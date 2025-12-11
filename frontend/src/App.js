@@ -14,9 +14,9 @@ import Orders from './components/Orders';
 import Reports from './components/Reports';
 import TeknisiDashboard from './components/TeknisiDashboard';
 import Accounting from './components/Accounting';
-const Users = () => <div className="p-6"><h1 className="text-3xl font-bold">Manajemen Pengguna</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
-const Loyalty = () => <div className="p-6"><h1 className="text-3xl font-bold">Program Loyalitas</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
-const CSR = () => <div className="p-6"><h1 className="text-3xl font-bold">Program CSR</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
+import Users from './components/Users';
+import Loyalty from './components/Loyalty';
+import CSR from './components/CSR';
 const ActivityLogs = () => <div className="p-6"><h1 className="text-3xl font-bold">Log Aktivitas</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
 const Settings = () => <div className="p-6"><h1 className="text-3xl font-bold">Pengaturan Sistem</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
 
