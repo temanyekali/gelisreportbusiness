@@ -321,9 +321,14 @@ export default function Reports() {
                   <div className="flex gap-2">
                     {canEditDelete && (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => handleDeleteLoket(report.id)}>
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                        <Button size="sm" variant="outline" onClick={() => handleEditLoket(report)}>
+                          <Edit className="w-4 h-4 text-blue-600" />
                         </Button>
+                        {currentUser.role_id === 1 && (
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteLoket(report.id)}>
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        )}
                       </>
                     )}
                     <Button size="sm" variant="outline">
