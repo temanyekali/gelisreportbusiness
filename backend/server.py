@@ -468,15 +468,31 @@ async def update_transaction(
 
 @api_router.delete('/transactions/{transaction_id}')
 async def delete_transaction(transaction_id: str, current_user: dict = Depends(get_current_user)):
-    # Check permission - Owner or Finance
+    # Check permission - ONLY Owner can delete
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 3]:  # Owner or Finance
-        raise HTTPException(status_code=403, detail='Hanya Owner/Finance yang dapat menghapus transaksi')
+    if user['role_id'] != 1:  # Only Owner
+        raise HTTPException(status_code=403, detail='Hanya Owner yang dapat menghapus transaksi')
+    
+    # Get transaction details for logging
+    transaction = await db.transactions.find_one({'id': transaction_id}, {'_id': 0})
+    if not transaction:
+        raise HTTPException(status_code=404, detail='Transaksi tidak ditemukan')
     
     result = await db.transactions.delete_one({'id': transaction_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail='Transaksi tidak ditemukan')
+    
+    # Log activity
+    activity_log = {
+        'id': generate_id(),
+        'user_id': current_user['sub'],
+        'action': 'delete_transaction',
+        'description': f"Menghapus transaksi {transaction['transaction_code']} - {transaction['description']} (Rp {transaction['amount']})",
+        'ip_address': '0.0.0.0',
+        'created_at': utc_now().isoformat()
+    }
+    await db.activity_logs.insert_one(activity_log)
     
     return {'message': 'Transaksi berhasil dihapus'}
 
