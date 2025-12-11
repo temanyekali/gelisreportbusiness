@@ -294,6 +294,22 @@ export default function Orders() {
                   rows={2}
                 />
               </div>
+              <div className="flex items-center space-x-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <input
+                  type="checkbox"
+                  id="requires_technician"
+                  checked={formData.requires_technician}
+                  onChange={(e) => setFormData({ ...formData, requires_technician: e.target.checked })}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="requires_technician" className="cursor-pointer">
+                  <span className="font-semibold">Butuh SDM Teknisi?</span>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Centang jika order ini memerlukan teknisi lapangan (PLN, PDAM, dll). 
+                    Order akan otomatis masuk ke modul pekerjaan teknisi.
+                  </p>
+                </Label>
+              </div>
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Batal
