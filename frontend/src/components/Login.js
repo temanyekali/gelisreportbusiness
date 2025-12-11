@@ -38,7 +38,8 @@ export default function Login() {
             <Building2 className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">GELIS</h1>
-          <p className="text-slate-600 mt-2">Sistem Monitoring Operasional Multi-Bisnis</p>
+          <p className="text-sm text-slate-700 font-medium mt-2">Gerbang Elektronik Layanan Informasi Sistem</p>
+          <p className="text-xs text-slate-500 mt-1">Platform Terpadu Monitoring Operasional Multi-Bisnis</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
