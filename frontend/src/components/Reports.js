@@ -115,8 +115,14 @@ export default function Reports() {
         report_date: new Date(kasirFormData.report_date).toISOString()
       };
       
-      await api.post('/reports/kasir-daily', submitData);
-      toast.success('Laporan berhasil disimpan!');
+      if (editingReport) {
+        await api.put(`/reports/kasir-daily/${editingReport.id}`, submitData);
+        toast.success('Laporan berhasil diupdate!');
+      } else {
+        await api.post('/reports/kasir-daily', submitData);
+        toast.success('Laporan berhasil disimpan!');
+      }
+      
       setShowKasirForm(false);
       setEditingReport(null);
       fetchData();
