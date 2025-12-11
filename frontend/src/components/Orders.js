@@ -45,6 +45,7 @@ export default function Orders() {
     paid_amount: 0,
     payment_method: 'Cash',
     notes: '',
+    requires_technician: false,
   });
   const [updateData, setUpdateData] = useState({
     status: '',
