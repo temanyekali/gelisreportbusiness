@@ -297,3 +297,68 @@ class DashboardStats(BaseModel):
     revenue_today: float
     expenses_today: float
     net_today: float
+
+# Daily Loket Report Models
+class BankBalance(BaseModel):
+    bank_name: str  # BRIS, Mandiri, BCA, dll
+    saldo_awal: float
+    saldo_inject: float
+    data_lunas: float
+    setor_kasir: float
+    transfer_amount: float
+    sisa_setoran: float
+    saldo_akhir: float
+    uang_lebih: float = 0
+
+class LoketDailyReportBase(BaseModel):
+    business_id: str
+    report_date: datetime
+    nama_petugas: str
+    shift: int  # 1, 2, 3
+    bank_balances: List[BankBalance] = []
+    total_setoran_shift: float = 0
+    notes: Optional[str] = None
+
+class LoketDailyReportCreate(LoketDailyReportBase):
+    pass
+
+class LoketDailyReport(LoketDailyReportBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
+
+# Cashier Daily Report Models
+class TopupTransaction(BaseModel):
+    amount: float
+    description: Optional[str] = None
+
+class KasirDailyReportBase(BaseModel):
+    business_id: str
+    report_date: datetime
+    setoran_pagi: float = 0
+    setoran_siang: float = 0
+    setoran_sore: float = 0
+    setoran_deposit_loket_luar: float = 0
+    setoran_pelunasan_pagi: float = 0
+    setoran_pelunasan_siang: float = 0
+    topup_transactions: List[TopupTransaction] = []
+    total_topup: float = 0
+    penerimaan_kas_kecil: float = 0
+    pengurangan_kas_kecil: float = 0
+    belanja_loket: float = 0
+    total_kas_kecil: float = 0
+    penerimaan_admin: float = 0
+    total_admin: float = 0
+    saldo_bank: float = 0
+    saldo_brankas: float = 0
+    notes: Optional[str] = None
+
+class KasirDailyReportCreate(KasirDailyReportBase):
+    pass
+
+class KasirDailyReport(KasirDailyReportBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
