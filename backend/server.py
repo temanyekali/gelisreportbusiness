@@ -402,6 +402,170 @@ async def create_transaction(txn_data: TransactionCreate, current_user: dict = D
     
     return Transaction(**txn_dict)
 
+@api_router.put('/transactions/{transaction_id}', response_model=Transaction)
+async def update_transaction(
+    transaction_id: str,
+    txn_data: TransactionCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    # Check permission
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3, 5]:  # Owner, Manager, Finance, Kasir
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin')
+    
+    existing = await db.transactions.find_one({'id': transaction_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail='Transaksi tidak ditemukan')
+    
+    txn_dict = txn_data.model_dump()
+    doc = txn_dict.copy()
+    
+    await db.transactions.update_one({'id': transaction_id}, {'$set': doc})
+    
+    existing.update(txn_dict)
+    if isinstance(existing.get('created_at'), str):
+        existing['created_at'] = datetime.fromisoformat(existing['created_at'])
+    
+    return Transaction(**existing)
+
+@api_router.delete('/transactions/{transaction_id}')
+async def delete_transaction(transaction_id: str, current_user: dict = Depends(get_current_user)):
+    # Check permission - Owner or Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 3]:  # Owner or Finance
+        raise HTTPException(status_code=403, detail='Hanya Owner/Finance yang dapat menghapus transaksi')
+    
+    result = await db.transactions.delete_one({'id': transaction_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail='Transaksi tidak ditemukan')
+    
+    return {'message': 'Transaksi berhasil dihapus'}
+
+# ============= ACCOUNTING SUMMARY ROUTES =============
+@api_router.get('/accounting/summary')
+async def get_accounting_summary(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get accounting summary with debit/kredit totals"""
+    query = {}
+    if business_id:
+        query['business_id'] = business_id
+    if start_date and end_date:
+        query['created_at'] = {'$gte': start_date, '$lte': end_date}
+    
+    # Get all transactions
+    transactions = await db.transactions.find(query, {'_id': 0}).to_list(10000)
+    
+    # Calculate totals
+    total_income = sum(t['amount'] for t in transactions if t['transaction_type'] == 'income')
+    total_expense = sum(t['amount'] for t in transactions if t['transaction_type'] == 'expense')
+    total_transfer = sum(t['amount'] for t in transactions if t['transaction_type'] == 'transfer')
+    
+    # Group by category
+    categories = {}
+    for txn in transactions:
+        cat = txn.get('category', 'Other')
+        if cat not in categories:
+            categories[cat] = {'income': 0, 'expense': 0, 'count': 0}
+        
+        if txn['transaction_type'] == 'income':
+            categories[cat]['income'] += txn['amount']
+        elif txn['transaction_type'] == 'expense':
+            categories[cat]['expense'] += txn['amount']
+        categories[cat]['count'] += 1
+    
+    # Group by payment method
+    payment_methods = {}
+    for txn in transactions:
+        method = txn.get('payment_method', 'Unknown')
+        if method not in payment_methods:
+            payment_methods[method] = {'total': 0, 'count': 0}
+        payment_methods[method]['total'] += txn['amount']
+        payment_methods[method]['count'] += 1
+    
+    return {
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'total_transfer': total_transfer,
+        'balance': total_income - total_expense,
+        'transaction_count': len(transactions),
+        'categories': categories,
+        'payment_methods': payment_methods
+    }
+
+@api_router.get('/accounting/period-report')
+async def get_period_report(
+    period: str = 'daily',  # daily, weekly, monthly, yearly
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get period-based accounting report"""
+    query = {}
+    if business_id:
+        query['business_id'] = business_id
+    
+    # Set default date range if not provided
+    if not start_date:
+        start_date = (datetime.now() - timedelta(days=30)).isoformat()
+    if not end_date:
+        end_date = datetime.now().isoformat()
+    
+    query['created_at'] = {'$gte': start_date, '$lte': end_date}
+    
+    transactions = await db.transactions.find(query, {'_id': 0}).to_list(10000)
+    
+    # Group by period
+    period_data = {}
+    for txn in transactions:
+        txn_date = datetime.fromisoformat(txn['created_at']) if isinstance(txn['created_at'], str) else txn['created_at']
+        
+        if period == 'daily':
+            key = txn_date.strftime('%Y-%m-%d')
+        elif period == 'weekly':
+            key = f"{txn_date.year}-W{txn_date.isocalendar()[1]}"
+        elif period == 'monthly':
+            key = txn_date.strftime('%Y-%m')
+        elif period == 'yearly':
+            key = str(txn_date.year)
+        else:
+            key = txn_date.strftime('%Y-%m-%d')
+        
+        if key not in period_data:
+            period_data[key] = {'income': 0, 'expense': 0, 'transfer': 0, 'count': 0}
+        
+        if txn['transaction_type'] == 'income':
+            period_data[key]['income'] += txn['amount']
+        elif txn['transaction_type'] == 'expense':
+            period_data[key]['expense'] += txn['amount']
+        elif txn['transaction_type'] == 'transfer':
+            period_data[key]['transfer'] += txn['amount']
+        period_data[key]['count'] += 1
+    
+    # Convert to list and sort
+    report = []
+    for period_key, data in sorted(period_data.items()):
+        report.append({
+            'period': period_key,
+            'income': data['income'],
+            'expense': data['expense'],
+            'transfer': data['transfer'],
+            'balance': data['income'] - data['expense'],
+            'transaction_count': data['count']
+        })
+    
+    return {
+        'period_type': period,
+        'start_date': start_date,
+        'end_date': end_date,
+        'data': report
+    }
+
 # ============= USER MANAGEMENT ROUTES =============
 @api_router.get('/users', response_model=List[UserResponse])
 async def get_users(current_user: dict = Depends(get_current_user)):
