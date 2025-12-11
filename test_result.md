@@ -177,11 +177,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added PUT /teknisi/orders/{order_id}/status with permission check and activity logging"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Successfully updated order status from processing to completed. Activity logging working. Endpoint functioning correctly."
 
   - task: "Teknisi Update Progress Endpoint"
     implemented: true
