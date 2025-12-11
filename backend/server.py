@@ -520,6 +520,91 @@ async def update_setting(key: str, value: dict, current_user: dict = Depends(get
     
     return {'message': 'Setting berhasil diupdate'}
 
+# ============= DAILY REPORT ROUTES =============
+@api_router.get('/reports/loket-daily', response_model=List[LoketDailyReport])
+async def get_loket_daily_reports(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    query = {}
+    if business_id:
+        query['business_id'] = business_id
+    if start_date and end_date:
+        query['report_date'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    reports = await db.loket_daily_reports.find(query, {'_id': 0}).sort('report_date', -1).to_list(1000)
+    
+    for report in reports:
+        if isinstance(report.get('report_date'), str):
+            report['report_date'] = datetime.fromisoformat(report['report_date'])
+        if isinstance(report.get('created_at'), str):
+            report['created_at'] = datetime.fromisoformat(report['created_at'])
+    
+    return reports
+
+@api_router.post('/reports/loket-daily', response_model=LoketDailyReport)
+async def create_loket_daily_report(report_data: LoketDailyReportCreate, current_user: dict = Depends(get_current_user)):
+    report_dict = report_data.model_dump()
+    report_dict['id'] = generate_id()
+    report_dict['created_by'] = current_user['sub']
+    report_dict['created_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = report_dict.copy()
+    doc['report_date'] = doc['report_date'].isoformat() if isinstance(doc['report_date'], datetime) else doc['report_date']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.loket_daily_reports.insert_one(doc)
+    
+    return LoketDailyReport(**report_dict)
+
+@api_router.get('/reports/kasir-daily', response_model=List[KasirDailyReport])
+async def get_kasir_daily_reports(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    query = {}
+    if business_id:
+        query['business_id'] = business_id
+    if start_date and end_date:
+        query['report_date'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    reports = await db.kasir_daily_reports.find(query, {'_id': 0}).sort('report_date', -1).to_list(1000)
+    
+    for report in reports:
+        if isinstance(report.get('report_date'), str):
+            report['report_date'] = datetime.fromisoformat(report['report_date'])
+        if isinstance(report.get('created_at'), str):
+            report['created_at'] = datetime.fromisoformat(report['created_at'])
+    
+    return reports
+
+@api_router.post('/reports/kasir-daily', response_model=KasirDailyReport)
+async def create_kasir_daily_report(report_data: KasirDailyReportCreate, current_user: dict = Depends(get_current_user)):
+    report_dict = report_data.model_dump()
+    report_dict['id'] = generate_id()
+    report_dict['created_by'] = current_user['sub']
+    report_dict['created_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = report_dict.copy()
+    doc['report_date'] = doc['report_date'].isoformat() if isinstance(doc['report_date'], datetime) else doc['report_date']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.kasir_daily_reports.insert_one(doc)
+    
+    return KasirDailyReport(**report_dict)
+
 # ============= INIT DATA =============
 @api_router.post('/init-data')
 async def init_data():
