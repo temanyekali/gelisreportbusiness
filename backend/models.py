@@ -159,6 +159,76 @@ class Transaction(TransactionBase):
     created_by: str
     created_at: datetime
 
+# Accounting Models
+class AccountType(str, Enum):
+    ASSET = 'asset'
+    LIABILITY = 'liability'
+    EQUITY = 'equity'
+    REVENUE = 'revenue'
+    EXPENSE = 'expense'
+
+class JournalEntryType(str, Enum):
+    DEBIT = 'debit'
+    CREDIT = 'credit'
+
+class AccountBase(BaseModel):
+    account_code: str
+    account_name: str
+    account_type: AccountType
+    parent_account: Optional[str] = None
+    description: Optional[str] = None
+    is_active: bool = True
+
+class AccountCreate(AccountBase):
+    pass
+
+class Account(AccountBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    balance: float = 0
+    created_at: datetime
+
+class JournalLineItem(BaseModel):
+    account_id: str
+    account_name: str
+    entry_type: JournalEntryType
+    amount: float
+    description: Optional[str] = None
+
+class JournalEntryBase(BaseModel):
+    business_id: str
+    transaction_date: datetime
+    reference_number: Optional[str] = None
+    description: str
+    line_items: List[JournalLineItem]
+    notes: Optional[str] = None
+
+class JournalEntryCreate(JournalEntryBase):
+    pass
+
+class JournalEntry(JournalEntryBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    entry_number: str
+    total_debit: float
+    total_credit: float
+    is_balanced: bool
+    created_by: str
+    created_at: datetime
+    approved_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+
+class CashFlowCategory(str, Enum):
+    OPERATING = 'operating'
+    INVESTING = 'investing'
+    FINANCING = 'financing'
+
+class CashFlowEntry(BaseModel):
+    category: CashFlowCategory
+    description: str
+    amount: float
+    is_inflow: bool  # True for cash in, False for cash out
+
 # Payroll Models
 class PayrollBase(BaseModel):
     user_id: str
