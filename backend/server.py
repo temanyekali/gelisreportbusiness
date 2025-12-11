@@ -128,6 +128,17 @@ async def login(login_data: UserLogin, request: Request):
         {'$set': {'last_login': utc_now().isoformat()}}
     )
     
+    # Log login activity
+    await log_activity(
+        user_id=user['id'],
+        action='login',
+        description=f"User {user['username']} logged in successfully",
+        ip_address=request.client.host,
+        related_type='user',
+        related_id=user['id'],
+        metadata={'username': user['username'], 'role_id': user['role_id'], 'user_agent': request.headers.get('user-agent')}
+    )
+    
     # Create access token
     access_token = create_access_token(data={
         'sub': user['id'],
@@ -139,18 +150,6 @@ async def login(login_data: UserLogin, request: Request):
     # Get role name
     role = await db.roles.find_one({'id': user['role_id']}, {'_id': 0})
     user['role_name'] = role['name'] if role else None
-    
-    # Log activity
-    activity_log = {
-        'id': generate_id(),
-        'user_id': user['id'],
-        'action': 'login',
-        'description': f"Login dari {request.client.host}",
-        'ip_address': request.client.host,
-        'user_agent': request.headers.get('user-agent'),
-        'created_at': utc_now().isoformat()
-    }
-    await db.activity_logs.insert_one(activity_log)
     
     # Parse datetime fields
     if isinstance(user['created_at'], str):
