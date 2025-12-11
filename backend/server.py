@@ -881,6 +881,70 @@ async def create_kasir_daily_report(report_data: KasirDailyReportCreate, current
     
     await db.kasir_daily_reports.insert_one(doc)
     
+    # AUTO-CREATE TRANSACTIONS for kasir report
+    transactions_created = []
+    
+    # Income: Total setoran (pagi + siang + sore)
+    total_setoran = (report_dict.get('setoran_pagi', 0) + 
+                     report_dict.get('setoran_siang', 0) + 
+                     report_dict.get('setoran_sore', 0))
+    
+    if total_setoran > 0:
+        txn = {
+            'id': generate_id(),
+            'transaction_code': generate_code('TXN', 12),
+            'business_id': report_dict['business_id'],
+            'transaction_type': 'income',
+            'category': 'Setoran Kasir',
+            'description': f"Total setoran harian kasir (Pagi: {report_dict.get('setoran_pagi', 0)}, Siang: {report_dict.get('setoran_siang', 0)}, Sore: {report_dict.get('setoran_sore', 0)})",
+            'amount': total_setoran,
+            'payment_method': 'cash',
+            'reference_number': f"KASIR-{doc['report_date']}",
+            'order_id': None,
+            'created_by': current_user['sub'],
+            'created_at': utc_now().isoformat()
+        }
+        await db.transactions.insert_one(txn)
+        transactions_created.append('setoran')
+    
+    # Expense: Belanja loket
+    if report_dict.get('belanja_loket', 0) > 0:
+        txn = {
+            'id': generate_id(),
+            'transaction_code': generate_code('TXN', 12),
+            'business_id': report_dict['business_id'],
+            'transaction_type': 'expense',
+            'category': 'Belanja Operasional',
+            'description': 'Belanja loket harian',
+            'amount': report_dict['belanja_loket'],
+            'payment_method': 'cash',
+            'reference_number': f"KASIR-{doc['report_date']}-BELANJA",
+            'order_id': None,
+            'created_by': current_user['sub'],
+            'created_at': utc_now().isoformat()
+        }
+        await db.transactions.insert_one(txn)
+        transactions_created.append('belanja')
+    
+    # Income: Admin fee
+    if report_dict.get('total_admin', 0) > 0:
+        txn = {
+            'id': generate_id(),
+            'transaction_code': generate_code('TXN', 12),
+            'business_id': report_dict['business_id'],
+            'transaction_type': 'income',
+            'category': 'Admin Fee',
+            'description': 'Penerimaan admin harian',
+            'amount': report_dict['total_admin'],
+            'payment_method': 'cash',
+            'reference_number': f"KASIR-{doc['report_date']}-ADMIN",
+            'order_id': None,
+            'created_by': current_user['sub'],
+            'created_at': utc_now().isoformat()
+        }
+        await db.transactions.insert_one(txn)
+        transactions_created.append('admin')
+    
     return KasirDailyReport(**report_dict)
 
 @api_router.put('/reports/loket-daily/{report_id}', response_model=LoketDailyReport)
