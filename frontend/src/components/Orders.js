@@ -118,8 +118,15 @@ export default function Orders() {
       if (updateData.assigned_to) params.append('assigned_to', updateData.assigned_to);
       if (updateData.paid_amount > 0) params.append('paid_amount', updateData.paid_amount);
 
-      await api.put(`/orders/${selectedOrder.id}?${params.toString()}`);
-      toast.success('Pesanan berhasil diupdate!');
+      const response = await api.put(`/orders/${selectedOrder.id}?${params.toString()}`);
+      
+      // Show appropriate message based on auto-transaction
+      if (response.data.auto_transaction_created) {
+        toast.success('✅ Pesanan diupdate! 💰 Transaksi pembayaran otomatis dibuat di Akunting');
+      } else {
+        toast.success('Pesanan berhasil diupdate!');
+      }
+      
       setShowUpdateDialog(false);
       fetchData();
     } catch (error) {
