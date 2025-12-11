@@ -162,11 +162,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added GET /teknisi/orders - teknisi can view assigned orders, owner/manager can view all"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Teknisi sees 151 assigned orders, Manager sees 370 total orders, Owner sees 370 total orders. Permission logic working correctly."
 
   - task: "Teknisi Update Status Endpoint"
     implemented: true
