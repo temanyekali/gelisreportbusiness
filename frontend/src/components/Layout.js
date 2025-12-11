@@ -4,7 +4,7 @@ import { getUser, clearAuth } from '../utils/auth';
 import { Button } from './ui/button';
 import {
   Building2, Home, ShoppingCart, DollarSign, Users, Bell,
-  Settings, LogOut, Menu, X, FileText, Activity, Gift, Heart
+  Settings, LogOut, Menu, X, FileText, Activity, Gift, Heart, Wrench
 } from 'lucide-react';
 import { Badge } from './ui/badge';
 
