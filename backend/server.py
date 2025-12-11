@@ -619,12 +619,98 @@ async def delete_loket_daily_report(report_id: str, current_user: dict = Depends
     
     return {'message': 'Laporan berhasil dihapus'}
 
-@api_router.delete('/reports/kasir-daily/{report_id}')
-async def delete_kasir_daily_report(report_id: str, current_user: dict = Depends(get_current_user)):
-    # Check permission - only Owner or Manager
+@api_router.put('/reports/loket-daily/{report_id}', response_model=LoketDailyReport)
+async def update_loket_daily_report(
+    report_id: str,
+    report_data: LoketDailyReportCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    # Check permission - Owner or Manager can edit
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
     if user['role_id'] not in [1, 2]:  # Owner or Manager
-        raise HTTPException(status_code=403, detail='Tidak memiliki izin untuk menghapus laporan')
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin untuk mengedit laporan')
+    
+    # Get existing report
+    existing = await db.loket_daily_reports.find_one({'id': report_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail='Laporan tidak ditemukan')
+    
+    report_dict = report_data.model_dump()
+    report_dict['updated_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = report_dict.copy()
+    doc['report_date'] = doc['report_date'].isoformat() if isinstance(doc['report_date'], datetime) else doc['report_date']
+    if 'updated_at' in doc and isinstance(doc['updated_at'], datetime):
+        doc['updated_at'] = doc['updated_at'].isoformat()
+    
+    await db.loket_daily_reports.update_one({'id': report_id}, {'$set': doc})
+    
+    # Merge for response
+    existing.update(report_dict)
+    if isinstance(existing.get('report_date'), str):
+        existing['report_date'] = datetime.fromisoformat(existing['report_date'])
+    if isinstance(existing.get('created_at'), str):
+        existing['created_at'] = datetime.fromisoformat(existing['created_at'])
+    
+    return LoketDailyReport(**existing)
+
+@api_router.put('/reports/kasir-daily/{report_id}', response_model=KasirDailyReport)
+async def update_kasir_daily_report(
+    report_id: str,
+    report_data: KasirDailyReportCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    # Check permission - Owner or Manager can edit
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2]:  # Owner or Manager
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin untuk mengedit laporan')
+    
+    # Get existing report
+    existing = await db.kasir_daily_reports.find_one({'id': report_id}, {'_id': 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail='Laporan tidak ditemukan')
+    
+    report_dict = report_data.model_dump()
+    report_dict['updated_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = report_dict.copy()
+    doc['report_date'] = doc['report_date'].isoformat() if isinstance(doc['report_date'], datetime) else doc['report_date']
+    if 'updated_at' in doc and isinstance(doc['updated_at'], datetime):
+        doc['updated_at'] = doc['updated_at'].isoformat()
+    
+    await db.kasir_daily_reports.update_one({'id': report_id}, {'$set': doc})
+    
+    # Merge for response
+    existing.update(report_dict)
+    if isinstance(existing.get('report_date'), str):
+        existing['report_date'] = datetime.fromisoformat(existing['report_date'])
+    if isinstance(existing.get('created_at'), str):
+        existing['created_at'] = datetime.fromisoformat(existing['created_at'])
+    
+    return KasirDailyReport(**existing)
+
+@api_router.delete('/reports/loket-daily/{report_id}')
+async def delete_loket_daily_report(report_id: str, current_user: dict = Depends(get_current_user)):
+    # Check permission - only Owner can delete
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 1:  # Only Owner
+        raise HTTPException(status_code=403, detail='Hanya Owner yang dapat menghapus laporan')
+    
+    result = await db.loket_daily_reports.delete_one({'id': report_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail='Laporan tidak ditemukan')
+    
+    return {'message': 'Laporan berhasil dihapus'}
+
+@api_router.delete('/reports/kasir-daily/{report_id}')
+async def delete_kasir_daily_report(report_id: str, current_user: dict = Depends(get_current_user)):
+    # Check permission - only Owner can delete
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 1:  # Only Owner
+        raise HTTPException(status_code=403, detail='Hanya Owner yang dapat menghapus laporan')
     
     result = await db.kasir_daily_reports.delete_one({'id': report_id})
     
