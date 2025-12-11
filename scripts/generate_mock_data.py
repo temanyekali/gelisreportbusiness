@@ -591,6 +591,8 @@ async def main():
     print(f"  • Orders: {len(orders)}")
     print(f"  • Transactions: {len(transactions)}")
     print(f"  • Notifications: {len(notifications)}")
+    print(f"  • Loket Daily Reports: {len(loket_reports)}")
+    print(f"  • Kasir Daily Reports: {len(kasir_reports)}")
     print(f"\\n🔐 Demo User Credentials:")
     print(f"  • owner / owner123 (Full access)")
     print(f"  • manager / manager123 (Manager)")
