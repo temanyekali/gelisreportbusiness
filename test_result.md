@@ -117,11 +117,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added PUT /reports/loket-daily/{report_id} with permission check (Owner/Manager only)"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Manager and Owner can edit successfully, Loket correctly denied (403). Endpoint working as expected."
   
   - task: "Edit Kasir Daily Report Endpoint"
     implemented: true
