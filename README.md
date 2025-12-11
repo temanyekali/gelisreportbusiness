@@ -1,4 +1,6 @@
-# GELIS - Sistem Monitoring Operasional Multi-Bisnis
+# GELIS - Gerbang Elektronik Layanan Informasi Sistem
+
+**GELIS** (Gerbang Elektronik Layanan Informasi Sistem) adalah platform terpadu untuk monitoring operasional multi-segmen usaha. Sistem ini bertindak sebagai **gerbang elektronik** yang mengkonsolidasi aliran informasi dari berbagai unit usaha ke dalam satu dashboard terpusat dengan visualisasi real-time.
 
 Sistem monitoring operasional komprehensif untuk mengelola berbagai jenis bisnis (PPOB, PLN Installation, Travel Umroh, PDAM, Inventory, dan Custom Business) dengan fitur keuangan lengkap, RBAC, notifikasi real-time, dan business intelligence.
 
