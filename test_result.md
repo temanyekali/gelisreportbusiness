@@ -143,15 +143,18 @@ backend:
 
   - task: "Delete Permission Update"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Updated DELETE endpoints for both reports - only Owner can delete (role_id = 1)"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL BUG: Duplicate DELETE endpoints in server.py. Lines 608-620 allow Manager to delete (wrong), lines 694-706 only allow Owner (correct). Manager successfully deleted report when should get 403. Need to remove duplicate endpoints."
 
   - task: "Teknisi Orders Endpoint"
     implemented: true
