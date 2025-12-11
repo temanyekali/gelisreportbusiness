@@ -330,3 +330,27 @@ agent_communication:
       - Teknisi: teknisi1 / teknisi123 (view assigned orders, update status/progress)
       
       📋 Next: Need to test all functionality with different user roles
+  
+  - agent: "testing"
+    message: |
+      🧪 BACKEND TESTING COMPLETED - Phase 1-2
+      
+      ✅ SUCCESSFUL TESTS (22/24 - 91.7% success rate):
+      - Authentication: All 5 user roles login successfully
+      - Reports GET: Retrieved 309 loket + 150 kasir reports
+      - Edit Permissions: Manager/Owner can edit, Loket/Kasir correctly denied (403)
+      - Teknisi Orders: Teknisi sees 151 assigned orders, Manager/Owner see all 370
+      - Teknisi Updates: Status and progress updates working correctly
+      - Auto-Generate: Both loket and kasir report generation working
+      
+      ❌ CRITICAL ISSUE FOUND - DELETE PERMISSIONS BUG:
+      - Manager can delete reports (should be 403 forbidden)
+      - Root cause: Duplicate DELETE endpoints in server.py
+        * Lines 608-620: Allows Owner OR Manager to delete
+        * Lines 694-706: Only allows Owner to delete
+        * Second definition overrides first, but inconsistent behavior
+      
+      🔧 REQUIRED FIX:
+      - Remove duplicate DELETE endpoints (lines 608-620)
+      - Keep only the Owner-only version (lines 694-706)
+      - This ensures only Owner can delete as per requirements
