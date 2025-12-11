@@ -92,8 +92,8 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Dashboard</h1>
-        <p className="text-slate-600">Selamat datang di sistem monitoring operasional GELIS</p>
+        <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Dashboard GELIS</h1>
+        <p className="text-slate-600">Gerbang Elektronik Layanan Informasi Sistem - Monitoring Terpadu Multi-Bisnis</p>
       </div>
 
       {/* Stats Grid */}
