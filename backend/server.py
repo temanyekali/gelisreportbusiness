@@ -331,6 +331,11 @@ async def update_order(
     paid_amount: Optional[float] = None,
     current_user: dict = Depends(get_current_user)
 ):
+    # Get existing order
+    order = await db.orders.find_one({'id': order_id}, {'_id': 0})
+    if not order:
+        raise HTTPException(status_code=404, detail='Order tidak ditemukan')
+    
     update_data = {'updated_at': utc_now().isoformat()}
     
     if status:
@@ -348,7 +353,7 @@ async def update_order(
             'id': generate_id(),
             'user_id': assigned_to,
             'title': 'Pesanan Ditugaskan',
-            'message': f"Anda ditugaskan untuk pesanan {order_id}",
+            'message': f"Anda ditugaskan untuk pesanan {order['order_number']}",
             'type': 'info',
             'related_id': order_id,
             'related_type': 'order',
@@ -357,7 +362,40 @@ async def update_order(
         }
         await db.notifications.insert_one(notif)
     
-    if paid_amount is not None:
+    # AUTO-CREATE TRANSACTION when payment received
+    if paid_amount is not None and paid_amount > 0:
+        old_paid = order.get('paid_amount', 0)
+        new_payment = paid_amount - old_paid
+        
+        if new_payment > 0:
+            # Create income transaction automatically
+            transaction = {
+                'id': generate_id(),
+                'transaction_code': generate_code('TXN', 12),
+                'business_id': order['business_id'],
+                'transaction_type': 'income',
+                'category': 'Order Payment',
+                'description': f"Pembayaran order {order['order_number']} - {order['customer_name']}",
+                'amount': new_payment,
+                'payment_method': order.get('payment_method', 'cash'),
+                'reference_number': order['order_number'],
+                'order_id': order_id,
+                'created_by': current_user['sub'],
+                'created_at': utc_now().isoformat()
+            }
+            await db.transactions.insert_one(transaction)
+            
+            # Log activity
+            activity_log = {
+                'id': generate_id(),
+                'user_id': current_user['sub'],
+                'action': 'payment_received',
+                'description': f"Pembayaran {new_payment} untuk order {order['order_number']} - Auto transaction created",
+                'ip_address': '0.0.0.0',
+                'created_at': utc_now().isoformat()
+            }
+            await db.activity_logs.insert_one(activity_log)
+        
         update_data['paid_amount'] = paid_amount
     
     result = await db.orders.update_one({'id': order_id}, {'$set': update_data})
@@ -365,7 +403,7 @@ async def update_order(
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail='Order tidak ditemukan')
     
-    return {'message': 'Order berhasil diupdate'}
+    return {'message': 'Order berhasil diupdate', 'auto_transaction_created': paid_amount is not None and (paid_amount - order.get('paid_amount', 0)) > 0}
 
 # ============= TRANSACTION ROUTES =============
 @api_router.get('/transactions', response_model=List[Transaction])
