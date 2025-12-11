@@ -24,18 +24,19 @@ export default function Layout({ children }) {
     navigate('/login');
   };
 
+  // Strict permission matrix
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Dashboard' },
-    { path: '/businesses', icon: Building2, label: 'Bisnis' },
-    { path: '/orders', icon: ShoppingCart, label: 'Pesanan' },
-    { path: '/teknisi', icon: Wrench, label: 'Pekerjaan Teknisi', role: [7, 1, 2] },
-    { path: '/accounting', icon: DollarSign, label: 'Akunting', role: [1, 2, 3, 5] },
+    { path: '/dashboard', icon: Home, label: 'Dashboard', role: [1, 2, 3, 4, 5, 6, 7] },
+    { path: '/businesses', icon: Building2, label: 'Bisnis', role: [1, 2] },
+    { path: '/orders', icon: ShoppingCart, label: 'Pesanan', role: [1, 2, 5, 6] },
+    { path: '/teknisi', icon: Wrench, label: 'Pekerjaan Teknisi', role: [1, 2, 5, 7] },
+    { path: '/accounting', icon: DollarSign, label: 'Akunting', role: [1, 2, 3] },
     { path: '/users', icon: Users, label: 'Pengguna', role: [1, 2] },
-    { path: '/reports', icon: FileText, label: 'Laporan' },
+    { path: '/reports', icon: FileText, label: 'Laporan', role: [1, 2, 3, 5, 6] },
     { path: '/loyalty', icon: Gift, label: 'Program Loyalitas', role: [1, 2] },
     { path: '/csr', icon: Heart, label: 'Program CSR', role: [1, 2] },
     { path: '/activity-logs', icon: Activity, label: 'Log Aktivitas', role: [1, 2] },
-    { path: '/settings', icon: Settings, label: 'Pengaturan', role: 1 },
+    { path: '/settings', icon: Settings, label: 'Pengaturan', role: [1] },
   ];
 
   const filteredNavItems = navItems.filter(item => {
