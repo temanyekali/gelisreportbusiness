@@ -424,6 +424,64 @@ async def get_users(current_user: dict = Depends(get_current_user)):
     
     return users
 
+@api_router.put('/users/{user_id}', response_model=UserResponse)
+async def update_user(user_id: str, user_data: UserCreate, current_user: dict = Depends(get_current_user)):
+    # Check permission - Owner or Manager (limited)
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2]:  # Owner or Manager
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin')
+    
+    target_user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail='User tidak ditemukan')
+    
+    # Manager can only edit non-owner users
+    if user['role_id'] == 2 and target_user['role_id'] == 1:
+        raise HTTPException(status_code=403, detail='Manager tidak bisa mengedit Owner')
+    
+    update_data = user_data.model_dump(exclude={'password'})
+    update_data['updated_at'] = utc_now().isoformat()
+    
+    # Update password if provided
+    if user_data.password:
+        update_data['password'] = get_password_hash(user_data.password)
+    
+    await db.users.update_one({'id': user_id}, {'$set': update_data})
+    
+    # Get updated user
+    updated_user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    role = await db.roles.find_one({'id': updated_user['role_id']}, {'_id': 0})
+    updated_user['role_name'] = role['name'] if role else None
+    
+    # Parse datetime
+    for field in ['created_at', 'updated_at', 'last_login']:
+        if updated_user.get(field) and isinstance(updated_user[field], str):
+            updated_user[field] = datetime.fromisoformat(updated_user[field])
+    
+    return UserResponse(**updated_user)
+
+@api_router.delete('/users/{user_id}')
+async def delete_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    # Check permission - Only Owner
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 1:  # Only Owner
+        raise HTTPException(status_code=403, detail='Hanya Owner yang dapat menghapus user')
+    
+    # Cannot delete self
+    if user_id == current_user['sub']:
+        raise HTTPException(status_code=400, detail='Tidak bisa menghapus akun sendiri')
+    
+    target_user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail='User tidak ditemukan')
+    
+    result = await db.users.delete_one({'id': user_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail='User tidak ditemukan')
+    
+    return {'message': 'User berhasil dihapus'}
+
 @api_router.put('/users/{user_id}/toggle-active')
 async def toggle_user_active(user_id: str, current_user: dict = Depends(get_current_user)):
     # Check permission
