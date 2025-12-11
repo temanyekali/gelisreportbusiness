@@ -126,6 +126,12 @@ function App() {
             <Layout><Settings /></Layout>
           </PrivateRoute>
         } />
+        
+        <Route path="/teknisi" element={
+          <PrivateRoute>
+            <Layout><TeknisiDashboard /></Layout>
+          </PrivateRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
