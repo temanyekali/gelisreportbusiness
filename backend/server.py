@@ -719,6 +719,245 @@ async def delete_kasir_daily_report(report_id: str, current_user: dict = Depends
     
     return {'message': 'Laporan berhasil dihapus'}
 
+# ============= TEKNISI ROUTES =============
+@api_router.get('/teknisi/orders', response_model=List[Order])
+async def get_teknisi_orders(current_user: dict = Depends(get_current_user)):
+    # Get orders assigned to current teknisi
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    
+    # If teknisi, only show assigned orders. If manager/owner, show all
+    if user['role_id'] == 7:  # Teknisi
+        query = {'assigned_to': current_user['sub']}
+    elif user['role_id'] in [1, 2]:  # Owner or Manager
+        query = {}
+    else:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses')
+    
+    orders = await db.orders.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    for order in orders:
+        for field in ['created_at', 'updated_at', 'completion_date']:
+            if order.get(field) and isinstance(order[field], str):
+                order[field] = datetime.fromisoformat(order[field])
+    
+    return orders
+
+@api_router.put('/teknisi/orders/{order_id}/status')
+async def update_order_status_by_teknisi(
+    order_id: str,
+    status: str,
+    notes: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    # Teknisi can update status of their assigned orders
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    
+    order = await db.orders.find_one({'id': order_id}, {'_id': 0})
+    if not order:
+        raise HTTPException(status_code=404, detail='Order tidak ditemukan')
+    
+    # Check permission
+    if user['role_id'] == 7:  # Teknisi
+        if order['assigned_to'] != current_user['sub']:
+            raise HTTPException(status_code=403, detail='Order tidak di-assign ke Anda')
+    elif user['role_id'] not in [1, 2]:  # Not owner or manager
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses')
+    
+    # Validate status
+    valid_statuses = ['pending', 'processing', 'completed', 'cancelled']
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail='Status tidak valid')
+    
+    update_data = {
+        'status': status,
+        'updated_at': utc_now().isoformat()
+    }
+    
+    if status == 'completed':
+        update_data['completion_date'] = utc_now().isoformat()
+    
+    if notes:
+        current_notes = order.get('notes', '')
+        timestamp = utc_now().strftime('%Y-%m-%d %H:%M:%S')
+        update_data['notes'] = f"{current_notes}\n[{timestamp}] {user['full_name']}: {notes}".strip()
+    
+    await db.orders.update_one({'id': order_id}, {'$set': update_data})
+    
+    # Log activity
+    activity_log = {
+        'id': generate_id(),
+        'user_id': current_user['sub'],
+        'action': 'update_order_status',
+        'description': f"Update status order {order['order_number']} menjadi {status}",
+        'ip_address': '0.0.0.0',
+        'created_at': utc_now().isoformat()
+    }
+    await db.activity_logs.insert_one(activity_log)
+    
+    return {'message': f'Status order berhasil diupdate menjadi {status}'}
+
+@api_router.put('/teknisi/orders/{order_id}/progress')
+async def update_order_progress(
+    order_id: str,
+    progress: int,
+    notes: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    # Teknisi can update progress (0-100%)
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    
+    order = await db.orders.find_one({'id': order_id}, {'_id': 0})
+    if not order:
+        raise HTTPException(status_code=404, detail='Order tidak ditemukan')
+    
+    # Check permission
+    if user['role_id'] == 7:  # Teknisi
+        if order['assigned_to'] != current_user['sub']:
+            raise HTTPException(status_code=403, detail='Order tidak di-assign ke Anda')
+    elif user['role_id'] not in [1, 2]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses')
+    
+    if progress < 0 or progress > 100:
+        raise HTTPException(status_code=400, detail='Progress harus antara 0-100')
+    
+    update_data = {
+        'order_details.progress': progress,
+        'updated_at': utc_now().isoformat()
+    }
+    
+    # Auto update status based on progress
+    if progress == 0:
+        update_data['status'] = 'pending'
+    elif progress > 0 and progress < 100:
+        update_data['status'] = 'processing'
+    elif progress == 100:
+        update_data['status'] = 'completed'
+        update_data['completion_date'] = utc_now().isoformat()
+    
+    if notes:
+        current_notes = order.get('notes', '')
+        timestamp = utc_now().strftime('%Y-%m-%d %H:%M:%S')
+        update_data['notes'] = f"{current_notes}\n[{timestamp}] Progress {progress}%: {notes}".strip()
+    
+    await db.orders.update_one({'id': order_id}, {'$set': update_data})
+    
+    return {'message': f'Progress order berhasil diupdate menjadi {progress}%'}
+
+# ============= AUTO GENERATE REPORTS =============
+@api_router.post('/reports/generate-loket')
+async def generate_loket_report(
+    business_id: str,
+    report_date: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Auto-generate laporan loket dari data orders"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    
+    # Parse date
+    target_date = datetime.fromisoformat(report_date).replace(hour=0, minute=0, second=0, microsecond=0)
+    next_day = target_date.replace(hour=23, minute=59, second=59)
+    
+    # Get orders for the day
+    orders = await db.orders.find({
+        'business_id': business_id,
+        'created_at': {
+            '$gte': target_date.isoformat(),
+            '$lte': next_day.isoformat()
+        }
+    }, {'_id': 0}).to_list(1000)
+    
+    # Calculate totals
+    total_lunas = sum(o.get('paid_amount', 0) for o in orders if o.get('payment_status') == 'paid')
+    
+    # Get business settings for banks
+    business = await db.businesses.find_one({'id': business_id}, {'_id': 0})
+    banks = business.get('settings', {}).get('banks', ['BRIS', 'MANDIRI'])
+    
+    # Create bank balances structure
+    bank_balances = []
+    for bank_name in banks:
+        bank_balances.append({
+            'bank_name': bank_name,
+            'saldo_awal': 0,
+            'saldo_inject': 0,
+            'data_lunas': total_lunas / len(banks),  # Distribute evenly
+            'setor_kasir': 0,
+            'transfer_amount': 0,
+            'sisa_setoran': total_lunas / len(banks),
+            'saldo_akhir': 0,
+            'uang_lebih': 0
+        })
+    
+    generated_data = {
+        'business_id': business_id,
+        'report_date': target_date.isoformat(),
+        'nama_petugas': user['full_name'],
+        'shift': 1,
+        'bank_balances': bank_balances,
+        'total_setoran_shift': total_lunas,
+        'notes': f"Auto-generated dari {len(orders)} orders"
+    }
+    
+    return generated_data
+
+@api_router.post('/reports/generate-kasir')
+async def generate_kasir_report(
+    business_id: str,
+    report_date: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Auto-generate laporan kasir dari data transactions"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    
+    # Parse date
+    target_date = datetime.fromisoformat(report_date).replace(hour=0, minute=0, second=0, microsecond=0)
+    next_day = target_date.replace(hour=23, minute=59, second=59)
+    
+    # Get transactions for the day
+    transactions = await db.transactions.find({
+        'business_id': business_id,
+        'created_at': {
+            '$gte': target_date.isoformat(),
+            '$lte': next_day.isoformat()
+        }
+    }, {'_id': 0}).to_list(1000)
+    
+    # Calculate totals by time (rough estimation)
+    total_income = sum(t.get('amount', 0) for t in transactions if t.get('transaction_type') == 'income')
+    setoran_pagi = total_income * 0.4  # 40% morning
+    setoran_siang = total_income * 0.35  # 35% afternoon
+    setoran_sore = total_income * 0.25  # 25% evening
+    
+    # Get transfers
+    transfers = [t for t in transactions if t.get('transaction_type') == 'transfer']
+    topup_transactions = [{'amount': t['amount'], 'description': t.get('description', '')} for t in transfers]
+    
+    # Calculate admin & kas kecil
+    expenses = sum(t.get('amount', 0) for t in transactions if t.get('transaction_type') == 'expense')
+    
+    generated_data = {
+        'business_id': business_id,
+        'report_date': target_date.isoformat(),
+        'setoran_pagi': setoran_pagi,
+        'setoran_siang': setoran_siang,
+        'setoran_sore': setoran_sore,
+        'setoran_deposit_loket_luar': 0,
+        'setoran_pelunasan_pagi': 0,
+        'setoran_pelunasan_siang': 0,
+        'topup_transactions': topup_transactions,
+        'total_topup': sum(t['amount'] for t in topup_transactions),
+        'penerimaan_kas_kecil': 0,
+        'pengurangan_kas_kecil': expenses * 0.1,
+        'belanja_loket': expenses * 0.9,
+        'total_kas_kecil': 0,
+        'penerimaan_admin': total_income * 0.02,  # 2% commission
+        'total_admin': total_income * 0.02,
+        'saldo_bank': 0,
+        'saldo_brankas': total_income * 0.02,
+        'notes': f"Auto-generated dari {len(transactions)} transaksi"
+    }
+    
+    return generated_data
+
 # ============= ACCOUNTING ROUTES =============
 @api_router.get('/accounting/accounts')
 async def get_accounts(current_user: dict = Depends(get_current_user)):
