@@ -122,6 +122,7 @@ class OrderBase(BaseModel):
     paid_amount: float = 0.0
     payment_method: Optional[str] = None
     notes: Optional[str] = None
+    requires_technician: bool = False  # Flag untuk sync dengan modul teknisi
 
 class OrderCreate(OrderBase):
     pass
