@@ -132,11 +132,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added PUT /reports/kasir-daily/{report_id} with permission check (Owner/Manager only)"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Manager and Owner can edit successfully, Kasir correctly denied (403). Endpoint working as expected."
 
   - task: "Delete Permission Update"
     implemented: true
