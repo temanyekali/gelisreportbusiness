@@ -119,6 +119,40 @@ export default function Reports() {
     }
   };
 
+  const handleEditLoket = (report) => {
+    setEditingReport(report);
+    setLoketFormData({
+      business_id: report.business_id,
+      report_date: new Date(report.report_date).toISOString().split('T')[0],
+      nama_petugas: report.nama_petugas,
+      shift: report.shift,
+      bank_balances: report.bank_balances,
+      notes: report.notes || ''
+    });
+    setShowLoketForm(true);
+  };
+
+  const handleEditKasir = (report) => {
+    setEditingReport(report);
+    setKasirFormData({
+      business_id: report.business_id,
+      report_date: new Date(report.report_date).toISOString().split('T')[0],
+      setoran_pagi: report.setoran_pagi,
+      setoran_siang: report.setoran_siang,
+      setoran_sore: report.setoran_sore,
+      setoran_deposit_loket_luar: report.setoran_deposit_loket_luar,
+      setoran_pelunasan_pagi: report.setoran_pelunasan_pagi,
+      setoran_pelunasan_siang: report.setoran_pelunasan_siang,
+      topup_transactions: report.topup_transactions,
+      penerimaan_kas_kecil: report.penerimaan_kas_kecil,
+      pengurangan_kas_kecil: report.pengurangan_kas_kecil,
+      belanja_loket: report.belanja_loket,
+      penerimaan_admin: report.penerimaan_admin,
+      notes: report.notes || ''
+    });
+    setShowKasirForm(true);
+  };
+
   const handleDeleteLoket = async (reportId) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus laporan ini?')) return;
     
