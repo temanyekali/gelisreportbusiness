@@ -605,20 +605,6 @@ async def create_kasir_daily_report(report_data: KasirDailyReportCreate, current
     
     return KasirDailyReport(**report_dict)
 
-@api_router.delete('/reports/loket-daily/{report_id}')
-async def delete_loket_daily_report(report_id: str, current_user: dict = Depends(get_current_user)):
-    # Check permission - only Owner or Manager
-    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2]:  # Owner or Manager
-        raise HTTPException(status_code=403, detail='Tidak memiliki izin untuk menghapus laporan')
-    
-    result = await db.loket_daily_reports.delete_one({'id': report_id})
-    
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail='Laporan tidak ditemukan')
-    
-    return {'message': 'Laporan berhasil dihapus'}
-
 @api_router.put('/reports/loket-daily/{report_id}', response_model=LoketDailyReport)
 async def update_loket_daily_report(
     report_id: str,
