@@ -16,6 +16,40 @@ export default function Reports() {
   const [kasirReports, setKasirReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('loket');
+  const [showLoketForm, setShowLoketForm] = useState(false);
+  const [showKasirForm, setShowKasirForm] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [editingReport, setEditingReport] = useState(null);
+  
+  // Loket form state
+  const [loketFormData, setLoketFormData] = useState({
+    business_id: '',
+    report_date: new Date().toISOString().split('T')[0],
+    nama_petugas: '',
+    shift: 1,
+    bank_balances: [
+      { bank_name: 'BRIS', saldo_awal: 0, saldo_inject: 0, data_lunas: 0, setor_kasir: 0, transfer_amount: 0, sisa_setoran: 0, saldo_akhir: 0, uang_lebih: 0 }
+    ],
+    notes: ''
+  });
+  
+  // Kasir form state
+  const [kasirFormData, setKasirFormData] = useState({
+    business_id: '',
+    report_date: new Date().toISOString().split('T')[0],
+    setoran_pagi: 0,
+    setoran_siang: 0,
+    setoran_sore: 0,
+    setoran_deposit_loket_luar: 0,
+    setoran_pelunasan_pagi: 0,
+    setoran_pelunasan_siang: 0,
+    topup_transactions: [],
+    penerimaan_kas_kecil: 0,
+    pengurangan_kas_kecil: 0,
+    belanja_loket: 0,
+    penerimaan_admin: 0,
+    notes: ''
+  });
 
   useEffect(() => {
     fetchData();
