@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
+import { getUser } from '../utils/auth';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { FileText, Download, Calendar, TrendingUp, DollarSign, Building2 } from 'lucide-react';
+import { FileText, Download, Calendar, Building2, Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import LoketReportForm from './LoketReportForm';
+import KasirReportForm from './KasirReportForm';
 
 export default function Reports() {
   const [businesses, setBusinesses] = useState([]);
@@ -18,22 +20,22 @@ export default function Reports() {
   const [activeTab, setActiveTab] = useState('loket');
   const [showLoketForm, setShowLoketForm] = useState(false);
   const [showKasirForm, setShowKasirForm] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
   const [editingReport, setEditingReport] = useState(null);
   
-  // Loket form state
+  const currentUser = getUser();
+  const canEditDelete = currentUser && (currentUser.role_id === 1 || currentUser.role_id === 2);
+
   const [loketFormData, setLoketFormData] = useState({
     business_id: '',
     report_date: new Date().toISOString().split('T')[0],
-    nama_petugas: '',
+    nama_petugas: currentUser?.full_name || '',
     shift: 1,
     bank_balances: [
       { bank_name: 'BRIS', saldo_awal: 0, saldo_inject: 0, data_lunas: 0, setor_kasir: 0, transfer_amount: 0, sisa_setoran: 0, saldo_akhir: 0, uang_lebih: 0 }
     ],
     notes: ''
   });
-  
-  // Kasir form state
+
   const [kasirFormData, setKasirFormData] = useState({
     business_id: '',
     report_date: new Date().toISOString().split('T')[0],
@@ -53,17 +55,7 @@ export default function Reports() {
 
   useEffect(() => {
     fetchData();
-    fetchCurrentUser();
   }, []);
-
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await api.get('/auth/me');
-      setCurrentUser(response.data);
-    } catch (error) {
-      console.error('Error fetching user:', error);
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -82,191 +74,49 @@ export default function Reports() {
     }
   };
 
-  const canEditDelete = () => {
-    return currentUser && (currentUser.role_id === 1 || currentUser.role_id === 2); // Owner or Manager
-  };
-
-  // Loket Report Functions
-  const addBankBalance = () => {
-    setLoketFormData({
-      ...loketFormData,
-      bank_balances: [
-        ...loketFormData.bank_balances,
-        { bank_name: '', saldo_awal: 0, saldo_inject: 0, data_lunas: 0, setor_kasir: 0, transfer_amount: 0, sisa_setoran: 0, saldo_akhir: 0, uang_lebih: 0 }
-      ]
-    });
-  };
-
-  const updateBankBalance = (index, field, value) => {
-    const newBalances = [...loketFormData.bank_balances];
-    newBalances[index][field] = field === 'bank_name' ? value : parseFloat(value) || 0;
-    
-    // Auto calculate sisa_setoran and saldo_akhir
-    const bank = newBalances[index];
-    bank.sisa_setoran = bank.data_lunas - bank.setor_kasir - bank.transfer_amount;
-    bank.saldo_akhir = bank.saldo_awal + bank.saldo_inject - bank.data_lunas;
-    
-    setLoketFormData({ ...loketFormData, bank_balances: newBalances });
-  };
-
-  const removeBankBalance = (index) => {
-    const newBalances = loketFormData.bank_balances.filter((_, i) => i !== index);
-    setLoketFormData({ ...loketFormData, bank_balances: newBalances });
-  };
-
-  const calculateTotalSetoran = () => {
-    return loketFormData.bank_balances.reduce((sum, bank) => sum + bank.sisa_setoran, 0);
-  };
-
   const handleSubmitLoket = async (e) => {
     e.preventDefault();
     try {
+      const totalSetoran = loketFormData.bank_balances.reduce((sum, bank) => sum + bank.sisa_setoran, 0);
       const submitData = {
         ...loketFormData,
-        total_setoran_shift: calculateTotalSetoran(),
+        total_setoran_shift: totalSetoran,
         report_date: new Date(loketFormData.report_date).toISOString()
       };
       
-      if (editingReport) {
-        // Update existing report
-        await api.put(`/reports/loket-daily/${editingReport.id}`, submitData);
-        toast.success('Laporan berhasil diupdate!');
-      } else {
-        await api.post('/reports/loket-daily', submitData);
-        toast.success('Laporan berhasil dibuat!');
-      }
-      
+      await api.post('/reports/loket-daily', submitData);
+      toast.success('Laporan berhasil disimpan!');
       setShowLoketForm(false);
       setEditingReport(null);
-      resetLoketForm();
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Gagal menyimpan laporan');
     }
-  };
-
-  const resetLoketForm = () => {
-    setLoketFormData({
-      business_id: '',
-      report_date: new Date().toISOString().split('T')[0],
-      nama_petugas: '',
-      shift: 1,
-      bank_balances: [
-        { bank_name: 'BRIS', saldo_awal: 0, saldo_inject: 0, data_lunas: 0, setor_kasir: 0, transfer_amount: 0, sisa_setoran: 0, saldo_akhir: 0, uang_lebih: 0 }
-      ],
-      notes: ''
-    });
-  };
-
-  // Kasir Report Functions
-  const addTopupTransaction = () => {
-    setKasirFormData({
-      ...kasirFormData,
-      topup_transactions: [...kasirFormData.topup_transactions, { amount: 0, description: '' }]
-    });
-  };
-
-  const updateTopupTransaction = (index, field, value) => {
-    const newTopups = [...kasirFormData.topup_transactions];
-    newTopups[index][field] = field === 'amount' ? parseFloat(value) || 0 : value;
-    setKasirFormData({ ...kasirFormData, topup_transactions: newTopups });
-  };
-
-  const removeTopupTransaction = (index) => {
-    const newTopups = kasirFormData.topup_transactions.filter((_, i) => i !== index);
-    setKasirFormData({ ...kasirFormData, topup_transactions: newTopups });
-  };
-
-  const calculateTotalTopup = () => {
-    return kasirFormData.topup_transactions.reduce((sum, txn) => sum + txn.amount, 0);
-  };
-
-  const calculateTotalKasKecil = () => {
-    return kasirFormData.penerimaan_kas_kecil - kasirFormData.pengurangan_kas_kecil - kasirFormData.belanja_loket;
   };
 
   const handleSubmitKasir = async (e) => {
     e.preventDefault();
     try {
+      const totalTopup = kasirFormData.topup_transactions.reduce((sum, txn) => sum + txn.amount, 0);
+      const totalKasKecil = kasirFormData.penerimaan_kas_kecil - kasirFormData.pengurangan_kas_kecil - kasirFormData.belanja_loket;
+      
       const submitData = {
         ...kasirFormData,
-        total_topup: calculateTotalTopup(),
-        total_kas_kecil: calculateTotalKasKecil(),
+        total_topup: totalTopup,
+        total_kas_kecil: totalKasKecil,
         total_admin: kasirFormData.penerimaan_admin,
         saldo_brankas: kasirFormData.penerimaan_admin,
         report_date: new Date(kasirFormData.report_date).toISOString()
       };
       
-      if (editingReport) {
-        await api.put(`/reports/kasir-daily/${editingReport.id}`, submitData);
-        toast.success('Laporan berhasil diupdate!');
-      } else {
-        await api.post('/reports/kasir-daily', submitData);
-        toast.success('Laporan berhasil dibuat!');
-      }
-      
+      await api.post('/reports/kasir-daily', submitData);
+      toast.success('Laporan berhasil disimpan!');
       setShowKasirForm(false);
       setEditingReport(null);
-      resetKasirForm();
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Gagal menyimpan laporan');
     }
-  };
-
-  const resetKasirForm = () => {
-    setKasirFormData({
-      business_id: '',
-      report_date: new Date().toISOString().split('T')[0],
-      setoran_pagi: 0,
-      setoran_siang: 0,
-      setoran_sore: 0,
-      setoran_deposit_loket_luar: 0,
-      setoran_pelunasan_pagi: 0,
-      setoran_pelunasan_siang: 0,
-      topup_transactions: [],
-      penerimaan_kas_kecil: 0,
-      pengurangan_kas_kecil: 0,
-      belanja_loket: 0,
-      penerimaan_admin: 0,
-      notes: ''
-    });
-  };
-
-  const handleEditLoket = (report) => {
-    setEditingReport(report);
-    setLoketFormData({
-      business_id: report.business_id,
-      report_date: new Date(report.report_date).toISOString().split('T')[0],
-      nama_petugas: report.nama_petugas,
-      shift: report.shift,
-      bank_balances: report.bank_balances,
-      notes: report.notes || ''
-    });
-    setShowLoketForm(true);
-    setActiveTab('loket');
-  };
-
-  const handleEditKasir = (report) => {
-    setEditingReport(report);
-    setKasirFormData({
-      business_id: report.business_id,
-      report_date: new Date(report.report_date).toISOString().split('T')[0],
-      setoran_pagi: report.setoran_pagi,
-      setoran_siang: report.setoran_siang,
-      setoran_sore: report.setoran_sore,
-      setoran_deposit_loket_luar: report.setoran_deposit_loket_luar,
-      setoran_pelunasan_pagi: report.setoran_pelunasan_pagi,
-      setoran_pelunasan_siang: report.setoran_pelunasan_siang,
-      topup_transactions: report.topup_transactions,
-      penerimaan_kas_kecil: report.penerimaan_kas_kecil,
-      pengurangan_kas_kecil: report.pengurangan_kas_kecil,
-      belanja_loket: report.belanja_loket,
-      penerimaan_admin: report.penerimaan_admin,
-      notes: report.notes || ''
-    });
-    setShowKasirForm(true);
-    setActiveTab('kasir');
   };
 
   const handleDeleteLoket = async (reportId) => {
@@ -277,7 +127,7 @@ export default function Reports() {
       toast.success('Laporan berhasil dihapus!');
       fetchData();
     } catch (error) {
-      toast.error('Gagal menghapus laporan');
+      toast.error(error.response?.data?.detail || 'Gagal menghapus laporan');
     }
   };
 
@@ -289,7 +139,7 @@ export default function Reports() {
       toast.success('Laporan berhasil dihapus!');
       fetchData();
     } catch (error) {
-      toast.error('Gagal menghapus laporan');
+      toast.error(error.response?.data?.detail || 'Gagal menghapus laporan');
     }
   };
 
@@ -328,9 +178,21 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Laporan</h1>
-        <p className="text-slate-600">Laporan harian operasional dan keuangan</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Laporan</h1>
+          <p className="text-slate-600">Laporan harian operasional dan keuangan</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowLoketForm(true)} data-testid="add-loket-report">
+            <Plus className="w-4 h-4 mr-2" />
+            Laporan Loket
+          </Button>
+          <Button onClick={() => setShowKasirForm(true)} data-testid="add-kasir-report">
+            <Plus className="w-4 h-4 mr-2" />
+            Laporan Kasir
+          </Button>
+        </div>
       </div>
 
       {/* Filter */}
@@ -410,10 +272,19 @@ export default function Reports() {
                       </span>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Cetak
-                  </Button>
+                  <div className="flex gap-2">
+                    {canEditDelete && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteLoket(report.id)}>
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </Button>
+                      </>
+                    )}
+                    <Button size="sm" variant="outline">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Cetak
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Bank Balances */}
@@ -484,7 +355,7 @@ export default function Reports() {
           )}
         </TabsContent>
 
-        {/* Kasir Reports */}
+        {/* Kasir Reports - Similar structure */}
         <TabsContent value="kasir" className="space-y-4 mt-6">
           {getFilteredKasirReports().slice(0, 10).map((report) => {
             const business = businesses.find(b => b.id === report.business_id);
@@ -502,10 +373,19 @@ export default function Reports() {
                       </span>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Cetak
-                  </Button>
+                  <div className="flex gap-2">
+                    {canEditDelete && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteKasir(report.id)}>
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </Button>
+                      </>
+                    )}
+                    <Button size="sm" variant="outline">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Cetak
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -596,6 +476,33 @@ export default function Reports() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Forms */}
+      <LoketReportForm
+        open={showLoketForm}
+        onClose={() => {
+          setShowLoketForm(false);
+          setEditingReport(null);
+        }}
+        formData={loketFormData}
+        setFormData={setLoketFormData}
+        businesses={businesses}
+        onSubmit={handleSubmitLoket}
+        isEditing={!!editingReport}
+      />
+
+      <KasirReportForm
+        open={showKasirForm}
+        onClose={() => {
+          setShowKasirForm(false);
+          setEditingReport(null);
+        }}
+        formData={kasirFormData}
+        setFormData={setKasirFormData}
+        businesses={businesses}
+        onSubmit={handleSubmitKasir}
+        isEditing={!!editingReport}
+      />
     </div>
   );
 }
