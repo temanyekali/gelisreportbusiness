@@ -17,7 +17,7 @@ import Accounting from './components/Accounting';
 import Users from './components/Users';
 import Loyalty from './components/Loyalty';
 import CSR from './components/CSR';
-const ActivityLogs = () => <div className="p-6"><h1 className="text-3xl font-bold">Log Aktivitas</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
+import ActivityLogs from './components/ActivityLogs';
 const Settings = () => <div className="p-6"><h1 className="text-3xl font-bold">Pengaturan Sistem</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
 
 const PrivateRoute = ({ children }) => {
