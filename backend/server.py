@@ -821,6 +821,24 @@ async def create_loket_daily_report(report_data: LoketDailyReportCreate, current
     
     await db.loket_daily_reports.insert_one(doc)
     
+    # AUTO-CREATE TRANSACTION for total setoran
+    if report_dict.get('total_setoran_shift', 0) > 0:
+        transaction = {
+            'id': generate_id(),
+            'transaction_code': generate_code('TXN', 12),
+            'business_id': report_dict['business_id'],
+            'transaction_type': 'income',
+            'category': 'Setoran Loket',
+            'description': f"Setoran harian loket shift {report_dict['shift']} - {report_dict['nama_petugas']}",
+            'amount': report_dict['total_setoran_shift'],
+            'payment_method': 'cash',
+            'reference_number': f"LOKET-{doc['report_date']}-SHIFT{report_dict['shift']}",
+            'order_id': None,
+            'created_by': current_user['sub'],
+            'created_at': utc_now().isoformat()
+        }
+        await db.transactions.insert_one(transaction)
+    
     return LoketDailyReport(**report_dict)
 
 @api_router.get('/reports/kasir-daily', response_model=List[KasirDailyReport])
