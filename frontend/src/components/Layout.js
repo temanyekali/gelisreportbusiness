@@ -28,6 +28,7 @@ export default function Layout({ children }) {
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/businesses', icon: Building2, label: 'Bisnis' },
     { path: '/orders', icon: ShoppingCart, label: 'Pesanan' },
+    { path: '/teknisi', icon: Wrench, label: 'Pekerjaan Teknisi', role: [7, 1, 2] },
     { path: '/transactions', icon: DollarSign, label: 'Transaksi' },
     { path: '/users', icon: Users, label: 'Pengguna', role: 1 },
     { path: '/reports', icon: FileText, label: 'Laporan' },
