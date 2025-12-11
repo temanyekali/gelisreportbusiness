@@ -316,9 +316,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Delete Permission Update - Fix duplicate endpoints"
-  stuck_tasks:
-    - "Delete Permission Update"
+    - "Frontend testing - ready to test UI"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
