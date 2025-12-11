@@ -253,6 +253,9 @@ async def seed_orders(businesses, users):
             amount = random.uniform(50000, 5000000)
             paid_amount = amount if payment_status == 'paid' else (amount * 0.5 if payment_status == 'partial' else 0)
             
+            # Determine if requires technician based on business category
+            requires_tech = business['category'] in ['PLN Installation', 'PDAM', 'Inventory']
+            
             order = {
                 'id': generate_id(),
                 'order_number': generate_code('ORD', 12),
@@ -271,7 +274,8 @@ async def seed_orders(businesses, users):
                 'notes': f'Order untuk {service_type}',
                 'status': status,
                 'payment_status': payment_status,
-                'assigned_to': random.choice(teknisi_users)['id'] if status != 'pending' else None,
+                'requires_technician': requires_tech,
+                'assigned_to': random.choice(teknisi_users)['id'] if (requires_tech and status != 'pending') else None,
                 'completion_date': target_date.isoformat() if status == 'completed' else None,
                 'created_by': random.choice(cs_users)['id'],
                 'created_at': target_date.replace(hour=random.randint(8, 17), minute=random.randint(0, 59)).isoformat(),
