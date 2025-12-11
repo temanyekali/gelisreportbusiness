@@ -382,6 +382,160 @@ async def create_notifications(db, users):
     print(f"  ✅ Created {len(notifications)} notifications")
     return notifications
 
+async def create_daily_reports(db, businesses, users):
+    """Create realistic daily reports (Loket & Kasir)"""
+    loket_reports = []
+    kasir_reports = []
+    
+    # Get loket and kasir users
+    loket_users = [u for u in users if u['role_id'] == 6]  # Loket
+    kasir_users = [u for u in users if u['role_id'] == 5]  # Kasir
+    
+    if not loket_users:
+        loket_users = [users[0]]  # Fallback to first user
+    if not kasir_users:
+        kasir_users = [users[0]]
+    
+    # Generate reports untuk 30 hari terakhir
+    for days_ago in range(30):
+        report_date = utc_now() - timedelta(days=days_ago)
+        
+        for business in businesses[:2]:  # Only for first 2 businesses (PPOB & PLN)
+            # LOKET DAILY REPORT
+            loket_user = random.choice(loket_users)
+            
+            # Generate realistic bank balances
+            bank_balances = []
+            
+            # BRIS Account
+            bris_saldo_awal = random.randint(300000000, 400000000)
+            bris_data_lunas = random.randint(2000000, 5000000)
+            bris_inject = 0
+            bris_setor = random.randint(0, 1000000)
+            bris_transfer = random.randint(0, 500000)
+            bris_sisa = bris_data_lunas - bris_setor - bris_transfer
+            bris_akhir = bris_saldo_awal + bris_inject - bris_data_lunas
+            
+            bank_balances.append({
+                'bank_name': 'BRIS',
+                'saldo_awal': bris_saldo_awal,
+                'saldo_inject': bris_inject,
+                'data_lunas': bris_data_lunas,
+                'setor_kasir': bris_setor,
+                'transfer_amount': bris_transfer,
+                'sisa_setoran': bris_sisa,
+                'saldo_akhir': bris_akhir,
+                'uang_lebih': 0
+            })
+            
+            # Mandiri Account
+            mandiri_saldo_awal = random.randint(2000000, 5000000)
+            mandiri_inject = random.choice([0, 3000000, 5000000])
+            mandiri_data_lunas = random.randint(500000, 1500000)
+            mandiri_setor = random.randint(0, 500000)
+            mandiri_transfer = 0
+            mandiri_sisa = mandiri_data_lunas - mandiri_setor
+            mandiri_akhir = mandiri_saldo_awal + mandiri_inject - mandiri_data_lunas
+            mandiri_lebih = random.randint(0, 5000)
+            
+            bank_balances.append({
+                'bank_name': 'Mandiri',
+                'saldo_awal': mandiri_saldo_awal,
+                'saldo_inject': mandiri_inject,
+                'data_lunas': mandiri_data_lunas,
+                'setor_kasir': mandiri_setor,
+                'transfer_amount': mandiri_transfer,
+                'sisa_setoran': mandiri_sisa,
+                'saldo_akhir': mandiri_akhir,
+                'uang_lebih': mandiri_lebih
+            })
+            
+            total_setoran = bris_sisa + mandiri_sisa
+            
+            loket_report = {
+                'id': generate_id(),
+                'business_id': business['id'],
+                'report_date': report_date.isoformat(),
+                'nama_petugas': loket_user['full_name'],
+                'shift': random.randint(1, 3),
+                'bank_balances': bank_balances,
+                'total_setoran_shift': total_setoran,
+                'notes': None,
+                'created_by': loket_user['id'],
+                'created_at': report_date.isoformat()
+            }
+            
+            await db.loket_daily_reports.insert_one(loket_report)
+            loket_reports.append(loket_report)
+            
+            # KASIR DAILY REPORT
+            kasir_user = random.choice(kasir_users)
+            
+            # Generate realistic cashier data
+            setoran_pagi = random.randint(15000000, 25000000)
+            setoran_siang = random.randint(5000000, 15000000)
+            setoran_sore = random.randint(0, 10000000)
+            setoran_deposit = random.randint(10000000, 20000000)
+            pelunasan_pagi = random.randint(2000000, 4000000)
+            pelunasan_siang = random.randint(500000, 2000000)
+            
+            # Generate topup transactions (5-10 transactions)
+            topup_txns = []
+            total_topup = 0
+            num_topup = random.randint(5, 10)
+            topup_amounts = [5000000, 6500000, 10000000, 13000000, 18000000]
+            
+            for i in range(num_topup):
+                amount = random.choice(topup_amounts)
+                topup_txns.append({
+                    'amount': amount,
+                    'description': f'Topup #{i+1}'
+                })
+                total_topup += amount
+            
+            penerimaan_kk = random.randint(50000, 100000)
+            pengurangan_kk = random.randint(5000, 20000)
+            belanja = random.randint(0, 50000)
+            total_kk = penerimaan_kk - pengurangan_kk - belanja
+            
+            admin_in = random.randint(100000, 200000)
+            total_admin = random.randint(500000, 1000000)
+            
+            saldo_bank = 0
+            saldo_brankas = total_admin
+            
+            kasir_report = {
+                'id': generate_id(),
+                'business_id': business['id'],
+                'report_date': report_date.isoformat(),
+                'setoran_pagi': setoran_pagi,
+                'setoran_siang': setoran_siang,
+                'setoran_sore': setoran_sore,
+                'setoran_deposit_loket_luar': setoran_deposit,
+                'setoran_pelunasan_pagi': pelunasan_pagi,
+                'setoran_pelunasan_siang': pelunasan_siang,
+                'topup_transactions': topup_txns,
+                'total_topup': total_topup,
+                'penerimaan_kas_kecil': penerimaan_kk,
+                'pengurangan_kas_kecil': pengurangan_kk,
+                'belanja_loket': belanja,
+                'total_kas_kecil': total_kk,
+                'penerimaan_admin': admin_in,
+                'total_admin': total_admin,
+                'saldo_bank': saldo_bank,
+                'saldo_brankas': saldo_brankas,
+                'notes': None,
+                'created_by': kasir_user['id'],
+                'created_at': report_date.isoformat()
+            }
+            
+            await db.kasir_daily_reports.insert_one(kasir_report)
+            kasir_reports.append(kasir_report)
+    
+    print(f"  ✅ Created {len(loket_reports)} loket daily reports")
+    print(f"  ✅ Created {len(kasir_reports)} kasir daily reports")
+    return loket_reports, kasir_reports
+
 async def main():
     print("🚀 Starting Mock Data Generation for GELIS System\\n")
     
