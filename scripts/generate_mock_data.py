@@ -575,6 +575,10 @@ async def main():
     print("\\n6️⃣ Creating notifications...")
     notifications = await create_notifications(db, all_users)
     
+    # Step 7: Create daily reports
+    print("\\n7️⃣ Creating daily reports (Loket & Kasir)...")
+    loket_reports, kasir_reports = await create_daily_reports(db, businesses, all_users)
+    
     client.close()
     
     print("\\n" + "="*60)
