@@ -84,8 +84,14 @@ export default function Reports() {
         report_date: new Date(loketFormData.report_date).toISOString()
       };
       
-      await api.post('/reports/loket-daily', submitData);
-      toast.success('Laporan berhasil disimpan!');
+      if (editingReport) {
+        await api.put(`/reports/loket-daily/${editingReport.id}`, submitData);
+        toast.success('Laporan berhasil diupdate!');
+      } else {
+        await api.post('/reports/loket-daily', submitData);
+        toast.success('Laporan berhasil disimpan!');
+      }
+      
       setShowLoketForm(false);
       setEditingReport(null);
       fetchData();
