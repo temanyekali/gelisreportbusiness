@@ -224,7 +224,11 @@ async def seed_orders(businesses, users):
     print("\n📦 Creating orders...")
     
     teknisi_users = [u for u in users if u['role_id'] == 7]
-    cs_users = [u for u in users if u['role_id'] == 4] or users[:1]
+    if not teknisi_users:
+        teknisi_users = [users[0]]  # fallback to first user
+    cs_users = [u for u in users if u['role_id'] == 4]
+    if not cs_users:
+        cs_users = [users[0]]  # fallback to first user
     
     orders = []
     
