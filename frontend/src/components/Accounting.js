@@ -180,11 +180,19 @@ export default function Accounting() {
         <div>
           <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Akunting</h1>
           <p className="text-slate-600">Kelola arus kas masuk dan keluar</p>
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            <div className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+              ✨ Auto-update dari sistem (Pesanan, Laporan)
+            </div>
+            <div className="px-3 py-1 bg-green-50 text-green-700 rounded-full">
+              ✏️ Input manual tersedia
+            </div>
+          </div>
         </div>
         {canEdit && (
           <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Tambah Transaksi
+            Tambah Manual
           </Button>
         )}
       </div>
