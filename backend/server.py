@@ -515,6 +515,11 @@ async def get_accounting_summary(
     current_user: dict = Depends(get_current_user)
 ):
     """Get accounting summary with debit/kredit totals"""
+    # Check permission - Only Owner, Manager, Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses ke menu Akunting')
+    
     query = {}
     if business_id:
         query['business_id'] = business_id
