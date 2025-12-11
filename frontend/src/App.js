@@ -87,7 +87,13 @@ function App() {
         
         <Route path="/transactions" element={
           <PrivateRoute>
-            <Layout><Transactions /></Layout>
+            <Layout><Accounting /></Layout>
+          </PrivateRoute>
+        } />
+        
+        <Route path="/accounting" element={
+          <PrivateRoute>
+            <Layout><Accounting /></Layout>
           </PrivateRoute>
         } />
         
