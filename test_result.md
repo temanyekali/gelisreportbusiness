@@ -222,11 +222,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added POST /reports/generate-kasir - auto generate from transactions data"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Successfully generated kasir report data with setoran breakdown and calculations. Endpoint working correctly."
 
 frontend:
   - task: "Reports Edit Functionality"
