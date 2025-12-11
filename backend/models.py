@@ -349,6 +349,62 @@ class Customer(CustomerBase):
     created_at: datetime
     updated_at: datetime
 
+# Loyalty Program Models
+class ProgramStatus(str, Enum):
+    PLANNED = 'planned'
+    IN_PROGRESS = 'in_progress'
+    COMPLETED = 'completed'
+    CANCELLED = 'cancelled'
+
+class LoyaltyProgramBase(BaseModel):
+    program_name: str
+    description: str
+    start_date: datetime
+    end_date: datetime
+    target_customers: Optional[int] = None
+    budget: float = 0
+    rewards_offered: Optional[str] = None
+    status: ProgramStatus = ProgramStatus.PLANNED
+    notes: Optional[str] = None
+
+class LoyaltyProgramCreate(LoyaltyProgramBase):
+    pass
+
+class LoyaltyProgram(LoyaltyProgramBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    actual_participants: int = 0
+    actual_cost: float = 0
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
+
+# CSR Program Models
+class CSRProgramBase(BaseModel):
+    program_name: str
+    description: str
+    category: str  # Pendidikan, Kesehatan, Lingkungan, dll
+    start_date: datetime
+    end_date: Optional[datetime] = None
+    budget: float = 0
+    beneficiary_target: Optional[int] = None
+    location: Optional[str] = None
+    status: ProgramStatus = ProgramStatus.PLANNED
+    notes: Optional[str] = None
+
+class CSRProgramCreate(CSRProgramBase):
+    pass
+
+class CSRProgram(CSRProgramBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    actual_beneficiaries: int = 0
+    actual_cost: float = 0
+    impact_report: Optional[str] = None
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
+
 # Token Response
 class Token(BaseModel):
     access_token: str
