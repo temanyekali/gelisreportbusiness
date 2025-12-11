@@ -361,7 +361,11 @@ async def seed_reports(businesses, users):
     print("\n📊 Creating daily reports...")
     
     loket_users = [u for u in users if u['role_id'] == 6]
+    if not loket_users:
+        loket_users = [users[0]]  # fallback
     kasir_users = [u for u in users if u['role_id'] == 5]
+    if not kasir_users:
+        kasir_users = [users[0]]  # fallback
     
     loket_reports = []
     kasir_reports = []
