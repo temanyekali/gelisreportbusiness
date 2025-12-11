@@ -13,7 +13,7 @@ import Businesses from './components/Businesses';
 import Orders from './components/Orders';
 import Reports from './components/Reports';
 import TeknisiDashboard from './components/TeknisiDashboard';
-const Transactions = () => <div className="p-6"><h1 className="text-3xl font-bold">Transaksi Keuangan</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
+import Accounting from './components/Accounting';
 const Users = () => <div className="p-6"><h1 className="text-3xl font-bold">Manajemen Pengguna</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
 const Loyalty = () => <div className="p-6"><h1 className="text-3xl font-bold">Program Loyalitas</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
 const CSR = () => <div className="p-6"><h1 className="text-3xl font-bold">Program CSR</h1><p className="mt-4 text-slate-600">Module dalam pengembangan...</p></div>;
