@@ -19,6 +19,30 @@ from utils.auth import (
 from utils.permissions import check_permission, require_permission, ROLE_OWNER
 from utils.helpers import generate_id, generate_code, utc_now
 
+# Activity logging helper
+async def log_activity(
+    user_id: str,
+    action: str,
+    description: str,
+    ip_address: str = '0.0.0.0',
+    related_type: str = None,
+    related_id: str = None,
+    metadata: dict = None
+):
+    """Log user activity for audit trail"""
+    activity_log = {
+        'id': generate_id(),
+        'user_id': user_id,
+        'action': action,
+        'description': description,
+        'ip_address': ip_address,
+        'related_type': related_type,
+        'related_id': related_id,
+        'metadata': metadata or {},
+        'created_at': utc_now().isoformat()
+    }
+    await db.activity_logs.insert_one(activity_log)
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
