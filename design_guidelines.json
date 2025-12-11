@@ -1,0 +1,133 @@
+{
+  "identity": {
+    "persona": "E1",
+    "philosophy": "Fusion over Imitation. Emotion First. Content is King.",
+    "archetype": "Swiss & High-Contrast (Authority, Clarity, Truth)",
+    "vibe": "Professional, Organized, 'Control Room', Data-Dense"
+  },
+  "typography": {
+    "fonts": {
+      "heading": "Outfit",
+      "body": "Inter",
+      "mono": "JetBrains Mono"
+    },
+    "weights": {
+      "heading": "font-semibold or font-bold",
+      "body": "font-normal or font-medium"
+    },
+    "rules": [
+      "Use 'Outfit' for all Headings (h1-h4).",
+      "Use 'Inter' for all body text, tables, and data.",
+      "Use 'JetBrains Mono' for transaction IDs, codes, and financial figures where alignment matters.",
+      "Headings > 32px must use 'tracking-tight'.",
+      "Overlines/Labels must be Uppercase + Tiny + Wide Spacing ('tracking-widest')."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "background": "#F8F9FA",
+      "surface": "#FFFFFF",
+      "primary": "#0F172A",
+      "secondary": "#F1F5F9",
+      "accent": "#2563EB",
+      "border": "#E2E8F0",
+      "text_primary": "#0F172A",
+      "text_secondary": "#64748B",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "danger": "#EF4444",
+      "info": "#3B82F6"
+    },
+    "gradients": {
+      "primary_gradient": "None. Use solid colors for authority.",
+      "subtle_glow": "radial-gradient(circle at center, rgba(37,99,235,0.1) 0%, rgba(255,255,255,0) 70%)"
+    },
+    "usage": [
+      "Background: #F8F9FA (Light Gray/White Smoke)",
+      "Cards: #FFFFFF (Pure White) with 1px border #E2E8F0",
+      "Primary Actions: #0F172A (Slate 900) or #2563EB (Royal Blue)",
+      "Text: High contrast #0F172A for headings, #64748B for secondary text",
+      "NEVER use gradients for text or backgrounds. Keep it flat and clean."
+    ]
+  },
+  "layout": {
+    "grid_system": {
+      "dashboard": "grid-cols-1 md:grid-cols-4 gap-4 (The Control Room Grid)",
+      "marketing": "grid-cols-1 md:grid-cols-12 gap-8 (The Tetris Grid)"
+    },
+    "spacing": {
+      "container_padding": "p-6 or p-8",
+      "element_gap": "gap-4 or gap-6",
+      "section_spacing": "py-12 or py-16"
+    },
+    "rules": [
+      "Dashboard widgets must fill their grid cells (h-full).",
+      "Use 'subgrid' behavior where possible for aligned internals.",
+      "Always start mobile-first (grid-cols-1)."
+    ]
+  },
+  "components": {
+    "cards": {
+      "style": "bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200",
+      "padding": "p-6"
+    },
+    "buttons": {
+      "primary": "bg-slate-900 text-white hover:bg-slate-800 rounded-lg px-4 py-2 font-medium transition-all active:scale-95",
+      "secondary": "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-lg px-4 py-2 font-medium transition-all active:scale-95",
+      "ghost": "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg px-4 py-2 transition-all"
+    },
+    "inputs": {
+      "style": "bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+    },
+    "tables": {
+      "style": "w-full text-sm text-left",
+      "header": "bg-slate-50 text-slate-500 uppercase tracking-wider font-medium py-3 px-4",
+      "row": "border-b border-slate-100 hover:bg-slate-50 transition-colors",
+      "cell": "py-3 px-4 text-slate-700"
+    }
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "Login Background",
+        "url": "https://images.unsplash.com/photo-1763356844645-dbfd9244fa20?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Modern minimalist office space, bright and professional."
+      },
+      {
+        "category": "Team / Avatars",
+        "url": "https://images.unsplash.com/photo-1758518731468-98e90ffd7430?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "description": "Diverse group of business professionals."
+      }
+    ],
+    "icons": "Use 'lucide-react' for all UI icons. Use 'phosphor-icons' if a specific weight/style is needed for marketing."
+  },
+  "motion": {
+    "transitions": "transition-all duration-200 ease-out",
+    "hover_effects": "hover:-translate-y-1 hover:shadow-lg (for cards)",
+    "page_transition": "initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}"
+  },
+  "accessibility": {
+    "contrast": "Ensure 4.5:1 contrast ratio for normal text.",
+    "focus_states": "Visible focus rings (ring-2 ring-blue-500) on all interactive elements.",
+    "aria": "Use aria-label for icon-only buttons."
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install necessary fonts (Outfit, Inter, JetBrains Mono) via Google Fonts in index.css.",
+    "2. THEME: Configure tailwind.config.js with the 'Swiss & High-Contrast' palette defined above.",
+    "3. LAYOUT: Build the 'DashboardLayout' component with a collapsible sidebar and top navbar.",
+    "4. COMPONENTS: Customize Shadcn components (Card, Button, Input, Table) to match the 'Swiss' aesthetic (sharper corners, high contrast borders).",
+    "5. PAGES: Implement the Dashboard Overview first, using the 'Control Room' grid.",
+    "6. CHARTS: Use Recharts for data visualization. Style them to match the palette (Emerald for growth, Red for loss).",
+    "7. LANGUAGE: Ensure all text is in BAHASA INDONESIA as requested.",
+    "8. TESTING: Add data-testid to all interactive elements."
+  ],
+  "universal_guidelines": [
+    "Do not use generic centered layouts.",
+    "Create depth through layered design elements.",
+    "Use glass-morphism effects sparingly (only for sticky headers/overlays).",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "NEVER use AI assistant Emoji characters.",
+    "Use 'sonner' for toasts."
+  ]
+}
