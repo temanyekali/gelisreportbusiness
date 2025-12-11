@@ -1104,14 +1104,16 @@ async def get_teknisi_orders(current_user: dict = Depends(get_current_user)):
     # Get orders assigned to current teknisi - ONLY orders that require technician
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
     
+    # Check permission - Owner, Manager, Kasir, Teknisi
+    if user['role_id'] not in [1, 2, 5, 7]:  # Owner, Manager, Kasir, Teknisi
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses ke menu Pekerjaan Teknisi')
+    
     # Base query: only orders that require technician
     query = {'requires_technician': True}
     
-    # If teknisi, only show assigned orders. If manager/owner, show all
+    # If teknisi, only show assigned orders. If manager/owner/kasir, show all
     if user['role_id'] == 7:  # Teknisi
         query['assigned_to'] = current_user['sub']
-    elif user['role_id'] not in [1, 2]:  # Not owner or manager
-        raise HTTPException(status_code=403, detail='Tidak memiliki akses')
     
     orders = await db.orders.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
     for order in orders:
