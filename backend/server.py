@@ -708,15 +708,16 @@ async def delete_kasir_daily_report(report_id: str, current_user: dict = Depends
 # ============= TEKNISI ROUTES =============
 @api_router.get('/teknisi/orders', response_model=List[Order])
 async def get_teknisi_orders(current_user: dict = Depends(get_current_user)):
-    # Get orders assigned to current teknisi
+    # Get orders assigned to current teknisi - ONLY orders that require technician
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    
+    # Base query: only orders that require technician
+    query = {'requires_technician': True}
     
     # If teknisi, only show assigned orders. If manager/owner, show all
     if user['role_id'] == 7:  # Teknisi
-        query = {'assigned_to': current_user['sub']}
-    elif user['role_id'] in [1, 2]:  # Owner or Manager
-        query = {}
-    else:
+        query['assigned_to'] = current_user['sub']
+    elif user['role_id'] not in [1, 2]:  # Not owner or manager
         raise HTTPException(status_code=403, detail='Tidak memiliki akses')
     
     orders = await db.orders.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
