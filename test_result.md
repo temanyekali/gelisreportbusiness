@@ -313,12 +313,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test edit reports with Manager login"
-    - "Test delete reports with Owner login"
-    - "Test teknisi dashboard with teknisi1 login"
-    - "Test teknisi update order status and progress"
-    - "Verify permission restrictions"
-  stuck_tasks: []
+    - "Delete Permission Update - Fix duplicate endpoints"
+  stuck_tasks:
+    - "Delete Permission Update"
   test_all: false
   test_priority: "high_first"
 
