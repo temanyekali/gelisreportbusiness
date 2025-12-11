@@ -633,6 +633,222 @@ async def delete_kasir_daily_report(report_id: str, current_user: dict = Depends
     
     return {'message': 'Laporan berhasil dihapus'}
 
+# ============= ACCOUNTING ROUTES =============
+@api_router.get('/accounting/accounts')
+async def get_accounts(current_user: dict = Depends(get_current_user)):
+    accounts = await db.accounts.find({}, {'_id': 0}).to_list(1000)
+    for acc in accounts:
+        if isinstance(acc.get('created_at'), str):
+            acc['created_at'] = datetime.fromisoformat(acc['created_at'])
+    return accounts
+
+@api_router.post('/accounting/accounts', response_model=Account)
+async def create_account(account_data: AccountCreate, current_user: dict = Depends(get_current_user)):
+    # Check permission - Owner or Manager or Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin')
+    
+    acc_dict = account_data.model_dump()
+    acc_dict['id'] = generate_id()
+    acc_dict['balance'] = 0
+    acc_dict['created_at'] = utc_now()
+    
+    doc = acc_dict.copy()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.accounts.insert_one(doc)
+    return Account(**acc_dict)
+
+@api_router.get('/accounting/journal-entries')
+async def get_journal_entries(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    query = {}
+    if business_id:
+        query['business_id'] = business_id
+    if start_date and end_date:
+        query['transaction_date'] = {'$gte': start_date, '$lte': end_date}
+    
+    entries = await db.journal_entries.find(query, {'_id': 0}).sort('transaction_date', -1).to_list(1000)
+    for entry in entries:
+        if isinstance(entry.get('transaction_date'), str):
+            entry['transaction_date'] = datetime.fromisoformat(entry['transaction_date'])
+        if isinstance(entry.get('created_at'), str):
+            entry['created_at'] = datetime.fromisoformat(entry['created_at'])
+    return entries
+
+@api_router.post('/accounting/journal-entries', response_model=JournalEntry)
+async def create_journal_entry(entry_data: JournalEntryCreate, current_user: dict = Depends(get_current_user)):
+    entry_dict = entry_data.model_dump()
+    entry_dict['id'] = generate_id()
+    entry_dict['entry_number'] = generate_code('JE', 12)
+    entry_dict['created_by'] = current_user['sub']
+    entry_dict['created_at'] = utc_now()
+    
+    # Calculate totals
+    total_debit = sum(item['amount'] for item in entry_dict['line_items'] if item['entry_type'] == 'debit')
+    total_credit = sum(item['amount'] for item in entry_dict['line_items'] if item['entry_type'] == 'credit')
+    
+    entry_dict['total_debit'] = total_debit
+    entry_dict['total_credit'] = total_credit
+    entry_dict['is_balanced'] = abs(total_debit - total_credit) < 0.01
+    
+    if not entry_dict['is_balanced']:
+        raise HTTPException(status_code=400, detail='Journal entry tidak balance')
+    
+    doc = entry_dict.copy()
+    doc['transaction_date'] = doc['transaction_date'].isoformat() if isinstance(doc['transaction_date'], datetime) else doc['transaction_date']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.journal_entries.insert_one(doc)
+    
+    # Update account balances
+    for item in entry_dict['line_items']:
+        if item['entry_type'] == 'debit':
+            await db.accounts.update_one(
+                {'id': item['account_id']},
+                {'$inc': {'balance': item['amount']}}
+            )
+        else:
+            await db.accounts.update_one(
+                {'id': item['account_id']},
+                {'$inc': {'balance': -item['amount']}}
+            )
+    
+    return JournalEntry(**entry_dict)
+
+# ============= LOYALTY PROGRAM ROUTES =============
+@api_router.get('/loyalty-programs')
+async def get_loyalty_programs(current_user: dict = Depends(get_current_user)):
+    programs = await db.loyalty_programs.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    for prog in programs:
+        for field in ['start_date', 'end_date', 'created_at', 'updated_at']:
+            if prog.get(field) and isinstance(prog[field], str):
+                prog[field] = datetime.fromisoformat(prog[field])
+    return programs
+
+@api_router.post('/loyalty-programs', response_model=LoyaltyProgram)
+async def create_loyalty_program(program_data: LoyaltyProgramCreate, current_user: dict = Depends(get_current_user)):
+    prog_dict = program_data.model_dump()
+    prog_dict['id'] = generate_id()
+    prog_dict['actual_participants'] = 0
+    prog_dict['actual_cost'] = 0
+    prog_dict['created_by'] = current_user['sub']
+    prog_dict['created_at'] = utc_now()
+    prog_dict['updated_at'] = utc_now()
+    
+    doc = prog_dict.copy()
+    for field in ['start_date', 'end_date', 'created_at', 'updated_at']:
+        if doc.get(field) and isinstance(doc[field], datetime):
+            doc[field] = doc[field].isoformat()
+    
+    await db.loyalty_programs.insert_one(doc)
+    return LoyaltyProgram(**prog_dict)
+
+@api_router.put('/loyalty-programs/{program_id}')
+async def update_loyalty_program(
+    program_id: str,
+    status: Optional[str] = None,
+    actual_participants: Optional[int] = None,
+    actual_cost: Optional[float] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    update_data = {'updated_at': utc_now().isoformat()}
+    if status:
+        update_data['status'] = status
+    if actual_participants is not None:
+        update_data['actual_participants'] = actual_participants
+    if actual_cost is not None:
+        update_data['actual_cost'] = actual_cost
+    
+    result = await db.loyalty_programs.update_one({'id': program_id}, {'$set': update_data})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail='Program tidak ditemukan')
+    
+    return {'message': 'Program berhasil diupdate'}
+
+@api_router.delete('/loyalty-programs/{program_id}')
+async def delete_loyalty_program(program_id: str, current_user: dict = Depends(get_current_user)):
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin')
+    
+    result = await db.loyalty_programs.delete_one({'id': program_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail='Program tidak ditemukan')
+    
+    return {'message': 'Program berhasil dihapus'}
+
+# ============= CSR PROGRAM ROUTES =============
+@api_router.get('/csr-programs')
+async def get_csr_programs(current_user: dict = Depends(get_current_user)):
+    programs = await db.csr_programs.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    for prog in programs:
+        for field in ['start_date', 'end_date', 'created_at', 'updated_at']:
+            if prog.get(field) and isinstance(prog[field], str):
+                prog[field] = datetime.fromisoformat(prog[field])
+    return programs
+
+@api_router.post('/csr-programs', response_model=CSRProgram)
+async def create_csr_program(program_data: CSRProgramCreate, current_user: dict = Depends(get_current_user)):
+    prog_dict = program_data.model_dump()
+    prog_dict['id'] = generate_id()
+    prog_dict['actual_beneficiaries'] = 0
+    prog_dict['actual_cost'] = 0
+    prog_dict['impact_report'] = None
+    prog_dict['created_by'] = current_user['sub']
+    prog_dict['created_at'] = utc_now()
+    prog_dict['updated_at'] = utc_now()
+    
+    doc = prog_dict.copy()
+    for field in ['start_date', 'end_date', 'created_at', 'updated_at']:
+        if doc.get(field) and isinstance(doc[field], datetime):
+            doc[field] = doc[field].isoformat()
+    
+    await db.csr_programs.insert_one(doc)
+    return CSRProgram(**prog_dict)
+
+@api_router.put('/csr-programs/{program_id}')
+async def update_csr_program(
+    program_id: str,
+    status: Optional[str] = None,
+    actual_beneficiaries: Optional[int] = None,
+    actual_cost: Optional[float] = None,
+    impact_report: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    update_data = {'updated_at': utc_now().isoformat()}
+    if status:
+        update_data['status'] = status
+    if actual_beneficiaries is not None:
+        update_data['actual_beneficiaries'] = actual_beneficiaries
+    if actual_cost is not None:
+        update_data['actual_cost'] = actual_cost
+    if impact_report:
+        update_data['impact_report'] = impact_report
+    
+    result = await db.csr_programs.update_one({'id': program_id}, {'$set': update_data})
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail='Program tidak ditemukan')
+    
+    return {'message': 'Program berhasil diupdate'}
+
+@api_router.delete('/csr-programs/{program_id}')
+async def delete_csr_program(program_id: str, current_user: dict = Depends(get_current_user)):
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin')
+    
+    result = await db.csr_programs.delete_one({'id': program_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail='Program tidak ditemukan')
+    
+    return {'message': 'Program berhasil dihapus'}
+
 # ============= INIT DATA =============
 @api_router.post('/init-data')
 async def init_data():
