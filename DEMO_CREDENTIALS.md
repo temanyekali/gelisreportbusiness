@@ -1,5 +1,13 @@
 # GELIS - Demo User Credentials
 
+## 🎯 Tentang GELIS
+
+**GELIS** (Gerbang Elektronik Layanan Informasi Sistem) adalah platform terpadu untuk monitoring operasional multi-segmen usaha. Sistem ini bertindak sebagai gerbang elektronik yang mengkonsolidasi aliran informasi dari berbagai unit usaha (PPOB, PLN, Travel Umroh, PDAM, Inventory) ke dalam satu dashboard terpusat dengan visualisasi real-time.
+
+📖 **Baca lebih lengkap:** `/app/ABOUT_GELIS.md`
+
+---
+
 ## 🔐 User Accounts
 
 Semua password menggunakan format: `{username}123`
