@@ -410,18 +410,28 @@ async def update_order(
 async def get_transactions(
     business_id: Optional[str] = None,
     transaction_type: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
+    # Check permission - Only Owner, Manager, Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:  # Owner, Manager, Finance
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses ke menu Akunting')
+    
     query = {}
     if business_id:
         query['business_id'] = business_id
     if transaction_type:
         query['transaction_type'] = transaction_type
+    if start_date and end_date:
+        query['created_at'] = {'$gte': start_date, '$lte': end_date}
     
     transactions = await db.transactions.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
     for txn in transactions:
-        if isinstance(txn.get('created_at'), str):
+        if txn.get('created_at') and isinstance(txn['created_at'], str):
             txn['created_at'] = datetime.fromisoformat(txn['created_at'])
+    
     return transactions
 
 @api_router.post('/transactions', response_model=Transaction)
