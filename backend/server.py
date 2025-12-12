@@ -575,6 +575,91 @@ async def delete_transaction(transaction_id: str, current_user: dict = Depends(g
     
     return {'message': 'Transaksi berhasil dihapus'}
 
+
+# ============= FINANCIAL DASHBOARD SUMMARY =============
+@api_router.get('/financial/dashboard')
+async def get_financial_dashboard(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Real-time financial dashboard - Membaca langsung dari transactions
+    Menampilkan: Total Pemasukan, Pengeluaran, Laba, dan breakdown per kategori
+    """
+    # Check permission - Only Owner, Manager, Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses ke Financial Dashboard')
+    
+    query = {}
+    if business_id:
+        query['business_id'] = business_id
+    if start_date and end_date:
+        query['created_at'] = {'$gte': start_date, '$lte': end_date}
+    
+    # Get all transactions
+    transactions = await db.transactions.find(query, {'_id': 0}).to_list(10000)
+    
+    # Calculate totals
+    total_income = sum(t['amount'] for t in transactions if t.get('transaction_type') == 'income')
+    total_expense = sum(t['amount'] for t in transactions if t.get('transaction_type') == 'expense')
+    net_profit = total_income - total_expense
+    
+    # Breakdown by category
+    income_by_category = {}
+    expense_by_category = {}
+    
+    for txn in transactions:
+        category = txn.get('category', 'Lainnya')
+        amount = txn.get('amount', 0)
+        
+        if txn.get('transaction_type') == 'income':
+            income_by_category[category] = income_by_category.get(category, 0) + amount
+        elif txn.get('transaction_type') == 'expense':
+            expense_by_category[category] = expense_by_category.get(category, 0) + amount
+    
+    # Get orders summary for comparison
+    order_query = {}
+    if business_id:
+        order_query['business_id'] = business_id
+    if start_date and end_date:
+        order_query['created_at'] = {'$gte': start_date, '$lte': end_date}
+    
+    orders = await db.orders.find(order_query, {'_id': 0}).to_list(10000)
+    total_orders = len(orders)
+    total_order_amount = sum(o.get('total_amount', 0) for o in orders)
+    paid_orders = len([o for o in orders if o.get('payment_status') == 'paid'])
+    pending_orders = len([o for o in orders if o.get('payment_status') in ['unpaid', 'partial']])
+    
+    return {
+        'period': {
+            'start_date': start_date or 'All time',
+            'end_date': end_date or 'Now'
+        },
+        'financial_summary': {
+            'total_income': round(total_income, 2),
+            'total_expense': round(total_expense, 2),
+            'net_profit': round(net_profit, 2),
+            'profit_margin': round((net_profit / total_income * 100), 2) if total_income > 0 else 0
+        },
+        'income_breakdown': income_by_category,
+        'expense_breakdown': expense_by_category,
+        'orders_summary': {
+            'total_orders': total_orders,
+            'total_order_amount': round(total_order_amount, 2),
+            'paid_orders': paid_orders,
+            'pending_orders': pending_orders,
+            'payment_collection_rate': round((paid_orders / total_orders * 100), 2) if total_orders > 0 else 0
+        },
+        'transaction_count': {
+            'total': len(transactions),
+            'income_transactions': len([t for t in transactions if t.get('transaction_type') == 'income']),
+            'expense_transactions': len([t for t in transactions if t.get('transaction_type') == 'expense'])
+        }
+    }
+
 # ============= ACCOUNTING SUMMARY ROUTES =============
 @api_router.get('/accounting/summary')
 async def get_accounting_summary(
