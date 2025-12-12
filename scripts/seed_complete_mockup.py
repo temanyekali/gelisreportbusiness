@@ -605,34 +605,31 @@ async def seed_orders(businesses, users):
     return orders
 
 async def seed_transactions(businesses, orders, users):
-    """Create accounting transactions"""
+    """Create accounting transactions - TERHUBUNG dengan orders secara real-time"""
     print("\n💰 Creating transactions...")
     
     transactions = []
     
-    # Revenue transactions from completed orders
+    # AUTO-CREATE income transactions from ALL PAID ORDERS (realistic sync)
     for order in orders:
-        if order['status'] == 'completed':
+        if order.get('paid_amount', 0) > 0:  # Any payment creates transaction
             business = next(b for b in businesses if b['id'] == order['business_id'])
             
-            # Revenue transaction
+            # Income transaction (follows same logic as server.py)
             trans = {
                 'id': generate_id(),
-                'transaction_number': generate_code('TRX'),
+                'transaction_code': generate_code('TXN'),
                 'business_id': business['id'],
-                'transaction_type': 'revenue',
-                'category': business['category'],
+                'transaction_type': 'income',  # Changed to match server.py
+                'category': 'Order Payment',  # Consistent with auto-create in server.py
                 'amount': order['paid_amount'],
-                'description': f"Revenue dari {order['service_type']} - Order #{order['order_number']}",
-                'transaction_date': order['created_at'],
-                'payment_method': order['payment_method'],
-                'bank_name': random.choice(BANK_NAMES) if order['payment_method'] in ['Transfer', 'Debit Card'] else None,
+                'description': f"Pembayaran order {order['order_number']} - {order['customer_name']}",
+                'payment_method': order.get('payment_method', 'cash'),
                 'reference_number': order['order_number'],
-                'related_order_id': order['id'],
+                'order_id': order['id'],  # Links back to order
                 'is_mock': True,
                 'created_by': order['created_by'],
-                'created_at': order['created_at'],
-                'updated_at': order['updated_at']
+                'created_at': order['created_at']
             }
             transactions.append(trans)
     
