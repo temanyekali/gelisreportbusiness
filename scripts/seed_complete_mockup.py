@@ -863,20 +863,29 @@ async def seed_loyalty_programs(businesses, users):
     for prog_data in LOYALTY_PROGRAMS:
         business = random.choice(businesses)
         
+        # Determine budget based on program tier
+        budget_map = {
+            'Member Gold': 50000000,
+            'Member Platinum': 100000000,
+            'Member Diamond': 150000000
+        }
+        budget = budget_map.get(prog_data['name'], 75000000)
+        target = random.randint(100, 500)
+        actual = random.randint(int(target * 0.6), target) if random.random() > 0.3 else 0
+        
         program = {
             'id': generate_id(),
-            'program_code': generate_code('LYL'),
             'business_id': business['id'],
             'name': prog_data['name'],
             'description': prog_data['description'],
-            'points_per_transaction': prog_data['points_per_transaction'],
-            'min_transaction': prog_data['min_transaction'],
-            'cashback_percentage': prog_data['cashback_percentage'],
-            'benefits': prog_data['benefits'],
-            'is_active': True,
-            'start_date': (datetime.now() - timedelta(days=180)).date().isoformat(),
-            'end_date': (datetime.now() + timedelta(days=180)).date().isoformat(),
-            'total_members': random.randint(50, 200),
+            'start_date': (datetime.now() - timedelta(days=180)).isoformat(),
+            'end_date': (datetime.now() + timedelta(days=180)).isoformat(),
+            'target_participants': target,
+            'budget': budget,
+            'reward_type': 'Cashback & Points',
+            'status': random.choice(['active', 'active', 'planning']),  # 66% active
+            'actual_participants': actual,
+            'actual_cost': int(actual * (budget / target)) if actual > 0 else 0,
             'is_mock': True,
             'created_by': manager_user['id'],
             'created_at': random_date(180, 150).isoformat(),
