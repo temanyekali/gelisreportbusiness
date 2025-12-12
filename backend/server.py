@@ -1503,7 +1503,7 @@ async def get_verification_summary(
         },
         'recommendations': [
             'Lakukan rekonsiliasi harian untuk setiap tanggal' if abs((kasir_total_reported + loket_total_reported) - actual_total) > 10000 else 'Data akurat, tidak ada investigasi diperlukan',
-            'Periksa laporan kasir dengan discrepancy > 1%' if abs(kasir_total_reported - actual_total) / actual_total > 0.01 else 'Laporan kasir sesuai',
+            'Periksa laporan kasir dengan discrepancy > 1%' if actual_total > 0 and abs(kasir_total_reported - actual_total) / actual_total > 0.01 else 'Laporan kasir sesuai',
             'Verifikasi saldo bank di laporan loket' if len(loket_reports) > 0 else 'Tidak ada laporan loket'
         ]
     }
