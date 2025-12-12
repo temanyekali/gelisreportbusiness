@@ -294,11 +294,18 @@ Proprietary - GELIS System © 2024
 
 ## 📚 Dokumentasi Lengkap
 
-1. **[DEPLOY_COOLIFY_STEPBYSTEP.md](DEPLOY_COOLIFY_STEPBYSTEP.md)** - 🚀 Tutorial Step-by-Step Coolify (NEW!)
-   - Panduan praktis 11 langkah dari nol ke production
-   - Screenshot descriptions & expected outputs
-   - Timeline estimasi per step (~50 menit total)
+1. **[COOLIFY_DEPLOY_COMPLETE_GUIDE.md](COOLIFY_DEPLOY_COMPLETE_GUIDE.md)** - 🚀 Tutorial SUPER LENGKAP Coolify (NEW!)
+   - Panduan DETAIL dari menu Coolify sampai app running
+   - 7 PART lengkap: MongoDB → Backend → Frontend → Domain → SSL → Auto-deploy → Testing
+   - Screenshot descriptions, form fills, expected outputs
    - Troubleshooting 6 common issues
+   - Template Dockerfile included
+   - Timeline: ~40 menit total
+
+2. **[DEPLOY_COOLIFY_STEPBYSTEP.md](DEPLOY_COOLIFY_STEPBYSTEP.md)** - Tutorial Praktis Coolify
+   - Panduan praktis 11 langkah
+   - Timeline estimasi per step
+   - Troubleshooting guide
    - Deployment checklist
 
 2. **[INSTALASI_COOLIFY.md](INSTALASI_COOLIFY.md)** - Deploy dengan Coolify (Dokumentasi Lengkap)
