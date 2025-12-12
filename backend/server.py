@@ -1486,11 +1486,14 @@ async def get_verification_summary(
     # Get all loket reports in period
     loket_reports = await db.loket_daily_reports.find(kasir_query, {'_id': 0}).to_list(1000)
     
-    # Get all transactions in period
+    # Get all transactions in period (optimized: only needed fields for summary)
     txn_query = {
         'created_at': {'$gte': start_date, '$lt': end_date + 'T23:59:59'}
     }
-    transactions = await db.transactions.find(txn_query, {'_id': 0}).to_list(10000)
+    transactions = await db.transactions.find(
+        txn_query, 
+        {'_id': 0, 'amount': 1, 'transaction_type': 1}
+    ).limit(3000).to_list(3000)
     
     # Analyze discrepancies
     kasir_total_reported = sum(r.get('setoran_pagi', 0) + r.get('setoran_siang', 0) + r.get('setoran_sore', 0) for r in kasir_reports)
