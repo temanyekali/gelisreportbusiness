@@ -708,17 +708,17 @@ async def seed_reports(businesses, users, transactions):
             business = random.choice(businesses)
             loket_user = random.choice(loket_users)
             
-            # Get transactions for this day and business
+            # Get transactions for this day and business (using created_at field)
             day_transactions = [t for t in transactions 
                               if t['business_id'] == business['id'] 
-                              and t['transaction_date'].startswith(str(report_date))]
+                              and t['created_at'].startswith(str(report_date))]
             
-            total_revenue = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'revenue')
-            total_transactions_count = len([t for t in day_transactions if t['transaction_type'] == 'revenue'])
+            total_revenue = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income')
+            total_transactions_count = len([t for t in day_transactions if t['transaction_type'] == 'income'])
             
-            cash_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'revenue' and t['payment_method'] == 'Cash')
-            transfer_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'revenue' and t['payment_method'] == 'Transfer')
-            qris_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'revenue' and t['payment_method'] == 'QRIS')
+            cash_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income' and t['payment_method'] == 'cash')
+            transfer_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income' and t['payment_method'] == 'transfer')
+            qris_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income' and t['payment_method'] == 'qris')
             
             report = {
                 'id': generate_id(),
