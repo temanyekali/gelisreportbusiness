@@ -305,7 +305,14 @@ Proprietary - GELIS System © 2024
 
 ## 📚 Dokumentasi Lengkap
 
-1. **[COOLIFY_DEPLOY_COMPLETE_GUIDE.md](COOLIFY_DEPLOY_COMPLETE_GUIDE.md)** - 🚀 Tutorial SUPER LENGKAP Coolify (NEW!)
+1. **[NIXPACKS_DEPLOYMENT_GUIDE.md](NIXPACKS_DEPLOYMENT_GUIDE.md)** - ⚡ Deploy dengan Nixpacks (NEW!)
+   - Railway deployment (EASIEST - 20 menit)
+   - Coolify dengan Nixpacks (25 menit)
+   - Zero configuration deployment
+   - Auto-detect framework
+   - 3 metode deployment included
+
+2. **[COOLIFY_DEPLOY_COMPLETE_GUIDE.md](COOLIFY_DEPLOY_COMPLETE_GUIDE.md)** - 🚀 Tutorial SUPER LENGKAP Coolify
    - Panduan DETAIL dari menu Coolify sampai app running
    - 7 PART lengkap: MongoDB → Backend → Frontend → Domain → SSL → Auto-deploy → Testing
    - Screenshot descriptions, form fills, expected outputs
