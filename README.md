@@ -349,18 +349,24 @@ Proprietary - GELIS System © 2024
    - Testing guide di mobile
    - Best practices
 
-5. **[QUICK_START.md](QUICK_START.md)** - Quick reference instalasi
-   - Pilihan metode instalasi
-   - TL;DR installation
-   - Command cheat sheet
-   - Quick fixes
-
-6. **[MOCK_DATA_GUIDE.md](MOCK_DATA_GUIDE.md)** - Panduan Mock Data (NEW!)
+5. **[MOCK_DATA_GUIDE.md](MOCK_DATA_GUIDE.md)** - Panduan Mock Data
    - 959 data mockup realistic untuk simulasi
    - 14 users, 5 businesses, 345 orders, 404 transactions
    - Clear mock data dengan 1 klik (Owner only)
    - Use cases: Demo, Training, Testing
    - Re-seed script included
+
+6. **[DEPLOYMENT_READY.md](DEPLOYMENT_READY.md)** - Deployment Readiness Report
+   - Health check results
+   - Security fixes applied
+   - Environment variables guide
+   - Platform comparison
+
+7. **[QUICK_START.md](QUICK_START.md)** - Quick reference instalasi
+   - Pilihan metode instalasi
+   - TL;DR installation
+   - Command cheat sheet
+   - Quick fixes
 
 ---
 
