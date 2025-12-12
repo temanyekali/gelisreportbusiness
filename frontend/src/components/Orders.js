@@ -335,26 +335,36 @@ export default function Orders() {
         </Dialog>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="p-4">
-          <div className="text-sm text-slate-500">Total Pesanan</div>
-          <div className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-slate-500">Pending</div>
-          <div className="text-3xl font-bold text-yellow-600 mt-1">{stats.pending}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-slate-500">Processing</div>
-          <div className="text-3xl font-bold text-blue-600 mt-1">{stats.processing}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-slate-500">Completed</div>
-          <div className="text-3xl font-bold text-green-600 mt-1">{stats.completed}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-slate-500">Total Revenue</div>
+      {/* Stats - Scrollable on mobile */}
+      <div className="overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
+        <div className="flex md:grid md:grid-cols-5 gap-3 md:gap-4 pb-2 md:pb-0" style={{ minWidth: 'max-content' }}>
+          <div className="min-w-[150px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="text-xs md:text-sm text-slate-500">Total Pesanan</div>
+              <div className="text-2xl md:text-3xl font-bold text-slate-900 mt-1">{stats.total}</div>
+            </Card>
+          </div>
+          <div className="min-w-[150px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="text-xs md:text-sm text-slate-500">Pending</div>
+              <div className="text-2xl md:text-3xl font-bold text-yellow-600 mt-1">{stats.pending}</div>
+            </Card>
+          </div>
+          <div className="min-w-[150px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="text-xs md:text-sm text-slate-500">Processing</div>
+              <div className="text-2xl md:text-3xl font-bold text-blue-600 mt-1">{stats.processing}</div>
+            </Card>
+          </div>
+          <div className="min-w-[150px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="text-xs md:text-sm text-slate-500">Completed</div>
+              <div className="text-2xl md:text-3xl font-bold text-green-600 mt-1">{stats.completed}</div>
+            </Card>
+          </div>
+          <div className="min-w-[150px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="text-xs md:text-sm text-slate-500">Total Revenue</div>
           <div className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(stats.totalRevenue)}</div>
         </Card>
       </div>
