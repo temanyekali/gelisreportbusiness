@@ -106,12 +106,24 @@ Sistem monitoring operasional komprehensif untuk mengelola berbagai jenis bisnis
 
 ## 📦 Installation & Setup
 
-### Default Credentials
-```
-Username: owner
-Password: owner123
-Role: Owner (full access)
-```
+### 🚀 Quick Start
+Lihat dokumentasi lengkap di:
+- **[INSTALASI_SERVER.md](INSTALASI_SERVER.md)** - Tutorial lengkap instalasi ke server
+- **[QUICK_START.md](QUICK_START.md)** - Quick reference instalasi
+- **[MOBILE_RESPONSIVE_GUIDE.md](MOBILE_RESPONSIVE_GUIDE.md)** - Dokumentasi mobile features
+
+### Default Credentials (Setelah Seed Data)
+| Role | Username | Password |
+|------|----------|----------|
+| Owner | owner | owner123 |
+| Manager | manager | manager123 |
+| Finance | finance | finance123 |
+| Loket | loket1 | loket123 |
+| Kasir | kasir1 | kasir123 |
+| Admin | admin1 | admin123 |
+| Teknisi | teknisi1 | teknisi123 |
+
+**⚠️ PENTING: Ganti password setelah login pertama!**
 
 ### API Endpoints
 Backend API: `/api/*`
