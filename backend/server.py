@@ -1634,6 +1634,210 @@ async def init_data():
     
     return {'message': 'Data awal berhasil dibuat', 'owner_credentials': {'username': 'owner', 'password': 'owner123'}}
 
+
+# ============= SETTINGS ENDPOINTS =============
+@api_router.get('/settings/all')
+async def get_all_settings(current_user: User = Depends(get_current_user)):
+    """Get all settings"""
+    settings_docs = await db.settings.find({}, {'_id': 0}).to_list(length=None)
+    
+    # Convert to dict
+    settings_dict = {}
+    for doc in settings_docs:
+        settings_dict[doc['setting_key']] = doc.get('setting_value')
+    
+    # Add default values if not exist
+    defaults = {
+        'company_name': 'PT. GELIS Indonesia',
+        'company_address': 'Jl. Contoh No. 123, Jakarta Selatan',
+        'company_phone': '021-12345678',
+        'company_email': 'info@gelis.com',
+        'company_website': 'https://gelis.com',
+        'timezone': 'Asia/Jakarta',
+        'language': 'id',
+        'currency': 'IDR',
+        'date_format': 'DD/MM/YYYY',
+        'time_format': '24h',
+        'email_notifications': True,
+        'whatsapp_notifications': False,
+        'push_notifications': True,
+        'is_mock_data': True,
+        'data_retention_days': 365,
+        'auto_backup': False,
+        'backup_frequency': 'daily',
+        'session_timeout': 43200,
+        'password_expiry_days': 90,
+        'max_login_attempts': 5,
+        'two_factor_auth': False,
+    }
+    
+    for key, default_val in defaults.items():
+        if key not in settings_dict:
+            settings_dict[key] = default_val
+    
+    return settings_dict
+
+@api_router.put('/settings/bulk')
+async def update_bulk_settings(
+    data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update multiple settings at once"""
+    if current_user.role_id not in [1, 2]:  # Owner or Manager only
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Hanya Owner atau Manager yang dapat mengubah pengaturan'
+        )
+    
+    settings = data.get('settings', {})
+    section = data.get('section', 'all')
+    
+    # Update each setting
+    for key, value in settings.items():
+        await db.settings.update_one(
+            {'setting_key': key},
+            {
+                '$set': {
+                    'setting_value': value,
+                    'updated_by': current_user.id,
+                    'updated_at': utc_now().isoformat()
+                }
+            },
+            upsert=True
+        )
+    
+    # Log activity
+    await log_activity(
+        user_id=current_user.id,
+        action='settings.update',
+        description=f'Updated {section} settings',
+        metadata={'section': section}
+    )
+    
+    return {'message': 'Pengaturan berhasil disimpan'}
+
+@api_router.post('/settings/test-email')
+async def test_email(
+    data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Test email configuration"""
+    # This is a mock endpoint - in production, integrate with actual email service
+    return {'message': 'Email test berhasil dikirim ke ' + data.get('to')}
+
+# ============= DATA MANAGEMENT ENDPOINTS =============
+@api_router.post('/data/clear-mock')
+async def clear_mock_data(current_user: User = Depends(get_current_user)):
+    """Clear all mock data and keep only owner/admin users"""
+    if current_user.role_id != 1:  # Owner only
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Hanya Owner yang dapat menghapus data mockup'
+        )
+    
+    # Keep owner and admin users
+    owner_admin_ids = []
+    async for user in db.users.find({'role_id': {'$in': [1, 2]}}, {'_id': 0, 'id': 1}):
+        owner_admin_ids.append(user['id'])
+    
+    # Delete all mock users except owner/admin
+    deleted_users = await db.users.delete_many({'id': {'$nin': owner_admin_ids}})
+    
+    # Delete all orders
+    deleted_orders = await db.orders.delete_many({})
+    
+    # Delete all transactions
+    deleted_transactions = await db.accounting.delete_many({})
+    
+    # Delete all reports
+    deleted_loket_reports = await db.loket_reports.delete_many({})
+    deleted_kasir_reports = await db.kasir_reports.delete_many({})
+    
+    # Delete all loyalty programs
+    deleted_loyalty = await db.loyalty_programs.delete_many({})
+    
+    # Delete all CSR programs
+    deleted_csr = await db.csr_programs.delete_many({})
+    
+    # Delete all activity logs (optional - keep for audit trail)
+    # deleted_logs = await db.activity_logs.delete_many({})
+    
+    # Update is_mock_data setting
+    await db.settings.update_one(
+        {'setting_key': 'is_mock_data'},
+        {'$set': {'setting_value': False, 'updated_at': utc_now().isoformat()}},
+        upsert=True
+    )
+    
+    # Log activity
+    await log_activity(
+        user_id=current_user.id,
+        action='data.clear_mock',
+        description='Cleared all mock data from system',
+        metadata={
+            'deleted_users': deleted_users.deleted_count,
+            'deleted_orders': deleted_orders.deleted_count,
+            'deleted_transactions': deleted_transactions.deleted_count,
+            'deleted_reports': deleted_loket_reports.deleted_count + deleted_kasir_reports.deleted_count
+        }
+    )
+    
+    return {
+        'message': 'Data mockup berhasil dihapus',
+        'summary': {
+            'deleted_users': deleted_users.deleted_count,
+            'deleted_orders': deleted_orders.deleted_count,
+            'deleted_transactions': deleted_transactions.deleted_count,
+            'deleted_reports': deleted_loket_reports.deleted_count + deleted_kasir_reports.deleted_count,
+            'deleted_loyalty_programs': deleted_loyalty.deleted_count,
+            'deleted_csr_programs': deleted_csr.deleted_count
+        }
+    }
+
+@api_router.post('/data/backup')
+async def backup_database(current_user: User = Depends(get_current_user)):
+    """Create database backup"""
+    if current_user.role_id not in [1, 2]:  # Owner or Manager only
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Hanya Owner atau Manager yang dapat backup database'
+        )
+    
+    # Export all collections
+    backup_data = {
+        'backup_date': utc_now().isoformat(),
+        'backup_by': current_user.full_name,
+        'collections': {}
+    }
+    
+    # Export users (without passwords)
+    users = []
+    async for user in db.users.find({}, {'_id': 0, 'password': 0}):
+        users.append(user)
+    backup_data['collections']['users'] = users
+    
+    # Export businesses
+    businesses = await db.businesses.find({}, {'_id': 0}).to_list(length=None)
+    backup_data['collections']['businesses'] = businesses
+    
+    # Export orders
+    orders = await db.orders.find({}, {'_id': 0}).to_list(length=None)
+    backup_data['collections']['orders'] = orders
+    
+    # Export transactions
+    transactions = await db.accounting.find({}, {'_id': 0}).to_list(length=None)
+    backup_data['collections']['transactions'] = transactions
+    
+    # Log activity
+    await log_activity(
+        user_id=current_user.id,
+        action='data.backup',
+        description='Created database backup',
+        metadata={'collections_count': len(backup_data['collections'])}
+    )
+    
+    return backup_data
+
 # Include router
 app.include_router(api_router)
 
