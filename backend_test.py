@@ -851,7 +851,7 @@ class GelisAPITester:
     
     def run_all_tests(self):
         """Run all tests in sequence"""
-        print("🚀 Starting GELIS Backend API Testing Suite - Phase 1-2")
+        print("🚀 Starting GELIS Backend API Testing Suite - RECONCILIATION & VERIFICATION")
         print(f"Backend URL: {self.base_url}")
         print("=" * 60)
         
@@ -865,6 +865,12 @@ class GelisAPITester:
         self.test_teknisi_update_status()
         self.test_teknisi_update_progress()
         self.test_auto_generate_reports()
+        
+        # NEW RECONCILIATION & VERIFICATION TESTS
+        self.test_verification_summary_endpoint()
+        self.test_kasir_reconciliation_endpoint()
+        self.test_loket_reconciliation_endpoint()
+        self.test_reconciliation_edge_cases()
         
         # Print summary
         self.print_summary()
