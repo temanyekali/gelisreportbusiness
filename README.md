@@ -203,6 +203,12 @@ Aplikasi menggunakan **Swiss & High-Contrast** design system:
 10. **Program Loyalitas** - Loyalty program tracking
 11. **Program CSR** - CSR initiatives management
 12. **Log Aktivitas** - Activity logs & audit trail
+13. **⭐ Settings (NEW!)** - Complete system configuration
+    - Company Profile Settings
+    - System & Regional Settings (Timezone, Currency, Language)
+    - Notification Settings (Email, WhatsApp, Push)
+    - Data Management (Backup, Restore, Clear Mock Data)
+    - Security Settings (Session timeout, 2FA, Password policy)
 
 ### 📱 Mobile Responsive Features
 - ✅ Auto-hide sidebar di mobile (< 768px)
