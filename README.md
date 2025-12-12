@@ -274,6 +274,30 @@ Proprietary - GELIS System © 2024
 
 ---
 
-**Version**: 1.0.0 MVP  
-**Last Updated**: December 2024  
-**Status**: Core Features Complete, UI Expansion in Progress
+## 📚 Dokumentasi Lengkap
+
+1. **[INSTALASI_SERVER.md](INSTALASI_SERVER.md)** - Panduan instalasi lengkap ke VPS/Dedicated Server
+   - Setup Ubuntu Server
+   - Install Node.js, Python, MongoDB, Nginx
+   - Konfigurasi SSL dengan Let's Encrypt
+   - PM2 process management
+   - Auto backup MongoDB
+   - Troubleshooting guide
+
+2. **[MOBILE_RESPONSIVE_GUIDE.md](MOBILE_RESPONSIVE_GUIDE.md)** - Dokumentasi fitur mobile responsive
+   - Responsive breakpoints
+   - Touch-friendly patterns
+   - Performance tips
+   - Testing guide
+   - Best practices
+
+3. **[QUICK_START.md](QUICK_START.md)** - Quick reference untuk instalasi dan troubleshooting
+   - TL;DR installation
+   - Command cheat sheet
+   - Quick fixes
+
+---
+
+**Version**: 1.0.0 Production Ready  
+**Last Updated**: January 2025  
+**Status**: ✅ Core Features Complete, ✅ Mobile Responsive, ✅ Production Ready
