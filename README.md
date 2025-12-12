@@ -294,7 +294,14 @@ Proprietary - GELIS System © 2024
 
 ## 📚 Dokumentasi Lengkap
 
-1. **[INSTALASI_COOLIFY.md](INSTALASI_COOLIFY.md)** - 🚀 Deploy dengan Coolify (RECOMMENDED)
+1. **[DEPLOY_COOLIFY_STEPBYSTEP.md](DEPLOY_COOLIFY_STEPBYSTEP.md)** - 🚀 Tutorial Step-by-Step Coolify (NEW!)
+   - Panduan praktis 11 langkah dari nol ke production
+   - Screenshot descriptions & expected outputs
+   - Timeline estimasi per step (~50 menit total)
+   - Troubleshooting 6 common issues
+   - Deployment checklist
+
+2. **[INSTALASI_COOLIFY.md](INSTALASI_COOLIFY.md)** - Deploy dengan Coolify (Dokumentasi Lengkap)
    - Setup Coolify di server
    - Deploy dari GitHub dengan 1 klik
    - Auto-deploy & zero-downtime updates
@@ -302,7 +309,7 @@ Proprietary - GELIS System © 2024
    - Rollback & scaling
    - Troubleshooting Coolify
 
-2. **[INSTALASI_SERVER.md](INSTALASI_SERVER.md)** - Panduan instalasi manual lengkap
+3. **[INSTALASI_SERVER.md](INSTALASI_SERVER.md)** - Panduan instalasi manual lengkap
    - Setup Ubuntu Server dari nol
    - Install Node.js, Python, MongoDB, Nginx
    - Konfigurasi SSL dengan Let's Encrypt
@@ -310,14 +317,14 @@ Proprietary - GELIS System © 2024
    - Auto backup MongoDB
    - Troubleshooting guide lengkap
 
-3. **[MOBILE_RESPONSIVE_GUIDE.md](MOBILE_RESPONSIVE_GUIDE.md)** - Dokumentasi fitur mobile responsive
+4. **[MOBILE_RESPONSIVE_GUIDE.md](MOBILE_RESPONSIVE_GUIDE.md)** - Dokumentasi fitur mobile responsive
    - Responsive breakpoints
    - Touch-friendly patterns
    - Performance tips
    - Testing guide di mobile
    - Best practices
 
-4. **[QUICK_START.md](QUICK_START.md)** - Quick reference instalasi
+5. **[QUICK_START.md](QUICK_START.md)** - Quick reference instalasi
    - Pilihan metode instalasi
    - TL;DR installation
    - Command cheat sheet
