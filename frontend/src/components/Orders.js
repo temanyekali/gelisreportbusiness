@@ -365,12 +365,14 @@ export default function Orders() {
           <div className="min-w-[150px] md:min-w-0">
             <Card className="p-3 md:p-4">
               <div className="text-xs md:text-sm text-slate-500">Total Revenue</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(stats.totalRevenue)}</div>
-        </Card>
+              <div className="text-xl md:text-2xl font-bold text-slate-900 mt-1 break-words">{formatCurrency(stats.totalRevenue)}</div>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
+      <Card className="p-4 md:p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
