@@ -190,21 +190,21 @@ export default function Orders() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Manajemen Pesanan</h1>
-          <p className="text-slate-600">Kelola pesanan dari semua bisnis</p>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-1 md:mb-2">Manajemen Pesanan</h1>
+          <p className="text-sm md:text-base text-slate-600">Kelola pesanan dari semua bisnis</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button data-testid="add-order-button">
+            <Button data-testid="add-order-button" className="min-h-[44px] w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Buat Pesanan
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto mx-3 sm:mx-auto">
             <DialogHeader>
               <DialogTitle>Buat Pesanan Baru</DialogTitle>
             </DialogHeader>
