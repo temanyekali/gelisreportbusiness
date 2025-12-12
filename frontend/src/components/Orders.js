@@ -208,11 +208,11 @@ export default function Orders() {
             <DialogHeader>
               <DialogTitle>Buat Pesanan Baru</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleCreateOrder} className="space-y-4">
+            <form onSubmit={handleCreateOrder} className="space-y-3 md:space-y-4">
               <div>
-                <Label>Bisnis *</Label>
+                <Label className="text-sm md:text-base">Bisnis *</Label>
                 <Select value={formData.business_id} onValueChange={(value) => setFormData({ ...formData, business_id: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="min-h-[44px]">
                     <SelectValue placeholder="Pilih bisnis" />
                   </SelectTrigger>
                   <SelectContent>
@@ -222,59 +222,65 @@ export default function Orders() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <Label>Nama Customer *</Label>
+                  <Label className="text-sm md:text-base">Nama Customer *</Label>
                   <Input
                     value={formData.customer_name}
                     onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
                     required
                     placeholder="Nama lengkap"
+                    className="min-h-[44px]"
                   />
                 </div>
                 <div>
-                  <Label>No. Telepon</Label>
+                  <Label className="text-sm md:text-base">No. Telepon</Label>
                   <Input
                     value={formData.customer_phone}
                     onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
                     placeholder="081234567890"
+                    className="min-h-[44px]"
                   />
                 </div>
               </div>
               <div>
-                <Label>Email</Label>
+                <Label className="text-sm md:text-base">Email</Label>
                 <Input
                   type="email"
                   value={formData.customer_email}
                   onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
                   placeholder="customer@example.com"
+                  className="min-h-[44px]"
                 />
               </div>
               <div>
-                <Label>Jenis Layanan *</Label>
+                <Label className="text-sm md:text-base">Jenis Layanan *</Label>
                 <Input
                   value={formData.service_type}
                   onChange={(e) => setFormData({ ...formData, service_type: e.target.value })}
                   required
                   placeholder="Contoh: Instalasi PLN 2200VA"
+                  className="min-h-[44px]"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <Label>Total Amount *</Label>
+                  <Label className="text-sm md:text-base">Total Amount *</Label>
                   <Input
                     type="number"
                     value={formData.total_amount}
                     onChange={(e) => setFormData({ ...formData, total_amount: parseFloat(e.target.value) || 0 })}
                     required
+                    className="min-h-[44px]"
                   />
                 </div>
                 <div>
-                  <Label>Dibayar (DP)</Label>
+                  <Label className="text-sm md:text-base">Dibayar (DP)</Label>
                   <Input
                     type="number"
                     value={formData.paid_amount}
                     onChange={(e) => setFormData({ ...formData, paid_amount: parseFloat(e.target.value) || 0 })}
+                    className="min-h-[44px]"
                   />
                 </div>
               </div>
