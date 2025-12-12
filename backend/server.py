@@ -327,7 +327,15 @@ async def create_order(order_data: OrderCreate, current_user: dict = Depends(get
     order_dict['id'] = generate_id()
     order_dict['order_number'] = generate_code('ORD', 12)
     order_dict['status'] = OrderStatus.PENDING
-    order_dict['payment_status'] = PaymentStatus.UNPAID
+    
+    # Auto-set payment status based on paid_amount
+    if order_dict.get('paid_amount', 0) >= order_dict.get('total_amount', 0):
+        order_dict['payment_status'] = PaymentStatus.PAID
+    elif order_dict.get('paid_amount', 0) > 0:
+        order_dict['payment_status'] = PaymentStatus.PARTIAL
+    else:
+        order_dict['payment_status'] = PaymentStatus.UNPAID
+    
     order_dict['created_by'] = current_user['sub']
     order_dict['created_at'] = utc_now()
     order_dict['updated_at'] = utc_now()
@@ -338,6 +346,34 @@ async def create_order(order_data: OrderCreate, current_user: dict = Depends(get
     doc['updated_at'] = doc['updated_at'].isoformat()
     
     await db.orders.insert_one(doc)
+    
+    # AUTO-CREATE TRANSACTION if payment received on creation
+    if order_dict.get('paid_amount', 0) > 0:
+        transaction = {
+            'id': generate_id(),
+            'transaction_code': generate_code('TXN', 12),
+            'business_id': order_dict['business_id'],
+            'transaction_type': 'income',
+            'category': 'Order Payment',
+            'description': f"Pembayaran order {order_dict['order_number']} - {order_dict['customer_name']}",
+            'amount': order_dict['paid_amount'],
+            'payment_method': order_dict.get('payment_method', 'cash'),
+            'reference_number': order_dict['order_number'],
+            'order_id': order_dict['id'],
+            'created_by': current_user['sub'],
+            'created_at': utc_now().isoformat()
+        }
+        await db.transactions.insert_one(transaction)
+        
+        # Log activity
+        await log_activity(
+            user_id=current_user['sub'],
+            action='order_created_with_payment',
+            description=f"Order {order_dict['order_number']} dibuat dengan pembayaran {order_dict['paid_amount']} - Auto transaction created",
+            related_type='order',
+            related_id=order_dict['id'],
+            metadata={'order_number': order_dict['order_number'], 'amount': order_dict['paid_amount']}
+        )
     
     # Create notification for manager
     notif = {
