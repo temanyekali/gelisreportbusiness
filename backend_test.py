@@ -515,6 +515,339 @@ class GelisAPITester:
                 self.log_result("Auto-Generate Kasir Report", False, f"Failed: {response.status_code}", response.text)
         except Exception as e:
             self.log_result("Auto-Generate Kasir Report", False, f"Error: {str(e)}")
+
+    def test_verification_summary_endpoint(self):
+        """Test GET /api/reports/verification/summary"""
+        print("\n=== TESTING VERIFICATION SUMMARY ENDPOINT ===")
+        
+        # Test with Owner (should work)
+        headers = self.get_headers('owner')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/verification/summary",
+                params={
+                    "start_date": "2024-12-01",
+                    "end_date": "2024-12-15"
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                # Verify required fields
+                required_fields = ['period', 'summary', 'verification_status', 'recommendations']
+                missing_fields = [f for f in required_fields if f not in data]
+                
+                if not missing_fields:
+                    # Check summary fields
+                    summary = data.get('summary', {})
+                    summary_fields = ['total_kasir_reports', 'total_loket_reports', 'overall_difference', 'accuracy_rate']
+                    missing_summary = [f for f in summary_fields if f not in summary]
+                    
+                    if not missing_summary:
+                        self.log_result("Verification Summary - Owner", True, 
+                                      f"Retrieved summary: {summary['total_kasir_reports']} kasir + {summary['total_loket_reports']} loket reports, accuracy: {data['verification_status'].get('accuracy_rate', 0)}%")
+                        self.test_data['verification_summary'] = data
+                    else:
+                        self.log_result("Verification Summary - Owner", False, f"Missing summary fields: {missing_summary}")
+                else:
+                    self.log_result("Verification Summary - Owner", False, f"Missing required fields: {missing_fields}")
+            else:
+                self.log_result("Verification Summary - Owner", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Verification Summary - Owner", False, f"Error: {str(e)}")
+        
+        # Test with Finance (should work)
+        if 'finance' in self.users:
+            headers = self.get_headers('finance')
+            try:
+                response = requests.get(
+                    f"{self.base_url}/reports/verification/summary",
+                    headers=headers,
+                    timeout=30
+                )
+                if response.status_code == 200:
+                    self.log_result("Verification Summary - Finance", True, "Finance user can access verification summary")
+                else:
+                    self.log_result("Verification Summary - Finance", False, f"Failed: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Verification Summary - Finance", False, f"Error: {str(e)}")
+        
+        # Test with Loket (should fail with 403)
+        headers = self.get_headers('loket1')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/verification/summary",
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 403:
+                self.log_result("Verification Summary - Loket (403)", True, "Loket correctly denied access (403)")
+            else:
+                self.log_result("Verification Summary - Loket (403)", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Verification Summary - Loket (403)", False, f"Error: {str(e)}")
+
+    def test_kasir_reconciliation_endpoint(self):
+        """Test GET /api/reports/reconciliation/kasir"""
+        print("\n=== TESTING KASIR RECONCILIATION ENDPOINT ===")
+        
+        # Get a valid report date from existing kasir reports
+        report_date = "2024-12-10"  # Use a recent date
+        if 'kasir_reports' in self.test_data and self.test_data['kasir_reports']:
+            # Extract date from first report
+            first_report = self.test_data['kasir_reports'][0]
+            if 'report_date' in first_report:
+                report_date = first_report['report_date'][:10]  # Get YYYY-MM-DD part
+        
+        # Test with Owner (should work)
+        headers = self.get_headers('owner')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/reconciliation/kasir",
+                params={"report_date": report_date},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                # Verify required fields
+                required_fields = ['reconciliation_date', 'total_reports', 'matched_reports', 'discrepancy_reports', 'reports']
+                missing_fields = [f for f in required_fields if f not in data]
+                
+                if not missing_fields:
+                    reports = data.get('reports', [])
+                    if reports:
+                        # Check first report structure
+                        report = reports[0]
+                        report_fields = ['status', 'reported_total', 'actual_total', 'breakdown']
+                        missing_report_fields = [f for f in report_fields if f not in report]
+                        
+                        if not missing_report_fields:
+                            # Check breakdown structure
+                            breakdown = report.get('breakdown', {})
+                            breakdown_fields = ['setoran_kasir', 'admin_fee', 'belanja_loket']
+                            missing_breakdown = [f for f in breakdown_fields if f not in breakdown]
+                            
+                            if not missing_breakdown:
+                                self.log_result("Kasir Reconciliation - Owner", True, 
+                                              f"Reconciled {data['total_reports']} reports, {data['matched_reports']} matched, {data['discrepancy_reports']} discrepancies")
+                                self.test_data['kasir_reconciliation'] = data
+                            else:
+                                self.log_result("Kasir Reconciliation - Owner", False, f"Missing breakdown fields: {missing_breakdown}")
+                        else:
+                            self.log_result("Kasir Reconciliation - Owner", False, f"Missing report fields: {missing_report_fields}")
+                    else:
+                        self.log_result("Kasir Reconciliation - Owner", True, f"No reports found for date {report_date} (valid response)")
+                else:
+                    self.log_result("Kasir Reconciliation - Owner", False, f"Missing required fields: {missing_fields}")
+            elif response.status_code == 404:
+                self.log_result("Kasir Reconciliation - Owner", True, f"No reports found for date {report_date} (404 expected)")
+            else:
+                self.log_result("Kasir Reconciliation - Owner", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Kasir Reconciliation - Owner", False, f"Error: {str(e)}")
+        
+        # Test with Finance (should work)
+        if 'finance' in self.users:
+            headers = self.get_headers('finance')
+            try:
+                response = requests.get(
+                    f"{self.base_url}/reports/reconciliation/kasir",
+                    params={"report_date": report_date},
+                    headers=headers,
+                    timeout=30
+                )
+                if response.status_code in [200, 404]:
+                    self.log_result("Kasir Reconciliation - Finance", True, "Finance user can access kasir reconciliation")
+                else:
+                    self.log_result("Kasir Reconciliation - Finance", False, f"Failed: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Kasir Reconciliation - Finance", False, f"Error: {str(e)}")
+        
+        # Test with Loket (should fail with 403)
+        headers = self.get_headers('loket1')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/reconciliation/kasir",
+                params={"report_date": report_date},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 403:
+                self.log_result("Kasir Reconciliation - Loket (403)", True, "Loket correctly denied access (403)")
+            else:
+                self.log_result("Kasir Reconciliation - Loket (403)", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Kasir Reconciliation - Loket (403)", False, f"Error: {str(e)}")
+
+    def test_loket_reconciliation_endpoint(self):
+        """Test GET /api/reports/reconciliation/loket"""
+        print("\n=== TESTING LOKET RECONCILIATION ENDPOINT ===")
+        
+        # Get a valid report date from existing loket reports
+        report_date = "2024-12-10"  # Use a recent date
+        if 'loket_reports' in self.test_data and self.test_data['loket_reports']:
+            # Extract date from first report
+            first_report = self.test_data['loket_reports'][0]
+            if 'report_date' in first_report:
+                report_date = first_report['report_date'][:10]  # Get YYYY-MM-DD part
+        
+        # Test with Owner (should work)
+        headers = self.get_headers('owner')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/reconciliation/loket",
+                params={"report_date": report_date},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                # Verify required fields
+                required_fields = ['reconciliation_date', 'total_reports', 'matched_reports', 'discrepancy_reports', 'reports']
+                missing_fields = [f for f in required_fields if f not in data]
+                
+                if not missing_fields:
+                    reports = data.get('reports', [])
+                    if reports:
+                        # Check first report structure
+                        report = reports[0]
+                        report_fields = ['status', 'reported_total_setoran', 'actual_total_setoran', 'bank_balances', 'all_banks_balanced']
+                        missing_report_fields = [f for f in report_fields if f not in report]
+                        
+                        if not missing_report_fields:
+                            # Check bank balance structure
+                            bank_balances = report.get('bank_balances', [])
+                            if bank_balances:
+                                bank = bank_balances[0]
+                                bank_fields = ['bank_name', 'reported_saldo_akhir', 'calculated_saldo_akhir', 'is_balanced']
+                                missing_bank_fields = [f for f in bank_fields if f not in bank]
+                                
+                                if not missing_bank_fields:
+                                    self.log_result("Loket Reconciliation - Owner", True, 
+                                                  f"Reconciled {data['total_reports']} reports, {data['matched_reports']} matched, {data['discrepancy_reports']} discrepancies")
+                                    self.test_data['loket_reconciliation'] = data
+                                else:
+                                    self.log_result("Loket Reconciliation - Owner", False, f"Missing bank fields: {missing_bank_fields}")
+                            else:
+                                self.log_result("Loket Reconciliation - Owner", True, f"No bank balances in reports for date {report_date}")
+                        else:
+                            self.log_result("Loket Reconciliation - Owner", False, f"Missing report fields: {missing_report_fields}")
+                    else:
+                        self.log_result("Loket Reconciliation - Owner", True, f"No reports found for date {report_date} (valid response)")
+                else:
+                    self.log_result("Loket Reconciliation - Owner", False, f"Missing required fields: {missing_fields}")
+            elif response.status_code == 404:
+                self.log_result("Loket Reconciliation - Owner", True, f"No reports found for date {report_date} (404 expected)")
+            else:
+                self.log_result("Loket Reconciliation - Owner", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Loket Reconciliation - Owner", False, f"Error: {str(e)}")
+        
+        # Test with Finance (should work)
+        if 'finance' in self.users:
+            headers = self.get_headers('finance')
+            try:
+                response = requests.get(
+                    f"{self.base_url}/reports/reconciliation/loket",
+                    params={"report_date": report_date},
+                    headers=headers,
+                    timeout=30
+                )
+                if response.status_code in [200, 404]:
+                    self.log_result("Loket Reconciliation - Finance", True, "Finance user can access loket reconciliation")
+                else:
+                    self.log_result("Loket Reconciliation - Finance", False, f"Failed: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Loket Reconciliation - Finance", False, f"Error: {str(e)}")
+        
+        # Test with Loket (should fail with 403)
+        headers = self.get_headers('loket1')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/reconciliation/loket",
+                params={"report_date": report_date},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 403:
+                self.log_result("Loket Reconciliation - Loket (403)", True, "Loket correctly denied access (403)")
+            else:
+                self.log_result("Loket Reconciliation - Loket (403)", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Loket Reconciliation - Loket (403)", False, f"Error: {str(e)}")
+
+    def test_reconciliation_edge_cases(self):
+        """Test edge cases for reconciliation endpoints"""
+        print("\n=== TESTING RECONCILIATION EDGE CASES ===")
+        
+        headers = self.get_headers('owner')
+        
+        # Test with non-existent date (should return 404)
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/reconciliation/kasir",
+                params={"report_date": "2020-01-01"},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 404:
+                self.log_result("Kasir Reconciliation - No Data (404)", True, "Correctly returns 404 for non-existent date")
+            else:
+                self.log_result("Kasir Reconciliation - No Data (404)", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Kasir Reconciliation - No Data (404)", False, f"Error: {str(e)}")
+        
+        # Test with invalid date format
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/reconciliation/kasir",
+                params={"report_date": "invalid-date"},
+                headers=headers,
+                timeout=30
+            )
+            # Should handle gracefully (either 400 or 404)
+            if response.status_code in [400, 404]:
+                self.log_result("Kasir Reconciliation - Invalid Date", True, f"Correctly handles invalid date format ({response.status_code})")
+            else:
+                self.log_result("Kasir Reconciliation - Invalid Date", False, f"Unexpected response: {response.status_code}")
+        except Exception as e:
+            self.log_result("Kasir Reconciliation - Invalid Date", False, f"Error: {str(e)}")
+        
+        # Test loket reconciliation with non-existent date
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/reconciliation/loket",
+                params={"report_date": "2020-01-01"},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 404:
+                self.log_result("Loket Reconciliation - No Data (404)", True, "Correctly returns 404 for non-existent date")
+            else:
+                self.log_result("Loket Reconciliation - No Data (404)", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Loket Reconciliation - No Data (404)", False, f"Error: {str(e)}")
+        
+        # Test verification summary with invalid date range
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/verification/summary",
+                params={
+                    "start_date": "2025-01-01",
+                    "end_date": "2020-01-01"  # End before start
+                },
+                headers=headers,
+                timeout=30
+            )
+            # Should handle gracefully
+            if response.status_code in [200, 400]:
+                self.log_result("Verification Summary - Invalid Range", True, f"Handles invalid date range ({response.status_code})")
+            else:
+                self.log_result("Verification Summary - Invalid Range", False, f"Unexpected response: {response.status_code}")
+        except Exception as e:
+            self.log_result("Verification Summary - Invalid Range", False, f"Error: {str(e)}")
     
     def run_all_tests(self):
         """Run all tests in sequence"""
