@@ -749,9 +749,9 @@ async def seed_reports(businesses, users, transactions):
             
             day_transactions = [t for t in transactions 
                               if t['business_id'] == business['id'] 
-                              and t['transaction_date'].startswith(str(report_date))]
+                              and t['created_at'].startswith(str(report_date))]
             
-            total_revenue = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'revenue')
+            total_revenue = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income')
             total_expenses = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'expense')
             
             report = {
