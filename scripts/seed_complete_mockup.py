@@ -278,6 +278,7 @@ async def seed_roles():
         {'id': 5, 'name': 'Kasir', 'description': 'Kasir', 'permissions': {}, 'created_at': utc_now().isoformat()},
         {'id': 6, 'name': 'Loket', 'description': 'Petugas Loket', 'permissions': {}, 'created_at': utc_now().isoformat()},
         {'id': 7, 'name': 'Teknisi', 'description': 'Teknisi Lapangan', 'permissions': {}, 'created_at': utc_now().isoformat()},
+        {'id': 8, 'name': 'IT Developer', 'description': 'IT Developer dengan akses penuh untuk maintenance', 'permissions': {}, 'created_at': utc_now().isoformat()},
     ]
     
     await db.roles.insert_many(roles)
