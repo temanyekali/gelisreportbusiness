@@ -1924,22 +1924,31 @@ async def create_loyalty_program(program_data: LoyaltyProgramCreate, current_use
 @api_router.put('/loyalty-programs/{program_id}')
 async def update_loyalty_program(
     program_id: str,
-    status: Optional[str] = None,
-    actual_participants: Optional[int] = None,
-    actual_cost: Optional[float] = None,
+    program_data: dict,
     current_user: dict = Depends(get_current_user)
 ):
+    # Allow updating all fields
     update_data = {'updated_at': utc_now().isoformat()}
-    if status:
-        update_data['status'] = status
-    if actual_participants is not None:
-        update_data['actual_participants'] = actual_participants
-    if actual_cost is not None:
-        update_data['actual_cost'] = actual_cost
+    
+    # Update allowed fields
+    allowed_fields = ['name', 'description', 'status', 'actual_participants', 'actual_cost', 
+                     'target_participants', 'budget', 'reward_type', 'start_date', 'end_date']
+    
+    for field in allowed_fields:
+        if field in program_data and program_data[field] is not None:
+            update_data[field] = program_data[field]
     
     result = await db.loyalty_programs.update_one({'id': program_id}, {'$set': update_data})
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail='Program tidak ditemukan')
+    
+    await log_activity(
+        user_id=current_user['sub'],
+        action='loyalty_program_updated',
+        description=f"Updated loyalty program {program_id}",
+        related_type='loyalty_program',
+        related_id=program_id
+    )
     
     return {'message': 'Program berhasil diupdate'}
 
