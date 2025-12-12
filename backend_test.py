@@ -21,6 +21,7 @@ class GelisAPITester:
         self.users = {
             'owner': {'username': 'owner', 'password': 'owner123'},
             'manager': {'username': 'manager', 'password': 'manager123'},
+            'finance': {'username': 'finance', 'password': 'finance123'},
             'loket1': {'username': 'loket1', 'password': 'loket123'},
             'kasir1': {'username': 'kasir1', 'password': 'kasir123'},
             'teknisi1': {'username': 'teknisi1', 'password': 'teknisi123'}
