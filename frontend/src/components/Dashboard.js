@@ -140,45 +140,48 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Revenue Trend */}
-        <Card className="p-6 lg:col-span-2">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Trend Pendapatan & Pengeluaran</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={revenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-              <XAxis dataKey="name" stroke="#64748B" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#64748B" style={{ fontSize: '12px' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="pendapatan"
-                stroke="#10B981"
-                strokeWidth={3}
-                dot={{ fill: '#10B981', r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="pengeluaran"
-                stroke="#EF4444"
-                strokeWidth={3}
-                dot={{ fill: '#EF4444', r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <Card className="p-4 md:p-6 lg:col-span-2">
+          <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4">Trend Pendapatan & Pengeluaran</h3>
+          <div className="w-full overflow-x-auto">
+            <ResponsiveContainer width="100%" height={250} minWidth={300}>
+              <LineChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="name" stroke="#64748B" style={{ fontSize: '10px' }} />
+                <YAxis stroke="#64748B" style={{ fontSize: '10px' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Line
+                  type="monotone"
+                  dataKey="pendapatan"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot={{ fill: '#10B981', r: 3 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="pengeluaran"
+                  stroke="#EF4444"
+                  strokeWidth={2}
+                  dot={{ fill: '#EF4444', r: 3 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
 
         {/* Business Distribution */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">Distribusi Bisnis</h3>
-          <ResponsiveContainer width="100%" height={300}>
+        <Card className="p-4 md:p-6">
+          <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4">Distribusi Bisnis</h3>
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={businessData}
@@ -186,40 +189,41 @@ export default function Dashboard() {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
+                outerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
+                style={{ fontSize: '10px' }}
               >
                 {businessData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ fontSize: '12px' }} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-          <h3 className="text-sm font-medium opacity-90 mb-2">Total Pendapatan</h3>
-          <p className="text-3xl font-bold tracking-tight">{formatCurrency(stats?.total_revenue || 0)}</p>
-          <p className="text-sm opacity-75 mt-2">Akumulasi semua bisnis</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <Card className="p-4 md:p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+          <h3 className="text-xs md:text-sm font-medium opacity-90 mb-2">Total Pendapatan</h3>
+          <p className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight break-words">{formatCurrency(stats?.total_revenue || 0)}</p>
+          <p className="text-xs md:text-sm opacity-75 mt-2">Akumulasi semua bisnis</p>
         </Card>
 
-        <Card className="p-6 bg-gradient-to-br from-red-600 to-red-700 text-white">
-          <h3 className="text-sm font-medium opacity-90 mb-2">Total Pengeluaran</h3>
-          <p className="text-3xl font-bold tracking-tight">{formatCurrency(stats?.total_expenses || 0)}</p>
-          <p className="text-sm opacity-75 mt-2">Akumulasi semua bisnis</p>
+        <Card className="p-4 md:p-6 bg-gradient-to-br from-red-600 to-red-700 text-white">
+          <h3 className="text-xs md:text-sm font-medium opacity-90 mb-2">Total Pengeluaran</h3>
+          <p className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight break-words">{formatCurrency(stats?.total_expenses || 0)}</p>
+          <p className="text-xs md:text-sm opacity-75 mt-2">Akumulasi semua bisnis</p>
         </Card>
 
-        <Card className="p-6 bg-gradient-to-br from-green-600 to-green-700 text-white">
-          <h3 className="text-sm font-medium opacity-90 mb-2">Net Profit</h3>
-          <p className="text-3xl font-bold tracking-tight">
+        <Card className="p-4 md:p-6 bg-gradient-to-br from-green-600 to-green-700 text-white">
+          <h3 className="text-xs md:text-sm font-medium opacity-90 mb-2">Net Profit</h3>
+          <p className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight break-words">
             {formatCurrency((stats?.total_revenue || 0) - (stats?.total_expenses || 0))}
           </p>
-          <p className="text-sm opacity-75 mt-2">
+          <p className="text-xs md:text-sm opacity-75 mt-2">
             Margin: {(((stats?.total_revenue - stats?.total_expenses) / stats?.total_revenue) * 100 || 0).toFixed(1)}%
           </p>
         </Card>
