@@ -234,6 +234,81 @@ backend:
         agent: "testing"
         comment: "✅ TESTED: Successfully generated kasir report data with setoran breakdown and calculations. Endpoint working correctly."
 
+  - task: "Auto-Create Transaction on Order Creation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Auto-sync accounting: Transactions automatically created when orders have paid_amount > 0"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Order with 2M payment auto-created transaction TXN20251212045911. Payment status correctly set to 'partial'. Transaction type='income', category='Order Payment', order_id linked correctly."
+
+  - task: "Auto-Create Transaction on Order Update"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Auto-sync accounting: Additional transactions created when order payments are updated"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Order update from 2M to 5M payment auto-created additional transaction TXN20251212045912 for 3M difference. Total verification: 2M + 3M = 5M order amount. Auto transaction flag returned correctly."
+
+  - task: "Financial Dashboard Real-time Sync"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "GET /api/financial/dashboard - Real-time financial data from transactions collection"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Dashboard shows real-time data. New 1.5M order increased income by exactly 1.5M. Transaction count increased by 1. All required fields present: financial_summary, orders_summary, transaction_count. Business ID and date filters working."
+
+  - task: "Financial Dashboard Permissions"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Permission control: Owner, Manager, Finance can access financial dashboard"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Owner ✅, Finance ✅ can access dashboard. Loket correctly denied with 403. Permission matrix working as expected."
+
+  - task: "Payment Status Auto-Management"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Auto-set payment status based on paid_amount vs total_amount"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Edge cases working perfectly. paid_amount=0 → 'unpaid', paid_amount=total → 'paid', 0<paid<total → 'partial'. Zero payment orders don't create transactions."
+
 frontend:
   - task: "Reports Edit Functionality"
     implemented: true
