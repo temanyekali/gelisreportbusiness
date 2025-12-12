@@ -1382,7 +1382,7 @@ async def reconcile_loket_report(
     if not loket_reports:
         raise HTTPException(status_code=404, detail=f'Tidak ada laporan loket untuk tanggal {report_date}')
     
-    # Get actual transactions for the date
+    # Get actual transactions for the date (optimized: only needed fields)
     txn_query = {
         'created_at': {'$gte': report_date, '$lt': report_date + 'T23:59:59'},
         'category': {'$in': ['Order Payment', 'Setoran Loket']}
@@ -1390,7 +1390,10 @@ async def reconcile_loket_report(
     if business_id:
         txn_query['business_id'] = business_id
     
-    transactions = await db.transactions.find(txn_query, {'_id': 0}).to_list(10000)
+    transactions = await db.transactions.find(
+        txn_query, 
+        {'_id': 0, 'amount': 1, 'category': 1}
+    ).limit(2000).to_list(2000)
     
     # Calculate actual total
     actual_total_setoran = sum(t['amount'] for t in transactions if t.get('category') == 'Setoran Loket')
