@@ -49,18 +49,20 @@ export default function Loyalty() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Parse numbers to ensure they're valid
       const submitData = {
         ...formData,
+        target_participants: parseInt(formData.target_participants) || 0,
+        budget: parseFloat(formData.budget) || 0,
+        actual_participants: parseInt(formData.actual_participants) || 0,
+        actual_cost: parseFloat(formData.actual_cost) || 0,
         start_date: new Date(formData.start_date).toISOString(),
         end_date: new Date(formData.end_date).toISOString()
       };
       
       if (editingProgram) {
-        await api.put(`/loyalty-programs/${editingProgram.id}`, {
-          status: submitData.status,
-          actual_participants: formData.actual_participants,
-          actual_cost: formData.actual_cost
-        });
+        // Send ALL data for update (not just 3 fields)
+        await api.put(`/loyalty-programs/${editingProgram.id}`, submitData);
         toast.success('Program berhasil diupdate!');
       } else {
         await api.post('/loyalty-programs', submitData);
@@ -71,6 +73,7 @@ export default function Loyalty() {
       resetForm();
       fetchData();
     } catch (error) {
+      console.error('Submit error:', error);
       toast.error(error.response?.data?.detail || 'Gagal menyimpan program');
     }
   };
