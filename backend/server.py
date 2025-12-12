@@ -599,8 +599,11 @@ async def get_financial_dashboard(
     if start_date and end_date:
         query['created_at'] = {'$gte': start_date, '$lte': end_date}
     
-    # Get all transactions
-    transactions = await db.transactions.find(query, {'_id': 0}).to_list(10000)
+    # Get all transactions (optimized: projection for only needed fields, max 5000 records)
+    transactions = await db.transactions.find(
+        query, 
+        {'_id': 0, 'amount': 1, 'transaction_type': 1, 'category': 1, 'created_at': 1}
+    ).limit(5000).to_list(5000)
     
     # Calculate totals
     total_income = sum(t['amount'] for t in transactions if t.get('transaction_type') == 'income')
