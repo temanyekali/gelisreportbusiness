@@ -623,14 +623,17 @@ async def get_financial_dashboard(
         elif txn.get('transaction_type') == 'expense':
             expense_by_category[category] = expense_by_category.get(category, 0) + amount
     
-    # Get orders summary for comparison
+    # Get orders summary for comparison (optimized: only fetch needed fields)
     order_query = {}
     if business_id:
         order_query['business_id'] = business_id
     if start_date and end_date:
         order_query['created_at'] = {'$gte': start_date, '$lte': end_date}
     
-    orders = await db.orders.find(order_query, {'_id': 0}).to_list(10000)
+    orders = await db.orders.find(
+        order_query, 
+        {'_id': 0, 'total_amount': 1, 'payment_status': 1}
+    ).limit(5000).to_list(5000)
     total_orders = len(orders)
     total_order_amount = sum(o.get('total_amount', 0) for o in orders)
     paid_orders = len([o for o in orders if o.get('payment_status') == 'paid'])
