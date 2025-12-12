@@ -2295,6 +2295,39 @@ async def backup_database(current_user: User = Depends(get_current_user)):
 # Include router
 app.include_router(api_router)
 
+# Health check endpoint for Kubernetes/deployment platforms
+@app.get('/health')
+async def health_check():
+    """Health check endpoint for load balancers and orchestration platforms"""
+    try:
+        # Test database connection
+        await db.command('ping')
+        return {
+            'status': 'healthy',
+            'service': 'gelis-backend',
+            'database': 'connected',
+            'timestamp': utc_now().isoformat()
+        }
+    except Exception as e:
+        return {
+            'status': 'unhealthy',
+            'service': 'gelis-backend',
+            'database': 'disconnected',
+            'error': str(e),
+            'timestamp': utc_now().isoformat()
+        }
+
+@app.get('/')
+async def root():
+    """Root endpoint"""
+    return {
+        'service': 'GELIS API',
+        'version': '1.0.0',
+        'status': 'running',
+        'docs': '/docs'
+    }
+
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
