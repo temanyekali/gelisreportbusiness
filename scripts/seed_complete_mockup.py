@@ -691,7 +691,7 @@ async def seed_transactions(businesses, orders, users):
     return transactions
 
 async def seed_reports(businesses, users, transactions):
-    """Create daily reports for Loket and Kasir"""
+    """Create daily reports for Loket and Kasir with detailed breakdown"""
     print("\n📊 Creating daily reports...")
     
     loket_users = [u for u in users if u['role_id'] == 6]
@@ -703,42 +703,60 @@ async def seed_reports(businesses, users, transactions):
     for days_ago in range(60, -1, -1):
         report_date = (datetime.now() - timedelta(days=days_ago)).date()
         
-        # Loket Reports (1-2 per day)
-        for _ in range(random.randint(1, 2)):
+        # Loket Reports (1-2 shifts per day) - Enhanced with bank balances
+        for shift_num in range(1, random.randint(2, 3)):
             business = random.choice(businesses)
             loket_user = random.choice(loket_users)
             
-            # Get transactions for this day and business (using created_at field)
+            # Get transactions for this day and business
             day_transactions = [t for t in transactions 
                               if t['business_id'] == business['id'] 
                               and t['created_at'].startswith(str(report_date))]
             
             total_revenue = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income')
-            total_transactions_count = len([t for t in day_transactions if t['transaction_type'] == 'income'])
             
-            cash_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income' and t['payment_method'] == 'cash')
-            transfer_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income' and t['payment_method'] == 'transfer')
-            qris_total = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income' and t['payment_method'] == 'qris')
+            # Create bank balances (BRIS, Mandiri, BCA)
+            bank_balances = []
+            banks = ['BRIS', 'Mandiri', 'BCA']
+            total_setoran_shift = 0
+            
+            for bank_name in banks:
+                saldo_awal = random.randint(50000000, 350000000)
+                saldo_inject = random.choice([0, 3000000, 5000000, 10000000])
+                data_lunas = random.randint(500000, 5000000)
+                setor_kasir = random.randint(0, 2000000)
+                transfer_amount = random.randint(0, 1000000)
+                
+                saldo_akhir = saldo_awal + saldo_inject - data_lunas - setor_kasir - transfer_amount
+                sisa_setoran = data_lunas + setor_kasir
+                uang_lebih = random.choice([0, 1000, 2000, 5000])
+                
+                total_setoran_shift += sisa_setoran
+                
+                bank_balances.append({
+                    'bank_name': bank_name,
+                    'saldo_awal': saldo_awal,
+                    'saldo_inject': saldo_inject,
+                    'data_lunas': data_lunas,
+                    'setor_kasir': setor_kasir,
+                    'transfer_amount': transfer_amount,
+                    'sisa_setoran': sisa_setoran,
+                    'saldo_akhir': saldo_akhir,
+                    'uang_lebih': uang_lebih
+                })
             
             report = {
                 'id': generate_id(),
-                'report_number': generate_code('LRPT'),
                 'business_id': business['id'],
                 'report_date': report_date.isoformat(),
-                'shift': random.choice(['Pagi', 'Siang', 'Malam']),
-                'opening_balance': random.randint(500000, 2000000),
-                'closing_balance': random.randint(1000000, 5000000),
-                'total_transactions': total_transactions_count,
-                'total_revenue': total_revenue,
-                'cash_total': cash_total,
-                'transfer_total': transfer_total,
-                'qris_total': qris_total,
-                'notes': f'Operasional normal, {total_transactions_count} transaksi hari ini',
+                'nama_petugas': loket_user['full_name'],
+                'shift': shift_num,
+                'bank_balances': bank_balances,
+                'total_setoran_shift': total_setoran_shift,
+                'notes': f'Shift {shift_num} - Operasional normal',
                 'is_mock': True,
-                'submitted_by': loket_user['id'],
-                'submitted_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=18)).isoformat(),
-                'created_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=18)).isoformat(),
-                'updated_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=18)).isoformat()
+                'created_by': loket_user['id'],
+                'created_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=8*shift_num)).isoformat()
             }
             loket_reports.append(report)
         
