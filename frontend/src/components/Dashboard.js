@@ -89,44 +89,54 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Dashboard GELIS</h1>
-        <p className="text-slate-600">Gerbang Elektronik Layanan Informasi Sistem - Monitoring Terpadu Multi-Bisnis</p>
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-1 md:mb-2">Dashboard GELIS</h1>
+        <p className="text-sm md:text-base text-slate-600">Gerbang Elektronik Layanan Informasi Sistem - Monitoring Terpadu Multi-Bisnis</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Bisnis"
-          value={stats?.total_businesses || 0}
-          subtitle="Bisnis aktif"
-          icon={Building2}
-          color="blue"
-        />
-        <StatCard
-          title="Pesanan Aktif"
-          value={stats?.active_orders || 0}
-          subtitle={`${stats?.pending_orders || 0} pending`}
-          icon={Clock}
-          color="orange"
-        />
-        <StatCard
-          title="Pendapatan Hari Ini"
-          value={formatCurrency(stats?.revenue_today || 0)}
-          subtitle={`Net: ${formatCurrency(stats?.net_today || 0)}`}
-          icon={TrendingUp}
-          color="green"
-          trend={8.5}
-        />
-        <StatCard
-          title="Pesanan Selesai"
-          value={stats?.completed_orders_today || 0}
-          subtitle="Hari ini"
-          icon={CheckCircle2}
-          color="slate"
-        />
+      {/* Stats Grid - Scrollable on mobile */}
+      <div className="overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 pb-2 md:pb-0" style={{ minWidth: 'max-content' }}>
+          <div className="min-w-[280px] md:min-w-0">
+            <StatCard
+              title="Total Bisnis"
+              value={stats?.total_businesses || 0}
+              subtitle="Bisnis aktif"
+              icon={Building2}
+              color="blue"
+            />
+          </div>
+          <div className="min-w-[280px] md:min-w-0">
+            <StatCard
+              title="Pesanan Aktif"
+              value={stats?.active_orders || 0}
+              subtitle={`${stats?.pending_orders || 0} pending`}
+              icon={Clock}
+              color="orange"
+            />
+          </div>
+          <div className="min-w-[280px] md:min-w-0">
+            <StatCard
+              title="Pendapatan Hari Ini"
+              value={formatCurrency(stats?.revenue_today || 0)}
+              subtitle={`Net: ${formatCurrency(stats?.net_today || 0)}`}
+              icon={TrendingUp}
+              color="green"
+              trend={8.5}
+            />
+          </div>
+          <div className="min-w-[280px] md:min-w-0">
+            <StatCard
+              title="Pesanan Selesai"
+              value={stats?.completed_orders_today || 0}
+              subtitle="Hari ini"
+              icon={CheckCircle2}
+              color="slate"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Charts Grid */}
