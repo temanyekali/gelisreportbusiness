@@ -108,16 +108,27 @@ Sistem monitoring operasional komprehensif untuk mengelola berbagai jenis bisnis
 
 ### 🚀 Quick Start - Pilih Metode Instalasi
 
-**1. Instalasi dengan Coolify (RECOMMENDED)** 🚀
-- ✅ Paling mudah dan cepat (~30 menit)
+**1. Railway + Nixpacks** ⚡ SUPER MUDAH! (NEW!)
+- ✅ PALING CEPAT (~20 menit)
+- ✅ Zero configuration
 - ✅ Auto-deploy dari GitHub
-- ✅ Zero-downtime updates
-- ✅ Built-in monitoring & SSL
-- 📚 **[Tutorial Coolify →](INSTALASI_COOLIFY.md)**
+- ✅ Free tier available
+- 📚 **[Tutorial Nixpacks →](NIXPACKS_DEPLOYMENT_GUIDE.md)**
 
-**2. Instalasi Manual ke Server**
-- ✅ Full control atas infrastructure
+**2. Coolify + Nixpacks** 🚀 Mudah!
+- ✅ Cepat (~25 menit)
+- ✅ Self-hosted
+- ✅ Minimal config
+- 📚 **[Tutorial Nixpacks →](NIXPACKS_DEPLOYMENT_GUIDE.md)**
+
+**3. Coolify + Docker** 🔧 Flexible
+- ✅ Full control (~40 menit)
 - ✅ Custom configuration
+- 📚 **[Tutorial Coolify Docker →](COOLIFY_DEPLOY_COMPLETE_GUIDE.md)**
+
+**4. Manual Server** 🛠️ Advanced
+- ✅ Complete control (2-3 jam)
+- ✅ PM2 + Nginx
 - 📚 **[Tutorial Manual →](INSTALASI_SERVER.md)**
 
 **Dokumentasi Lainnya:**
