@@ -46,10 +46,10 @@ async def log_activity(
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
+# MongoDB connection (Kubernetes will inject MONGO_URL and DB_NAME, fallback for local dev)
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ.get('DB_NAME', 'gelis_db')]
 
 # Create the main app
 app = FastAPI(title='GELIS - Sistem Monitoring Operasional Multi-Bisnis')
