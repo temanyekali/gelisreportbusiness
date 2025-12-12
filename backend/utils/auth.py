@@ -6,9 +6,23 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'gelis-secret-key-change-in-production-123456789')
-ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 43200  # 30 days
+# JWT Configuration
+# CRITICAL: SECRET_KEY must be set in environment variables for production!
+# Generate with: python3 -c "import secrets; print(secrets.token_urlsafe(64))"
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    # Development fallback - NEVER use in production!
+    import warnings
+    warnings.warn(
+        "SECRET_KEY not set in environment! Using insecure default. "
+        "This is ONLY acceptable in development. "
+        "Set SECRET_KEY environment variable for production!",
+        RuntimeWarning
+    )
+    SECRET_KEY = 'INSECURE-DEVELOPMENT-KEY-DO-NOT-USE-IN-PRODUCTION-' + 'x' * 32
+
+ALGORITHM = os.environ.get('ALGORITHM', 'HS256')
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get('ACCESS_TOKEN_EXPIRE_MINUTES', 43200))
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 security = HTTPBearer()
