@@ -4,7 +4,23 @@ Panduan cepat untuk memulai aplikasi GELIS di server Anda.
 
 ---
 
-## 🚀 Instalasi Cepat (TL;DR)
+## 🎯 Pilih Metode Instalasi
+
+### 1. **Instalasi dengan Coolify** (RECOMMENDED) 🚀
+   - ✅ Paling mudah dan cepat
+   - ✅ Auto-deploy dari GitHub
+   - ✅ Zero-downtime updates
+   - ✅ Built-in monitoring & SSL
+   - 📚 **[Lihat Tutorial Lengkap Coolify →](INSTALASI_COOLIFY.md)**
+
+### 2. **Instalasi Manual ke Server**
+   - ✅ Full control
+   - ✅ Custom configuration
+   - 📚 **[Lihat Tutorial Manual →](INSTALASI_SERVER.md)**
+
+---
+
+## 🚀 Instalasi Manual Cepat (TL;DR)
 
 ```bash
 # 1. Update sistem
