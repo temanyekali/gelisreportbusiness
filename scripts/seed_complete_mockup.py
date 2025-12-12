@@ -569,6 +569,14 @@ async def seed_orders(businesses, users):
             requires_technician = business['category'] in ['PLN', 'PDAM']
             assigned_technician = random.choice(teknisi_users)['id'] if requires_technician else None
             
+            # Auto-set payment status based on paid_amount (consistent with server.py logic)
+            if paid_amount >= total_amount:
+                payment_status = 'paid'
+            elif paid_amount > 0:
+                payment_status = 'partial'
+            else:
+                payment_status = 'unpaid'
+            
             order = {
                 'id': generate_id(),
                 'order_number': generate_code('ORD'),
@@ -581,6 +589,7 @@ async def seed_orders(businesses, users):
                 'total_amount': total_amount,
                 'paid_amount': paid_amount,
                 'payment_method': random.choice(PAYMENT_METHODS),
+                'payment_status': payment_status,  # Added payment_status field
                 'status': status,
                 'notes': f'Order {service_name} untuk {customer_name}',
                 'requires_technician': requires_technician,
