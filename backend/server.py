@@ -301,6 +301,8 @@ async def get_business(business_id: str, current_user: dict = Depends(get_curren
 async def get_orders(
     business_id: Optional[str] = None,
     status_filter: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     current_user: dict = Depends(get_current_user)
 ):
     # Check permission - Owner, Manager, Kasir, Loket only
@@ -314,7 +316,8 @@ async def get_orders(
     if status_filter:
         query['status'] = status_filter
     
-    orders = await db.orders.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    # Pagination for faster loading (default: 100 latest orders)
+    orders = await db.orders.find(query, {'_id': 0}).sort('created_at', -1).skip(skip).limit(limit).to_list(limit)
     for order in orders:
         for field in ['created_at', 'updated_at', 'completion_date']:
             if order.get(field) and isinstance(order[field], str):
