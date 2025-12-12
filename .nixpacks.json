@@ -1,0 +1,17 @@
+{
+  "phases": {
+    "setup": {
+      "nixPkgs": ["nodejs_20", "python310", "gcc"]
+    },
+    "install": {
+      "cmds": [
+        "echo 'Installing dependencies...'"  
+      ]
+    },
+    "build": {
+      "cmds": [
+        "echo 'Build phase - handled by service-specific nixpacks.toml'"
+      ]
+    }
+  }
+}
