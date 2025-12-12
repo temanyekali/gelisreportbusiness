@@ -484,11 +484,13 @@ async def get_transactions(
     transaction_type: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     current_user: dict = Depends(get_current_user)
 ):
     # Check permission - Only Owner, Manager, Finance
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:  # Owner, Manager, Finance
+    if user['role_id'] not in [1, 2, 3, 8]:  # Owner, Manager, Finance, IT Developer
         raise HTTPException(status_code=403, detail='Tidak memiliki akses ke menu Akunting')
     
     query = {}
@@ -499,7 +501,8 @@ async def get_transactions(
     if start_date and end_date:
         query['created_at'] = {'$gte': start_date, '$lte': end_date}
     
-    transactions = await db.transactions.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    # Pagination for faster loading (default: 100 latest transactions)
+    transactions = await db.transactions.find(query, {'_id': 0}).sort('created_at', -1).skip(skip).limit(limit).to_list(limit)
     for txn in transactions:
         if txn.get('created_at') and isinstance(txn['created_at'], str):
             txn['created_at'] = datetime.fromisoformat(txn['created_at'])
