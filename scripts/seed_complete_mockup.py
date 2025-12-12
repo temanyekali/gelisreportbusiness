@@ -760,43 +760,80 @@ async def seed_reports(businesses, users, transactions):
             }
             loket_reports.append(report)
         
-        # Kasir Reports (1-2 per day)
-        for _ in range(random.randint(1, 2)):
-            business = random.choice(businesses)
-            kasir_user = random.choice(kasir_users)
-            
-            day_transactions = [t for t in transactions 
-                              if t['business_id'] == business['id'] 
-                              and t['created_at'].startswith(str(report_date))]
-            
-            total_revenue = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income')
-            total_expenses = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'expense')
-            
-            report = {
-                'id': generate_id(),
-                'report_number': generate_code('KRPT'),
-                'business_id': business['id'],
-                'report_date': report_date.isoformat(),
-                'shift': random.choice(['Pagi', 'Siang', 'Malam']),
-                'total_revenue': total_revenue,
-                'total_expenses': total_expenses,
-                'net_income': total_revenue - total_expenses,
-                'cash_in_hand': random.randint(1000000, 5000000),
-                'bank_deposits': random.randint(5000000, 20000000),
-                'discrepancy': random.randint(-50000, 50000) if random.random() > 0.8 else 0,
-                'notes': 'Kas sesuai, tidak ada selisih' if random.random() > 0.2 else 'Selisih kecil sudah diklarifikasi',
-                'is_mock': True,
-                'submitted_by': kasir_user['id'],
-                'submitted_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=19)).isoformat(),
-                'created_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=19)).isoformat(),
-                'updated_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=19)).isoformat()
-            }
-            kasir_reports.append(report)
+        # Kasir Reports (1 per day) - Enhanced dengan detail setoran
+        business = random.choice(businesses)
+        kasir_user = random.choice(kasir_users)
+        
+        day_transactions = [t for t in transactions 
+                          if t['business_id'] == business['id'] 
+                          and t['created_at'].startswith(str(report_date))]
+        
+        total_revenue = sum(t['amount'] for t in day_transactions if t['transaction_type'] == 'income')
+        
+        # Create detailed kasir report like user example
+        setoran_pagi = random.randint(10000000, 25000000)
+        setoran_siang = random.randint(5000000, 15000000)
+        setoran_sore = random.randint(8000000, 18000000)
+        
+        setoran_deposit_loket_luar = random.randint(10000000, 20000000)
+        setoran_pelunasan_pagi = random.randint(1000000, 5000000)
+        setoran_pelunasan_siang = random.randint(500000, 2000000)
+        
+        # Generate topup transactions (like user example)
+        topup_transactions = []
+        num_topups = random.randint(3, 8)
+        for _ in range(num_topups):
+            topup_amount = random.choice([5000000, 6500000, 13000000, 18000000, 20000000])
+            topup_transactions.append({
+                'amount': topup_amount,
+                'description': f'Transfer Topup Loket Mandiri'
+            })
+        total_topup = sum(t['amount'] for t in topup_transactions)
+        
+        # Kas kecil
+        penerimaan_kas_kecil = random.randint(50000, 150000)
+        pengurangan_kas_kecil = random.randint(5000, 20000)
+        belanja_loket = random.randint(0, 500000)
+        total_kas_kecil = penerimaan_kas_kecil - pengurangan_kas_kecil - belanja_loket
+        
+        # Admin
+        penerimaan_admin = random.randint(100000, 250000)
+        total_admin = penerimaan_admin + random.randint(300000, 600000)
+        
+        saldo_bank = 0
+        saldo_brankas = total_admin + random.randint(0, 100000)
+        
+        report = {
+            'id': generate_id(),
+            'business_id': business['id'],
+            'report_date': report_date.isoformat(),
+            'setoran_pagi': setoran_pagi,
+            'setoran_siang': setoran_siang,
+            'setoran_sore': setoran_sore,
+            'setoran_deposit_loket_luar': setoran_deposit_loket_luar,
+            'setoran_pelunasan_pagi': setoran_pelunasan_pagi,
+            'setoran_pelunasan_siang': setoran_pelunasan_siang,
+            'topup_transactions': topup_transactions,
+            'total_topup': total_topup,
+            'penerimaan_kas_kecil': penerimaan_kas_kecil,
+            'pengurangan_kas_kecil': pengurangan_kas_kecil,
+            'belanja_loket': belanja_loket,
+            'total_kas_kecil': total_kas_kecil,
+            'penerimaan_admin': penerimaan_admin,
+            'total_admin': total_admin,
+            'saldo_bank': saldo_bank,
+            'saldo_brankas': saldo_brankas,
+            'notes': 'Kas sesuai, operasional normal' if random.random() > 0.2 else 'Ada selisih kecil di kas kecil',
+            'is_mock': True,
+            'created_by': kasir_user['id'],
+            'created_at': (datetime.combine(report_date, datetime.min.time()) + timedelta(hours=19)).isoformat()
+        }
+        kasir_reports.append(report)
     
     if loket_reports:
-        await db.loket_reports.insert_many(loket_reports)
+        await db.loket_daily_reports.insert_many(loket_reports)
     if kasir_reports:
-        await db.kasir_reports.insert_many(kasir_reports)
+        await db.kasir_daily_reports.insert_many(kasir_reports)
     
     print(f"   ✓ Created {len(loket_reports)} loket reports and {len(kasir_reports)} kasir reports")
 
