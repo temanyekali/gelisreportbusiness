@@ -292,15 +292,30 @@ async def seed_users():
         # Owner
         {
             'id': generate_id(),
-            'username': 'owner',
-            'email': 'owner@gelis.com',
-            'password': get_password_hash('owner123'),
-            'full_name': 'Pak Budi Santoso (Owner)',
+            'username': 'edy',
+            'email': 'edy@gelis.com',
+            'password': get_password_hash('edy123'),
+            'full_name': 'Edy (Owner)',
             'phone': '081234567890',
             'role_id': 1,
             'is_active': True,
             'is_mock': False,  # Owner is NOT mock data
             'created_at': (datetime.now() - timedelta(days=90)).isoformat(),
+            'updated_at': utc_now().isoformat(),
+            'last_login': utc_now().isoformat()
+        },
+        # IT Developer
+        {
+            'id': generate_id(),
+            'username': 'indra',
+            'email': 'indra@gelis.com',
+            'password': get_password_hash('indra123'),
+            'full_name': 'Indra (IT Developer)',
+            'phone': '081234567891',
+            'role_id': 8,
+            'is_active': True,
+            'is_mock': False,  # IT Developer is NOT mock data
+            'created_at': (datetime.now() - timedelta(days=85)).isoformat(),
             'updated_at': utc_now().isoformat(),
             'last_login': utc_now().isoformat()
         },
