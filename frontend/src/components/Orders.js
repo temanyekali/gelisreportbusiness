@@ -285,9 +285,9 @@ export default function Orders() {
                 </div>
               </div>
               <div>
-                <Label>Metode Pembayaran</Label>
+                <Label className="text-sm md:text-base">Metode Pembayaran</Label>
                 <Select value={formData.payment_method} onValueChange={(value) => setFormData({ ...formData, payment_method: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="min-h-[44px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -299,35 +299,36 @@ export default function Orders() {
                 </Select>
               </div>
               <div>
-                <Label>Catatan</Label>
+                <Label className="text-sm md:text-base">Catatan</Label>
                 <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Catatan tambahan"
                   rows={2}
+                  className="min-h-[88px]"
                 />
               </div>
-              <div className="flex items-center space-x-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start space-x-2 p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <input
                   type="checkbox"
                   id="requires_technician"
                   checked={formData.requires_technician}
                   onChange={(e) => setFormData({ ...formData, requires_technician: e.target.checked })}
-                  className="w-4 h-4"
+                  className="w-5 h-5 mt-0.5"
                 />
-                <Label htmlFor="requires_technician" className="cursor-pointer">
-                  <span className="font-semibold">Butuh SDM Teknisi?</span>
+                <Label htmlFor="requires_technician" className="cursor-pointer flex-1">
+                  <span className="font-semibold text-sm md:text-base">Butuh SDM Teknisi?</span>
                   <p className="text-xs text-slate-600 mt-1">
                     Centang jika order ini memerlukan teknisi lapangan (PLN, PDAM, dll). 
                     Order akan otomatis masuk ke modul pekerjaan teknisi.
                   </p>
                 </Label>
               </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)} className="min-h-[44px]">
                   Batal
                 </Button>
-                <Button type="submit">Simpan Pesanan</Button>
+                <Button type="submit" className="min-h-[44px]">Simpan Pesanan</Button>
               </div>
             </form>
           </DialogContent>
