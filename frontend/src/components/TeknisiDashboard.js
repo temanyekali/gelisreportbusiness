@@ -205,43 +205,43 @@ export default function TeknisiDashboard() {
           </TabsList>
         </div>
 
-        <TabsContent value="all" className="space-y-4 mt-6">
+        <TabsContent value="all" className="space-y-3 md:space-y-4 mt-4 md:mt-6">
           {orders.map((order) => {
             const business = businesses.find(b => b.id === order.business_id);
             const progress = order.order_details?.progress || 0;
             
             return (
-              <Card key={order.id} className="p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-4">
+              <Card key={order.id} className="p-4 md:p-6 hover:shadow-lg transition-shadow">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4 space-y-3 md:space-y-0">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-slate-900">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                      <h3 className="text-base md:text-lg font-semibold text-slate-900">
                         {order.order_number}
                       </h3>
                       {getStatusBadge(order.status)}
                     </div>
-                    <div className="grid grid-cols-2 gap-4 mt-3">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <User className="w-4 h-4" />
-                        <span>{order.customer_name}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4 mt-3">
+                      <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600">
+                        <User className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">{order.customer_name}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Building2 className="w-4 h-4" />
-                        <span>{business?.name || 'N/A'}</span>
+                      <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600">
+                        <Building2 className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">{business?.name || 'N/A'}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Wrench className="w-4 h-4" />
-                        <span>{order.service_type}</span>
+                      <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600">
+                        <Wrench className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate">{order.service_type}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(order.created_at)}</span>
+                      <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600">
+                        <Calendar className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-xs">{formatDate(order.created_at)}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm text-slate-500 mb-1">Nilai Pekerjaan</div>
-                    <div className="text-xl font-bold text-slate-900">
+                  <div className="text-left md:text-right">
+                    <div className="text-xs md:text-sm text-slate-500 mb-1">Nilai Pekerjaan</div>
+                    <div className="text-lg md:text-xl font-bold text-slate-900">
                       {formatCurrency(order.total_amount)}
                     </div>
                   </div>
@@ -250,12 +250,12 @@ export default function TeknisiDashboard() {
                 {/* Progress Bar */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-slate-700">Progress</span>
-                    <span className="text-sm font-bold text-slate-900">{progress}%</span>
+                    <span className="text-xs md:text-sm font-medium text-slate-700">Progress</span>
+                    <span className="text-xs md:text-sm font-bold text-slate-900">{progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="w-full bg-gray-200 rounded-full h-2 md:h-3">
                     <div 
-                      className={`h-3 rounded-full transition-all ${getProgressColor(progress)}`}
+                      className={`h-2 md:h-3 rounded-full transition-all ${getProgressColor(progress)}`}
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
@@ -265,21 +265,22 @@ export default function TeknisiDashboard() {
                 {order.notes && (
                   <div className="mb-4 p-3 bg-slate-50 rounded-lg">
                     <div className="text-xs font-medium text-slate-500 mb-1">Catatan:</div>
-                    <div className="text-sm text-slate-700 whitespace-pre-line">{order.notes}</div>
+                    <div className="text-xs md:text-sm text-slate-700 whitespace-pre-line">{order.notes}</div>
                   </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button 
                     onClick={() => handleUpdateStatus(order)}
                     disabled={order.status === 'completed' || order.status === 'cancelled'}
+                    className="min-h-[44px] w-full sm:w-auto"
                   >
                     <Clock className="w-4 h-4 mr-2" />
                     Update Status
                   </Button>
                   {order.customer_phone && (
-                    <Button variant="outline">
+                    <Button variant="outline" className="min-h-[44px] w-full sm:w-auto">
                       <span>📞 {order.customer_phone}</span>
                     </Button>
                   )}
