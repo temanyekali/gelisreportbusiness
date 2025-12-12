@@ -1599,7 +1599,8 @@ async def update_order_status_by_teknisi(
     if notes:
         current_notes = order.get('notes', '')
         timestamp = utc_now().strftime('%Y-%m-%d %H:%M:%S')
-        update_data['notes'] = f"{current_notes}\n[{timestamp}] {user['full_name']}: {notes}".strip()
+        user_name = user.get('full_name', user.get('username', 'Unknown'))
+        update_data['notes'] = f"{current_notes}\n[{timestamp}] {user_name}: {notes}".strip()
     
     await db.orders.update_one({'id': order_id}, {'$set': update_data})
     
