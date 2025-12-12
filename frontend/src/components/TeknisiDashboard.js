@@ -131,67 +131,79 @@ export default function TeknisiDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight mb-1 md:mb-2">
             Dashboard Teknisi
           </h1>
-          <p className="text-slate-600">
+          <p className="text-sm md:text-base text-slate-600">
             Halo {currentUser?.full_name}, kelola pekerjaan Anda di sini
           </p>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-slate-500">Total Pekerjaan</div>
-              <div className="text-3xl font-bold text-slate-900 mt-1">{orders.length}</div>
-            </div>
-            <Wrench className="w-10 h-10 text-slate-400" />
+      {/* Stats Cards - Scrollable on mobile */}
+      <div className="overflow-x-auto -mx-3 md:mx-0 px-3 md:px-0">
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 pb-2 md:pb-0" style={{ minWidth: 'max-content' }}>
+          <div className="min-w-[200px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs md:text-sm text-slate-500">Total Pekerjaan</div>
+                  <div className="text-2xl md:text-3xl font-bold text-slate-900 mt-1">{orders.length}</div>
+                </div>
+                <Wrench className="w-8 h-8 md:w-10 md:h-10 text-slate-400" />
+              </div>
+            </Card>
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-slate-500">Pending</div>
-              <div className="text-3xl font-bold text-yellow-600 mt-1">{getPendingOrders().length}</div>
-            </div>
-            <AlertCircle className="w-10 h-10 text-yellow-400" />
+          <div className="min-w-[200px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs md:text-sm text-slate-500">Pending</div>
+                  <div className="text-2xl md:text-3xl font-bold text-yellow-600 mt-1">{getPendingOrders().length}</div>
+                </div>
+                <AlertCircle className="w-8 h-8 md:w-10 md:h-10 text-yellow-400" />
+              </div>
+            </Card>
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-slate-500">Dalam Proses</div>
-              <div className="text-3xl font-bold text-blue-600 mt-1">{getProcessingOrders().length}</div>
-            </div>
-            <PlayCircle className="w-10 h-10 text-blue-400" />
+          <div className="min-w-[200px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs md:text-sm text-slate-500">Dalam Proses</div>
+                  <div className="text-2xl md:text-3xl font-bold text-blue-600 mt-1">{getProcessingOrders().length}</div>
+                </div>
+                <PlayCircle className="w-8 h-8 md:w-10 md:h-10 text-blue-400" />
+              </div>
+            </Card>
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-slate-500">Selesai</div>
-              <div className="text-3xl font-bold text-green-600 mt-1">{getCompletedOrders().length}</div>
-            </div>
-            <CheckCircle className="w-10 h-10 text-green-400" />
+          <div className="min-w-[200px] md:min-w-0">
+            <Card className="p-3 md:p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs md:text-sm text-slate-500">Selesai</div>
+                  <div className="text-2xl md:text-3xl font-bold text-green-600 mt-1">{getCompletedOrders().length}</div>
+                </div>
+                <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-green-400" />
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Orders Tabs */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">Semua ({orders.length})</TabsTrigger>
-          <TabsTrigger value="pending">Pending ({getPendingOrders().length})</TabsTrigger>
-          <TabsTrigger value="processing">Proses ({getProcessingOrders().length})</TabsTrigger>
-          <TabsTrigger value="completed">Selesai ({getCompletedOrders().length})</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-3 md:mx-0">
+          <TabsList className="inline-flex md:grid w-full md:grid-cols-4 min-w-max md:min-w-0">
+            <TabsTrigger value="all" className="whitespace-nowrap px-3 md:px-4">Semua ({orders.length})</TabsTrigger>
+            <TabsTrigger value="pending" className="whitespace-nowrap px-3 md:px-4">Pending ({getPendingOrders().length})</TabsTrigger>
+            <TabsTrigger value="processing" className="whitespace-nowrap px-3 md:px-4">Proses ({getProcessingOrders().length})</TabsTrigger>
+            <TabsTrigger value="completed" className="whitespace-nowrap px-3 md:px-4">Selesai ({getCompletedOrders().length})</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="all" className="space-y-4 mt-6">
           {orders.map((order) => {
