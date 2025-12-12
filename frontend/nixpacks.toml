@@ -1,0 +1,23 @@
+# Nixpacks Configuration for GELIS Frontend (React)
+# https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+    "yarn install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+    "yarn build"
+]
+
+[start]
+cmd = "npx serve -s build -l ${PORT:-3000}"
+
+[variables]
+# Default environment variables (can be overridden)
+PORT = "3000"
+NODE_ENV = "production"
