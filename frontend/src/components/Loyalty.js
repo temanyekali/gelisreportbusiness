@@ -188,7 +188,7 @@ export default function Loyalty() {
         <Card className="p-4">
           <div className="text-sm text-slate-500">Total Budget</div>
           <div className="text-2xl font-bold text-slate-900 mt-1">
-            {formatCurrency(programs.reduce((sum, p) => sum + p.budget, 0))}
+            {formatCurrency(programs.reduce((sum, p) => sum + (parseFloat(p.budget) || 0), 0))}
           </div>
         </Card>
       </div>
