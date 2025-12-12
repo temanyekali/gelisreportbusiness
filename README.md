@@ -320,7 +320,7 @@ Proprietary - GELIS System © 2024
    - Template Dockerfile included
    - Timeline: ~40 menit total
 
-2. **[DEPLOY_COOLIFY_STEPBYSTEP.md](DEPLOY_COOLIFY_STEPBYSTEP.md)** - Tutorial Praktis Coolify
+3. **[DEPLOY_COOLIFY_STEPBYSTEP.md](DEPLOY_COOLIFY_STEPBYSTEP.md)** - Tutorial Praktis Coolify
    - Panduan praktis 11 langkah
    - Timeline estimasi per step
    - Troubleshooting guide
