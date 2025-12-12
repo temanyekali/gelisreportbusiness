@@ -1214,6 +1214,301 @@ async def update_kasir_daily_report(
     
     return KasirDailyReport(**existing)
 
+
+# ============= RECONCILIATION & VERIFICATION ROUTES =============
+@api_router.get('/reports/reconciliation/kasir')
+async def reconcile_kasir_report(
+    report_date: str,
+    business_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Rekonsiliasi Laporan Kasir dengan Transaksi Aktual
+    Mendeteksi ketidaksesuaian data untuk verifikasi lebih lanjut
+    """
+    # Check permission - Owner, Manager, Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses rekonsiliasi')
+    
+    # Get kasir report for the date
+    query = {'report_date': {'$gte': report_date, '$lt': report_date + 'T23:59:59'}}
+    if business_id:
+        query['business_id'] = business_id
+    
+    kasir_reports = await db.kasir_daily_reports.find(query, {'_id': 0}).to_list(100)
+    
+    if not kasir_reports:
+        raise HTTPException(status_code=404, detail=f'Tidak ada laporan kasir untuk tanggal {report_date}')
+    
+    # Get actual transactions for the date
+    txn_query = {
+        'created_at': {'$gte': report_date, '$lt': report_date + 'T23:59:59'},
+        'category': {'$in': ['Order Payment', 'Setoran Kasir', 'Admin Fee', 'Belanja Loket']}
+    }
+    if business_id:
+        txn_query['business_id'] = business_id
+    
+    transactions = await db.transactions.find(txn_query, {'_id': 0}).to_list(10000)
+    
+    # Calculate actual totals from transactions
+    actual_income = sum(t['amount'] for t in transactions if t['transaction_type'] == 'income')
+    actual_setoran_kasir = sum(t['amount'] for t in transactions if t.get('category') == 'Setoran Kasir')
+    actual_admin = sum(t['amount'] for t in transactions if t.get('category') == 'Admin Fee')
+    actual_belanja = sum(t['amount'] for t in transactions if t.get('category') == 'Belanja Loket')
+    
+    results = []
+    
+    for report in kasir_reports:
+        # Calculate reported totals
+        reported_setoran = (report.get('setoran_pagi', 0) + 
+                           report.get('setoran_siang', 0) + 
+                           report.get('setoran_sore', 0))
+        reported_admin = report.get('total_admin', 0)
+        reported_belanja = report.get('belanja_loket', 0)
+        reported_total = reported_setoran + reported_admin - reported_belanja
+        
+        # Calculate discrepancies
+        setoran_diff = reported_setoran - actual_setoran_kasir
+        admin_diff = reported_admin - actual_admin
+        belanja_diff = reported_belanja - actual_belanja
+        
+        # Determine status
+        has_discrepancy = abs(setoran_diff) > 1000 or abs(admin_diff) > 100 or abs(belanja_diff) > 100
+        
+        discrepancy_details = []
+        if abs(setoran_diff) > 1000:
+            discrepancy_details.append({
+                'category': 'Setoran Kasir',
+                'reported': reported_setoran,
+                'actual': actual_setoran_kasir,
+                'difference': setoran_diff,
+                'percentage': round((setoran_diff / reported_setoran * 100), 2) if reported_setoran > 0 else 0
+            })
+        
+        if abs(admin_diff) > 100:
+            discrepancy_details.append({
+                'category': 'Admin Fee',
+                'reported': reported_admin,
+                'actual': actual_admin,
+                'difference': admin_diff,
+                'percentage': round((admin_diff / reported_admin * 100), 2) if reported_admin > 0 else 0
+            })
+        
+        if abs(belanja_diff) > 100:
+            discrepancy_details.append({
+                'category': 'Belanja Loket',
+                'reported': reported_belanja,
+                'actual': actual_belanja,
+                'difference': belanja_diff,
+                'percentage': round((belanja_diff / reported_belanja * 100), 2) if reported_belanja > 0 else 0
+            })
+        
+        result = {
+            'report_id': report['id'],
+            'report_date': report['report_date'],
+            'business_id': report['business_id'],
+            'status': 'DISCREPANCY' if has_discrepancy else 'MATCHED',
+            'reported_total': round(reported_total, 2),
+            'actual_total': round(actual_income - actual_belanja, 2),
+            'total_difference': round(reported_total - (actual_income - actual_belanja), 2),
+            'breakdown': {
+                'setoran_kasir': {
+                    'reported': reported_setoran,
+                    'actual': actual_setoran_kasir,
+                    'difference': setoran_diff
+                },
+                'admin_fee': {
+                    'reported': reported_admin,
+                    'actual': actual_admin,
+                    'difference': admin_diff
+                },
+                'belanja_loket': {
+                    'reported': reported_belanja,
+                    'actual': actual_belanja,
+                    'difference': belanja_diff
+                }
+            },
+            'discrepancies': discrepancy_details,
+            'requires_investigation': has_discrepancy,
+            'created_by': report.get('created_by'),
+            'notes': report.get('notes')
+        }
+        
+        results.append(result)
+    
+    return {
+        'reconciliation_date': report_date,
+        'total_reports': len(results),
+        'matched_reports': len([r for r in results if r['status'] == 'MATCHED']),
+        'discrepancy_reports': len([r for r in results if r['status'] == 'DISCREPANCY']),
+        'reports': results
+    }
+
+@api_router.get('/reports/reconciliation/loket')
+async def reconcile_loket_report(
+    report_date: str,
+    business_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Rekonsiliasi Laporan Loket dengan Transaksi Aktual
+    Verifikasi pelunasan per bank dengan data transaksi
+    """
+    # Check permission - Owner, Manager, Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses rekonsiliasi')
+    
+    # Get loket reports for the date
+    query = {'report_date': {'$gte': report_date, '$lt': report_date + 'T23:59:59'}}
+    if business_id:
+        query['business_id'] = business_id
+    
+    loket_reports = await db.loket_daily_reports.find(query, {'_id': 0}).to_list(100)
+    
+    if not loket_reports:
+        raise HTTPException(status_code=404, detail=f'Tidak ada laporan loket untuk tanggal {report_date}')
+    
+    # Get actual transactions for the date
+    txn_query = {
+        'created_at': {'$gte': report_date, '$lt': report_date + 'T23:59:59'},
+        'category': {'$in': ['Order Payment', 'Setoran Loket']}
+    }
+    if business_id:
+        txn_query['business_id'] = business_id
+    
+    transactions = await db.transactions.find(txn_query, {'_id': 0}).to_list(10000)
+    
+    # Calculate actual total
+    actual_total_setoran = sum(t['amount'] for t in transactions if t.get('category') == 'Setoran Loket')
+    
+    results = []
+    
+    for report in loket_reports:
+        reported_total = report.get('total_setoran_shift', 0)
+        
+        # Check bank balances consistency
+        bank_balance_checks = []
+        total_bank_setoran = 0
+        
+        for bank in report.get('bank_balances', []):
+            expected_saldo_akhir = (bank['saldo_awal'] + 
+                                   bank['saldo_inject'] - 
+                                   bank['data_lunas'] - 
+                                   bank['setor_kasir'] - 
+                                   bank['transfer_amount'])
+            
+            saldo_match = abs(expected_saldo_akhir - bank['saldo_akhir']) < 100
+            total_bank_setoran += bank['sisa_setoran']
+            
+            bank_balance_checks.append({
+                'bank_name': bank['bank_name'],
+                'reported_saldo_akhir': bank['saldo_akhir'],
+                'calculated_saldo_akhir': expected_saldo_akhir,
+                'is_balanced': saldo_match,
+                'difference': bank['saldo_akhir'] - expected_saldo_akhir,
+                'sisa_setoran': bank['sisa_setoran']
+            })
+        
+        # Compare report total with actual transactions
+        difference = reported_total - actual_total_setoran
+        has_discrepancy = abs(difference) > 1000 or any(not b['is_balanced'] for b in bank_balance_checks)
+        
+        result = {
+            'report_id': report['id'],
+            'report_date': report['report_date'],
+            'business_id': report['business_id'],
+            'shift': report.get('shift'),
+            'nama_petugas': report.get('nama_petugas'),
+            'status': 'DISCREPANCY' if has_discrepancy else 'MATCHED',
+            'reported_total_setoran': reported_total,
+            'actual_total_setoran': actual_total_setoran,
+            'difference': difference,
+            'bank_balances': bank_balance_checks,
+            'all_banks_balanced': all(b['is_balanced'] for b in bank_balance_checks),
+            'requires_investigation': has_discrepancy,
+            'notes': report.get('notes')
+        }
+        
+        results.append(result)
+    
+    return {
+        'reconciliation_date': report_date,
+        'total_reports': len(results),
+        'matched_reports': len([r for r in results if r['status'] == 'MATCHED']),
+        'discrepancy_reports': len([r for r in results if r['status'] == 'DISCREPANCY']),
+        'reports': results
+    }
+
+@api_router.get('/reports/verification/summary')
+async def get_verification_summary(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Summary verifikasi semua laporan dalam periode tertentu
+    Menampilkan overview discrepancies yang perlu investigasi
+    """
+    # Check permission - Owner, Manager, Finance
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses verifikasi')
+    
+    # Default to last 7 days if not specified
+    if not start_date:
+        start_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+    if not end_date:
+        end_date = datetime.now().strftime('%Y-%m-%d')
+    
+    # Get all kasir reports in period
+    kasir_query = {
+        'report_date': {'$gte': start_date, '$lt': end_date + 'T23:59:59'}
+    }
+    kasir_reports = await db.kasir_daily_reports.find(kasir_query, {'_id': 0}).to_list(1000)
+    
+    # Get all loket reports in period
+    loket_reports = await db.loket_daily_reports.find(kasir_query, {'_id': 0}).to_list(1000)
+    
+    # Get all transactions in period
+    txn_query = {
+        'created_at': {'$gte': start_date, '$lt': end_date + 'T23:59:59'}
+    }
+    transactions = await db.transactions.find(txn_query, {'_id': 0}).to_list(10000)
+    
+    # Analyze discrepancies
+    kasir_total_reported = sum(r.get('setoran_pagi', 0) + r.get('setoran_siang', 0) + r.get('setoran_sore', 0) for r in kasir_reports)
+    loket_total_reported = sum(r.get('total_setoran_shift', 0) for r in loket_reports)
+    
+    actual_total = sum(t['amount'] for t in transactions if t['transaction_type'] == 'income')
+    
+    return {
+        'period': {
+            'start_date': start_date,
+            'end_date': end_date
+        },
+        'summary': {
+            'total_kasir_reports': len(kasir_reports),
+            'total_loket_reports': len(loket_reports),
+            'kasir_total_reported': round(kasir_total_reported, 2),
+            'loket_total_reported': round(loket_total_reported, 2),
+            'actual_total_transactions': round(actual_total, 2),
+            'overall_difference': round((kasir_total_reported + loket_total_reported) - actual_total, 2)
+        },
+        'verification_status': {
+            'requires_investigation': abs((kasir_total_reported + loket_total_reported) - actual_total) > 10000,
+            'tolerance_threshold': 10000,
+            'accuracy_rate': round((1 - abs((kasir_total_reported + loket_total_reported) - actual_total) / actual_total) * 100, 2) if actual_total > 0 else 100
+        },
+        'recommendations': [
+            'Lakukan rekonsiliasi harian untuk setiap tanggal' if abs((kasir_total_reported + loket_total_reported) - actual_total) > 10000 else 'Data akurat, tidak ada investigasi diperlukan',
+            'Periksa laporan kasir dengan discrepancy > 1%' if abs(kasir_total_reported - actual_total) / actual_total > 0.01 else 'Laporan kasir sesuai',
+            'Verifikasi saldo bank di laporan loket' if len(loket_reports) > 0 else 'Tidak ada laporan loket'
+        ]
+    }
+
+
 @api_router.delete('/reports/loket-daily/{report_id}')
 async def delete_loket_daily_report(report_id: str, current_user: dict = Depends(get_current_user)):
     # Check permission - only Owner can delete
