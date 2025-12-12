@@ -2304,6 +2304,10 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+# Gzip compression middleware for faster response (60-80% bandwidth reduction)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+
 @app.on_event('shutdown')
 async def shutdown_db_client():
     client.close()
