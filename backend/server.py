@@ -1250,7 +1250,7 @@ async def reconcile_kasir_report(
     if not kasir_reports:
         raise HTTPException(status_code=404, detail=f'Tidak ada laporan kasir untuk tanggal {report_date}')
     
-    # Get actual transactions for the date
+    # Get actual transactions for the date (optimized: only needed fields)
     txn_query = {
         'created_at': {'$gte': report_date, '$lt': report_date + 'T23:59:59'},
         'category': {'$in': ['Order Payment', 'Setoran Kasir', 'Admin Fee', 'Belanja Loket']}
@@ -1258,7 +1258,10 @@ async def reconcile_kasir_report(
     if business_id:
         txn_query['business_id'] = business_id
     
-    transactions = await db.transactions.find(txn_query, {'_id': 0}).to_list(10000)
+    transactions = await db.transactions.find(
+        txn_query, 
+        {'_id': 0, 'amount': 1, 'transaction_type': 1, 'category': 1}
+    ).limit(2000).to_list(2000)
     
     # Calculate actual totals from transactions
     actual_income = sum(t['amount'] for t in transactions if t['transaction_type'] == 'income')
