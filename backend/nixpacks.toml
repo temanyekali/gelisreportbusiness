@@ -1,0 +1,24 @@
+# Nixpacks Configuration for GELIS Backend (FastAPI)
+# https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["python310", "gcc", "curl"]
+
+[phases.install]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+    "mkdir -p uploads"
+]
+
+[start]
+cmd = "uvicorn server:app --host 0.0.0.0 --port ${PORT:-8001}"
+
+[variables]
+# Default environment variables (can be overridden)
+PORT = "8001"
+PYTHONUNBUFFERED = "1"
