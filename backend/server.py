@@ -2292,10 +2292,7 @@ async def backup_database(current_user: User = Depends(get_current_user)):
     
     return backup_data
 
-# Include router
-app.include_router(api_router)
-
-# Health check endpoint for Kubernetes/deployment platforms
+# Health check endpoint for Kubernetes/deployment platforms (BEFORE router)
 @app.get('/health')
 async def health_check():
     """Health check endpoint for load balancers and orchestration platforms"""
@@ -2317,15 +2314,20 @@ async def health_check():
             'timestamp': utc_now().isoformat()
         }
 
+# Root endpoint
 @app.get('/')
 async def root():
-    """Root endpoint"""
+    """Root endpoint - API info"""
     return {
         'service': 'GELIS API',
         'version': '1.0.0',
         'status': 'running',
-        'docs': '/docs'
+        'docs': '/docs',
+        'health': '/health'
     }
+
+# Include router
+app.include_router(api_router)
 
 
 # CORS
