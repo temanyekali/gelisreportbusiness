@@ -1728,39 +1728,36 @@ async def test_email(
 # ============= DATA MANAGEMENT ENDPOINTS =============
 @api_router.post('/data/clear-mock')
 async def clear_mock_data(current_user: User = Depends(get_current_user)):
-    """Clear all mock data and keep only owner/admin users"""
+    """Clear all mock data and keep only owner user"""
     if current_user.role_id != 1:  # Owner only
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Hanya Owner yang dapat menghapus data mockup'
         )
     
-    # Keep owner and admin users
-    owner_admin_ids = []
-    async for user in db.users.find({'role_id': {'$in': [1, 2]}}, {'_id': 0, 'id': 1}):
-        owner_admin_ids.append(user['id'])
+    # Delete all mock users (is_mock = True)
+    deleted_users = await db.users.delete_many({'is_mock': True})
     
-    # Delete all mock users except owner/admin
-    deleted_users = await db.users.delete_many({'id': {'$nin': owner_admin_ids}})
+    # Delete all mock businesses
+    deleted_businesses = await db.businesses.delete_many({'is_mock': True})
     
-    # Delete all orders
-    deleted_orders = await db.orders.delete_many({})
+    # Delete all mock orders
+    deleted_orders = await db.orders.delete_many({'is_mock': True})
     
-    # Delete all transactions
-    deleted_transactions = await db.accounting.delete_many({})
+    # Delete all mock transactions
+    deleted_transactions = await db.accounting.delete_many({'is_mock': True})
     
-    # Delete all reports
-    deleted_loket_reports = await db.loket_reports.delete_many({})
-    deleted_kasir_reports = await db.kasir_reports.delete_many({})
+    # Delete all mock reports
+    deleted_loket_reports = await db.loket_reports.delete_many({'is_mock': True})
+    deleted_kasir_reports = await db.kasir_reports.delete_many({'is_mock': True})
     
-    # Delete all loyalty programs
-    deleted_loyalty = await db.loyalty_programs.delete_many({})
+    # Delete all mock loyalty programs
+    deleted_loyalty = await db.loyalty_programs.delete_many({'is_mock': True})
     
-    # Delete all CSR programs
-    deleted_csr = await db.csr_programs.delete_many({})
+    # Delete all mock CSR programs
+    deleted_csr = await db.csr_programs.delete_many({'is_mock': True})
     
-    # Delete all activity logs (optional - keep for audit trail)
-    # deleted_logs = await db.activity_logs.delete_many({})
+    # Keep activity logs for audit trail (don't delete)
     
     # Update is_mock_data setting
     await db.settings.update_one(
@@ -1776,21 +1773,36 @@ async def clear_mock_data(current_user: User = Depends(get_current_user)):
         description='Cleared all mock data from system',
         metadata={
             'deleted_users': deleted_users.deleted_count,
-            'deleted_orders': deleted_orders.deleted_count,
-            'deleted_transactions': deleted_transactions.deleted_count,
-            'deleted_reports': deleted_loket_reports.deleted_count + deleted_kasir_reports.deleted_count
-        }
-    )
-    
-    return {
-        'message': 'Data mockup berhasil dihapus',
-        'summary': {
-            'deleted_users': deleted_users.deleted_count,
+            'deleted_businesses': deleted_businesses.deleted_count,
             'deleted_orders': deleted_orders.deleted_count,
             'deleted_transactions': deleted_transactions.deleted_count,
             'deleted_reports': deleted_loket_reports.deleted_count + deleted_kasir_reports.deleted_count,
             'deleted_loyalty_programs': deleted_loyalty.deleted_count,
             'deleted_csr_programs': deleted_csr.deleted_count
+        }
+    )
+    
+    return {
+        'message': 'Data mockup berhasil dihapus! Aplikasi sekarang siap untuk data real.',
+        'summary': {
+            'deleted_users': deleted_users.deleted_count,
+            'deleted_businesses': deleted_businesses.deleted_count,
+            'deleted_orders': deleted_orders.deleted_count,
+            'deleted_transactions': deleted_transactions.deleted_count,
+            'deleted_loket_reports': deleted_loket_reports.deleted_count,
+            'deleted_kasir_reports': deleted_kasir_reports.deleted_count,
+            'deleted_loyalty_programs': deleted_loyalty.deleted_count,
+            'deleted_csr_programs': deleted_csr.deleted_count,
+            'total_deleted': (
+                deleted_users.deleted_count +
+                deleted_businesses.deleted_count +
+                deleted_orders.deleted_count +
+                deleted_transactions.deleted_count +
+                deleted_loket_reports.deleted_count +
+                deleted_kasir_reports.deleted_count +
+                deleted_loyalty.deleted_count +
+                deleted_csr.deleted_count
+            )
         }
     }
 
