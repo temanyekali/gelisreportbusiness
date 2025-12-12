@@ -288,22 +288,31 @@ Proprietary - GELIS System © 2024
 
 ## 📚 Dokumentasi Lengkap
 
-1. **[INSTALASI_SERVER.md](INSTALASI_SERVER.md)** - Panduan instalasi lengkap ke VPS/Dedicated Server
-   - Setup Ubuntu Server
+1. **[INSTALASI_COOLIFY.md](INSTALASI_COOLIFY.md)** - 🚀 Deploy dengan Coolify (RECOMMENDED)
+   - Setup Coolify di server
+   - Deploy dari GitHub dengan 1 klik
+   - Auto-deploy & zero-downtime updates
+   - Built-in SSL, monitoring, logs
+   - Rollback & scaling
+   - Troubleshooting Coolify
+
+2. **[INSTALASI_SERVER.md](INSTALASI_SERVER.md)** - Panduan instalasi manual lengkap
+   - Setup Ubuntu Server dari nol
    - Install Node.js, Python, MongoDB, Nginx
    - Konfigurasi SSL dengan Let's Encrypt
    - PM2 process management
    - Auto backup MongoDB
-   - Troubleshooting guide
+   - Troubleshooting guide lengkap
 
-2. **[MOBILE_RESPONSIVE_GUIDE.md](MOBILE_RESPONSIVE_GUIDE.md)** - Dokumentasi fitur mobile responsive
+3. **[MOBILE_RESPONSIVE_GUIDE.md](MOBILE_RESPONSIVE_GUIDE.md)** - Dokumentasi fitur mobile responsive
    - Responsive breakpoints
    - Touch-friendly patterns
    - Performance tips
-   - Testing guide
+   - Testing guide di mobile
    - Best practices
 
-3. **[QUICK_START.md](QUICK_START.md)** - Quick reference untuk instalasi dan troubleshooting
+4. **[QUICK_START.md](QUICK_START.md)** - Quick reference instalasi
+   - Pilihan metode instalasi
    - TL;DR installation
    - Command cheat sheet
    - Quick fixes
