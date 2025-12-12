@@ -106,9 +106,21 @@ Sistem monitoring operasional komprehensif untuk mengelola berbagai jenis bisnis
 
 ## 📦 Installation & Setup
 
-### 🚀 Quick Start
-Lihat dokumentasi lengkap di:
-- **[INSTALASI_SERVER.md](INSTALASI_SERVER.md)** - Tutorial lengkap instalasi ke server
+### 🚀 Quick Start - Pilih Metode Instalasi
+
+**1. Instalasi dengan Coolify (RECOMMENDED)** 🚀
+- ✅ Paling mudah dan cepat (~30 menit)
+- ✅ Auto-deploy dari GitHub
+- ✅ Zero-downtime updates
+- ✅ Built-in monitoring & SSL
+- 📚 **[Tutorial Coolify →](INSTALASI_COOLIFY.md)**
+
+**2. Instalasi Manual ke Server**
+- ✅ Full control atas infrastructure
+- ✅ Custom configuration
+- 📚 **[Tutorial Manual →](INSTALASI_SERVER.md)**
+
+**Dokumentasi Lainnya:**
 - **[QUICK_START.md](QUICK_START.md)** - Quick reference instalasi
 - **[MOBILE_RESPONSIVE_GUIDE.md](MOBILE_RESPONSIVE_GUIDE.md)** - Dokumentasi mobile features
 
