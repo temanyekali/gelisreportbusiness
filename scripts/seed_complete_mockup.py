@@ -661,25 +661,23 @@ async def seed_transactions(businesses, orders, users):
             
             trans = {
                 'id': generate_id(),
-                'transaction_number': generate_code('TRX'),
+                'transaction_code': generate_code('TXN'),  # Consistent field name
                 'business_id': business['id'],
                 'transaction_type': 'expense',
                 'category': category,
                 'amount': amount,
                 'description': f"{category} - {business['name']}",
-                'transaction_date': trans_date.isoformat(),
-                'payment_method': random.choice(['Cash', 'Transfer']),
-                'bank_name': random.choice(BANK_NAMES) if random.random() > 0.5 else None,
+                'payment_method': random.choice(['cash', 'transfer']),  # Lowercase for consistency
                 'reference_number': generate_code('EXP'),
+                'order_id': None,  # No related order for expenses
                 'is_mock': True,
                 'created_by': finance_user['id'],
-                'created_at': trans_date.isoformat(),
-                'updated_at': trans_date.isoformat()
+                'created_at': trans_date.isoformat()
             }
             transactions.append(trans)
     
-    await db.accounting.insert_many(transactions)
-    print(f"   ✓ Created {len(transactions)} transactions ({sum(1 for t in transactions if t['transaction_type'] == 'revenue')} revenue, {sum(1 for t in transactions if t['transaction_type'] == 'expense')} expense)")
+    await db.transactions.insert_many(transactions)  # Changed to 'transactions' collection
+    print(f"   ✓ Created {len(transactions)} transactions ({sum(1 for t in transactions if t['transaction_type'] == 'income')} revenue, {sum(1 for t in transactions if t['transaction_type'] == 'expense')} expense)")
     
     return transactions
 
