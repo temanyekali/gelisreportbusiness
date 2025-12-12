@@ -11,6 +11,7 @@ class RoleEnum(str, Enum):
     KASIR = 'Kasir'
     LOKET = 'Loket'
     TEKNISI = 'Teknisi'
+    IT_DEVELOPER = 'IT Developer'
 
 class OrderStatus(str, Enum):
     PENDING = 'pending'
