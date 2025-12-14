@@ -147,17 +147,48 @@ export default function TechnicalProgressTracker({ orderId, onUpdate }) {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>🎯 Progress Keseluruhan</span>
-            <span className="text-2xl font-bold text-blue-600">{overallProgress.toFixed(1)}%</span>
+            <span className="text-3xl font-bold text-blue-600">{overallProgress.toFixed(1)}%</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Progress value={overallProgress} className="h-3" />
-          <p className="text-sm text-gray-500 mt-2">
-            {overallProgress === 100 
-              ? '✅ Semua tahapan telah selesai!' 
-              : `${progress.steps?.filter(s => s.status === 'completed').length || 0} dari ${progress.steps?.length || 0} tahapan selesai`
-            }
-          </p>
+        <CardContent className="space-y-4">
+          {/* Main Progress Bar */}
+          <div>
+            <Progress value={overallProgress} className="h-4" />
+            <p className="text-sm text-gray-500 mt-2">
+              {overallProgress === 100 
+                ? '✅ Semua tahapan telah selesai!' 
+                : `${progress.steps?.filter(s => s.status === 'completed').length || 0} dari ${progress.steps?.length || 0} tahapan selesai`
+              }
+            </p>
+          </div>
+
+          {/* Status Breakdown */}
+          <div className="grid grid-cols-3 gap-3 pt-3 border-t">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {progress.steps?.filter(s => s.status === 'completed').length || 0}
+              </div>
+              <div className="text-xs text-gray-600">Selesai</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {progress.steps?.filter(s => s.status === 'in_progress').length || 0}
+              </div>
+              <div className="text-xs text-gray-600">Sedang Berjalan</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-400">
+                {progress.steps?.filter(s => s.status === 'not_started').length || 0}
+              </div>
+              <div className="text-xs text-gray-600">Belum Dimulai</div>
+            </div>
+          </div>
+
+          {/* Progress Calculation Info */}
+          <div className="text-xs text-gray-500 bg-gray-50 rounded p-2">
+            <span className="font-medium">ℹ️ Cara Perhitungan:</span> Progress dihitung berdasarkan bobot setiap tahapan. 
+            Tahapan "Selesai" = 100% × bobot, "Sedang Berjalan" = 50% × bobot.
+          </div>
         </CardContent>
       </Card>
 
