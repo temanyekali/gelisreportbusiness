@@ -43,43 +43,6 @@ export default function TeknisiDashboard() {
     }
   };
 
-  const handleUpdateStatus = (order) => {
-    setSelectedOrder(order);
-    setUpdateData({
-      status: order.status,
-      progress: order.order_details?.progress || 0,
-      notes: ''
-    });
-    setShowUpdateModal(true);
-  };
-
-  const handleSubmitUpdate = async () => {
-    if (!selectedOrder) return;
-    
-    try {
-      // Update status
-      await api.put(`/teknisi/orders/${selectedOrder.id}/status`, {
-        status: updateData.status,
-        notes: updateData.notes
-      });
-      
-      // Update progress if changed
-      if (updateData.progress !== (selectedOrder.order_details?.progress || 0)) {
-        await api.put(`/teknisi/orders/${selectedOrder.id}/progress`, {
-          progress: updateData.progress,
-          notes: updateData.notes
-        });
-      }
-      
-      toast.success('Status berhasil diupdate!');
-      setShowUpdateModal(false);
-      setSelectedOrder(null);
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Gagal update status');
-    }
-  };
-
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
