@@ -2379,7 +2379,7 @@ async def create_technical_progress(
     await db.technical_progress.insert_one(doc)
     
     await log_activity(
-        current_user['id'],
+        current_user['sub'],
         'CREATE_TECHNICAL_PROGRESS',
         f"Created technical progress for order {progress_data.order_id}",
         related_type='technical_progress',
