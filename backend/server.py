@@ -831,7 +831,7 @@ async def get_users(current_user: dict = Depends(get_current_user)):
 async def update_user(user_id: str, user_data: UserCreate, current_user: dict = Depends(get_current_user)):
     # Check permission - Owner or Manager (limited)
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer
         raise HTTPException(status_code=403, detail='Tidak memiliki izin')
     
     target_user = await db.users.find_one({'id': user_id}, {'_id': 0})
@@ -936,7 +936,7 @@ async def get_activity_logs(
 ):
     # Check permission
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer
         raise HTTPException(status_code=403, detail='Tidak memiliki izin')
     
     query = {}
@@ -1166,7 +1166,7 @@ async def update_loket_daily_report(
 ):
     # Check permission - Owner or Manager can edit
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer
         raise HTTPException(status_code=403, detail='Tidak memiliki izin untuk mengedit laporan')
     
     # Get existing report
@@ -1202,7 +1202,7 @@ async def update_kasir_daily_report(
 ):
     # Check permission - Owner or Manager can edit
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer
         raise HTTPException(status_code=403, detail='Tidak memiliki izin untuk mengedit laporan')
     
     # Get existing report
@@ -1626,7 +1626,7 @@ async def update_order_status_by_teknisi(
     if user['role_id'] == 7:  # Teknisi
         if order['assigned_to'] != current_user['sub']:
             raise HTTPException(status_code=403, detail='Order tidak di-assign ke Anda')
-    elif user['role_id'] not in [1, 2, 8]  # Not Owner, Manager, or IT Developer:
+    elif user['role_id'] not in [1, 2, 8]:  # Not Owner, Manager, or IT Developer
         raise HTTPException(status_code=403, detail='Tidak memiliki akses')
     
     # Validate status
@@ -2375,7 +2375,7 @@ async def update_bulk_settings(
     current_user: User = Depends(get_current_user)
 ):
     """Update multiple settings at once"""
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer only:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer only
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Hanya Owner atau Manager yang dapat mengubah pengaturan'
@@ -2501,7 +2501,7 @@ async def clear_mock_data(current_user: User = Depends(get_current_user)):
 @api_router.post('/data/backup')
 async def backup_database(current_user: User = Depends(get_current_user)):
     """Create database backup"""
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer only:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer only
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Hanya Owner atau Manager yang dapat backup database'
@@ -3718,7 +3718,7 @@ async def delete_income(
 ):
     """Delete income entry (Owner/Manager only)"""
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer
         raise HTTPException(status_code=403, detail='Hanya Owner/Manager dapat menghapus data')
     
     result = await db.universal_income.delete_one({'id': income_id, 'business_id': business_id})
@@ -3844,7 +3844,7 @@ async def delete_expense(
 ):
     """Delete expense entry (Owner/Manager only)"""
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer:
+    if user['role_id'] not in [1, 2, 8]:  # Owner, Manager, IT Developer
         raise HTTPException(status_code=403, detail='Hanya Owner/Manager dapat menghapus data')
     
     result = await db.universal_expense.delete_one({'id': expense_id, 'business_id': business_id})
