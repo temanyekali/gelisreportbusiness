@@ -33,22 +33,48 @@ export default function TeknisiDashboard() {
     try {
       const ordersRes = await api.get('/teknisi/orders');
       setOrders(ordersRes.data);
+      
       // Extract unique businesses from orders
       const uniqueBusinesses = {};
       ordersRes.data.forEach(order => {
         if (order.business_id && !uniqueBusinesses[order.business_id]) {
           uniqueBusinesses[order.business_id] = {
             id: order.business_id,
-            name: 'Business' // Placeholder, will be fetched if needed
+            name: 'Business'
           };
         }
       });
       setBusinesses(Object.values(uniqueBusinesses));
+      
+      // Fetch technicians list if user is manager/owner
+      if (isManagerOrOwner) {
+        try {
+          const usersRes = await api.get('/users');
+          const techList = usersRes.data.filter(u => u.role_id === 7 && u.is_active);
+          setTechnicians(techList);
+        } catch (err) {
+          console.error('Error fetching technicians:', err);
+        }
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Gagal memuat data pekerjaan');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAssignTechnician = async (orderId, technicianId) => {
+    try {
+      setAssigningOrder(orderId);
+      await api.put(`/teknisi/orders/${orderId}/assign`, { technician_id: technicianId });
+      toast.success('Teknisi berhasil ditugaskan!');
+      fetchData(); // Refresh data
+    } catch (error) {
+      toast.error('Gagal menugaskan teknisi');
+      console.error('Error assigning technician:', error);
+    } finally {
+      setAssigningOrder(null);
     }
   };
 
