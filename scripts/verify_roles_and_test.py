@@ -138,6 +138,10 @@ async def generate_test_users():
     print("🔧 ENSURING TEST USERS EXIST")
     print("="*70)
     
+    # Import di awal function
+    import sys
+    import uuid
+    sys.path.insert(0, '/app/backend')
     from utils.auth import get_password_hash
     
     test_users = [
@@ -153,9 +157,8 @@ async def generate_test_users():
         existing = await db.users.find_one({'username': test_user['username']}, {'_id': 0})
         
         if not existing:
-            from utils.helpers import generate_id
             user_data = {
-                'id': generate_id(),
+                'id': str(uuid.uuid4()),
                 'username': test_user['username'],
                 'name': test_user['name'],
                 'email': test_user['email'],
