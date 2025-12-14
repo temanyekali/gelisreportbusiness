@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getUser, clearAuth } from '../utils/auth';
 import { Button } from './ui/button';
 import {
-  Building2, Home, ShoppingCart, DollarSign, Users, Bell,
+  Building2, Home, ShoppingCart, DollarSign, Users,
   Settings, LogOut, Menu, X, FileText, Activity, Gift, Heart, Wrench
 } from 'lucide-react';
 import { Badge } from './ui/badge';
