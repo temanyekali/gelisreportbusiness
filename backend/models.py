@@ -645,41 +645,6 @@ class TechnicalProgress(TechnicalProgressBase):
     created_at: datetime
     updated_at: datetime
 
-# PPOB Product Breakdown Models
-class PPOBProductBreakdown(BaseModel):
-    product_type: str  # Token PLN, Pulsa, PDAM, Paket Data, TV Kabel, dll
-    transaction_count: int = 0
-    total_amount: float = 0.0
-    total_fee: float = 0.0
-    total_commission: float = 0.0
-
-class PPOBShiftReport(BaseModel):
-    business_id: str
-    report_date: datetime
-    shift: int  # 1, 2, atau 3
-    petugas_name: str
-    product_breakdown: List[PPOBProductBreakdown] = []
-    total_transactions: int = 0
-    total_amount: float = 0.0
-    total_fee: float = 0.0
-    total_commission: float = 0.0
-    bank_deposit: float = 0.0
-    notes: Optional[str] = None
-
-class PPOBShiftReportCreate(BaseModel):
-    business_id: str
-    report_date: datetime
-    shift: int
-    petugas_name: str
-    product_breakdown: List[PPOBProductBreakdown] = []
-    notes: Optional[str] = None
-
-class PPOBShiftReportResponse(PPOBShiftReport):
-    model_config = ConfigDict(extra='ignore')
-    id: str
-    created_by: str
-    created_at: datetime
-
 # Executive Summary Report Models
 class BusinessUnitKPI(BaseModel):
     business_id: str
