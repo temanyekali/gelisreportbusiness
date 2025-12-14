@@ -204,20 +204,6 @@ export default function TeknisiDashboard() {
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs md:text-sm font-medium text-slate-700">Progress</span>
-                    <span className="text-xs md:text-sm font-bold text-slate-900">{progress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 md:h-3">
-                    <div 
-                      className={`h-2 md:h-3 rounded-full transition-all ${getProgressColor(progress)}`}
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
-                </div>
-
                 {/* Notes */}
                 {order.notes && (
                   <div className="mb-4 p-3 bg-slate-50 rounded-lg">
