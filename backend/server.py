@@ -3526,6 +3526,380 @@ async def resolve_alert(
     return {'message': 'Alert resolved successfully'}
 
 
+# ============= UNIVERSAL INCOME/EXPENSE ROUTES (PER-BUSINESS SYSTEM) =============
+
+# INCOME ENDPOINTS
+
+@api_router.post('/business/{business_id}/income', response_model=UniversalIncome)
+async def create_income(
+    business_id: str,
+    income_data: UniversalIncomeCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create income entry for a business"""
+    # Check permission - Owner, Manager, Finance, Kasir, Loket
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3, 5, 6]:  # Owner, Manager, Finance, Kasir, Loket
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin')
+    
+    # Verify business exists
+    business = await db.businesses.find_one({'id': business_id}, {'_id': 0})
+    if not business:
+        raise HTTPException(status_code=404, detail='Bisnis tidak ditemukan')
+    
+    income_dict = income_data.model_dump()
+    income_dict['id'] = generate_id()
+    income_dict['income_code'] = generate_code('INC', 10)
+    income_dict['business_id'] = business_id
+    income_dict['created_by'] = current_user['sub']
+    income_dict['created_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = income_dict.copy()
+    doc['transaction_date'] = doc['transaction_date'].isoformat() if isinstance(doc['transaction_date'], datetime) else doc['transaction_date']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.universal_income.insert_one(doc)
+    
+    # AUTO-CREATE TRANSACTION for accounting sync
+    transaction = {
+        'id': generate_id(),
+        'transaction_code': generate_code('TXN', 12),
+        'business_id': business_id,
+        'transaction_type': 'income',
+        'category': income_dict['category'].value if hasattr(income_dict['category'], 'value') else income_dict['category'],
+        'description': income_dict['description'],
+        'amount': income_dict['amount'],
+        'payment_method': income_dict['payment_method'],
+        'reference_number': income_dict.get('reference_number'),
+        'order_id': income_dict.get('order_id'),
+        'created_by': current_user['sub'],
+        'created_at': utc_now().isoformat()
+    }
+    await db.transactions.insert_one(transaction)
+    
+    # Log activity
+    await log_activity(
+        current_user['sub'],
+        'CREATE_INCOME',
+        f"Created income entry: {income_dict['description']} - Rp {income_dict['amount']:,.0f}",
+        related_type='income',
+        related_id=income_dict['id'],
+        metadata={'business_id': business_id, 'amount': income_dict['amount']}
+    )
+    
+    return UniversalIncome(**income_dict)
+
+@api_router.get('/business/{business_id}/income', response_model=List[UniversalIncome])
+async def get_business_income(
+    business_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    category: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all income entries for a business"""
+    # Check permission
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3, 5, 6]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses')
+    
+    query = {'business_id': business_id}
+    
+    if start_date and end_date:
+        query['transaction_date'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    if category:
+        query['category'] = category
+    
+    incomes = await db.universal_income.find(query, {'_id': 0}).sort('transaction_date', -1).to_list(1000)
+    
+    for income in incomes:
+        if isinstance(income.get('transaction_date'), str):
+            income['transaction_date'] = datetime.fromisoformat(income['transaction_date'])
+        if isinstance(income.get('created_at'), str):
+            income['created_at'] = datetime.fromisoformat(income['created_at'])
+    
+    return incomes
+
+@api_router.delete('/business/{business_id}/income/{income_id}')
+async def delete_income(
+    business_id: str,
+    income_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete income entry (Owner/Manager only)"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2]:  # Owner or Manager
+        raise HTTPException(status_code=403, detail='Hanya Owner/Manager dapat menghapus data')
+    
+    result = await db.universal_income.delete_one({'id': income_id, 'business_id': business_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail='Data pemasukan tidak ditemukan')
+    
+    # Also delete related transaction
+    await db.transactions.delete_many({'reference_number': income_id})
+    
+    await log_activity(
+        current_user['sub'],
+        'DELETE_INCOME',
+        f"Deleted income entry {income_id}",
+        related_type='income',
+        related_id=income_id
+    )
+    
+    return {'message': 'Data pemasukan berhasil dihapus'}
+
+# EXPENSE ENDPOINTS
+
+@api_router.post('/business/{business_id}/expense', response_model=UniversalExpense)
+async def create_expense(
+    business_id: str,
+    expense_data: UniversalExpenseCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create expense entry for a business"""
+    # Check permission - Owner, Manager, Finance, Kasir
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3, 5]:  # Owner, Manager, Finance, Kasir
+        raise HTTPException(status_code=403, detail='Tidak memiliki izin')
+    
+    # Verify business exists
+    business = await db.businesses.find_one({'id': business_id}, {'_id': 0})
+    if not business:
+        raise HTTPException(status_code=404, detail='Bisnis tidak ditemukan')
+    
+    expense_dict = expense_data.model_dump()
+    expense_dict['id'] = generate_id()
+    expense_dict['expense_code'] = generate_code('EXP', 10)
+    expense_dict['business_id'] = business_id
+    expense_dict['created_by'] = current_user['sub']
+    expense_dict['created_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = expense_dict.copy()
+    doc['transaction_date'] = doc['transaction_date'].isoformat() if isinstance(doc['transaction_date'], datetime) else doc['transaction_date']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.universal_expense.insert_one(doc)
+    
+    # AUTO-CREATE TRANSACTION for accounting sync
+    transaction = {
+        'id': generate_id(),
+        'transaction_code': generate_code('TXN', 12),
+        'business_id': business_id,
+        'transaction_type': 'expense',
+        'category': expense_dict['category'].value if hasattr(expense_dict['category'], 'value') else expense_dict['category'],
+        'description': expense_dict['description'],
+        'amount': expense_dict['amount'],
+        'payment_method': expense_dict['payment_method'],
+        'reference_number': expense_dict.get('reference_number'),
+        'order_id': expense_dict.get('order_id'),
+        'created_by': current_user['sub'],
+        'created_at': utc_now().isoformat()
+    }
+    await db.transactions.insert_one(transaction)
+    
+    # Log activity
+    await log_activity(
+        current_user['sub'],
+        'CREATE_EXPENSE',
+        f"Created expense entry: {expense_dict['description']} - Rp {expense_dict['amount']:,.0f}",
+        related_type='expense',
+        related_id=expense_dict['id'],
+        metadata={'business_id': business_id, 'amount': expense_dict['amount']}
+    )
+    
+    return UniversalExpense(**expense_dict)
+
+@api_router.get('/business/{business_id}/expense', response_model=List[UniversalExpense])
+async def get_business_expense(
+    business_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    category: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all expense entries for a business"""
+    # Check permission
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3, 5]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses')
+    
+    query = {'business_id': business_id}
+    
+    if start_date and end_date:
+        query['transaction_date'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    if category:
+        query['category'] = category
+    
+    expenses = await db.universal_expense.find(query, {'_id': 0}).sort('transaction_date', -1).to_list(1000)
+    
+    for expense in expenses:
+        if isinstance(expense.get('transaction_date'), str):
+            expense['transaction_date'] = datetime.fromisoformat(expense['transaction_date'])
+        if isinstance(expense.get('created_at'), str):
+            expense['created_at'] = datetime.fromisoformat(expense['created_at'])
+    
+    return expenses
+
+@api_router.delete('/business/{business_id}/expense/{expense_id}')
+async def delete_expense(
+    business_id: str,
+    expense_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete expense entry (Owner/Manager only)"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2]:  # Owner or Manager
+        raise HTTPException(status_code=403, detail='Hanya Owner/Manager dapat menghapus data')
+    
+    result = await db.universal_expense.delete_one({'id': expense_id, 'business_id': business_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail='Data pengeluaran tidak ditemukan')
+    
+    # Also delete related transaction
+    await db.transactions.delete_many({'reference_number': expense_id})
+    
+    await log_activity(
+        current_user['sub'],
+        'DELETE_EXPENSE',
+        f"Deleted expense entry {expense_id}",
+        related_type='expense',
+        related_id=expense_id
+    )
+    
+    return {'message': 'Data pengeluaran berhasil dihapus'}
+
+# BUSINESS DASHBOARD ENDPOINT
+
+@api_router.get('/business/{business_id}/dashboard', response_model=BusinessDashboardStats)
+async def get_business_dashboard(
+    business_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get dashboard statistics for a specific business"""
+    # Check permission
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3]:
+        raise HTTPException(status_code=403, detail='Tidak memiliki akses')
+    
+    # Get business info
+    business = await db.businesses.find_one({'id': business_id}, {'_id': 0})
+    if not business:
+        raise HTTPException(status_code=404, detail='Bisnis tidak ditemukan')
+    
+    # Default date range: Last 30 days
+    if not start_date:
+        start_date = (datetime.now(timezone.utc) - timedelta(days=30)).strftime('%Y-%m-%d')
+    if not end_date:
+        end_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    
+    # Get income data
+    income_query = {
+        'business_id': business_id,
+        'transaction_date': {'$gte': start_date, '$lte': end_date + 'T23:59:59'}
+    }
+    incomes = await db.universal_income.find(income_query, {'_id': 0}).to_list(10000)
+    
+    total_income = sum(inc['amount'] for inc in incomes)
+    income_by_category = {}
+    for inc in incomes:
+        cat = inc.get('category', 'other_income')
+        income_by_category[cat] = income_by_category.get(cat, 0) + inc['amount']
+    
+    # Get expense data
+    expense_query = {
+        'business_id': business_id,
+        'transaction_date': {'$gte': start_date, '$lte': end_date + 'T23:59:59'}
+    }
+    expenses = await db.universal_expense.find(expense_query, {'_id': 0}).to_list(10000)
+    
+    total_expense = sum(exp['amount'] for exp in expenses)
+    expense_by_category = {}
+    for exp in expenses:
+        cat = exp.get('category', 'other_expense')
+        expense_by_category[cat] = expense_by_category.get(cat, 0) + exp['amount']
+    
+    # Get orders data
+    order_query = {
+        'business_id': business_id,
+        'created_at': {'$gte': start_date, '$lte': end_date + 'T23:59:59'}
+    }
+    orders = await db.orders.find(order_query, {'_id': 0}).to_list(10000)
+    
+    total_orders = len(orders)
+    completed_orders = len([o for o in orders if o.get('status') == 'completed'])
+    pending_orders = len([o for o in orders if o.get('status') == 'pending'])
+    cancelled_orders = len([o for o in orders if o.get('status') == 'cancelled'])
+    completion_rate = (completed_orders / total_orders * 100) if total_orders > 0 else 0
+    
+    # Calculate profit metrics
+    net_profit = total_income - total_expense
+    profit_margin = (net_profit / total_income * 100) if total_income > 0 else 0
+    
+    # Top income sources
+    top_income_sources = [
+        {'category': cat, 'amount': amt, 'percentage': (amt / total_income * 100) if total_income > 0 else 0}
+        for cat, amt in sorted(income_by_category.items(), key=lambda x: x[1], reverse=True)[:5]
+    ]
+    
+    # Top expense categories
+    top_expense_categories = [
+        {'category': cat, 'amount': amt, 'percentage': (amt / total_expense * 100) if total_expense > 0 else 0}
+        for cat, amt in sorted(expense_by_category.items(), key=lambda x: x[1], reverse=True)[:5]
+    ]
+    
+    # Income trend (daily aggregation)
+    income_trend = []
+    expense_trend = []
+    
+    # Simple daily aggregation for last 7 days
+    for i in range(7):
+        day = (datetime.now(timezone.utc) - timedelta(days=i)).strftime('%Y-%m-%d')
+        day_income = sum(inc['amount'] for inc in incomes if inc.get('transaction_date', '')[:10] == day)
+        day_expense = sum(exp['amount'] for exp in expenses if exp.get('transaction_date', '')[:10] == day)
+        income_trend.append({'date': day, 'amount': day_income})
+        expense_trend.append({'date': day, 'amount': day_expense})
+    
+    income_trend.reverse()
+    expense_trend.reverse()
+    
+    return BusinessDashboardStats(
+        business_id=business_id,
+        business_name=business['name'],
+        business_category=business['category'],
+        period_start=datetime.fromisoformat(start_date) if isinstance(start_date, str) else start_date,
+        period_end=datetime.fromisoformat(end_date) if isinstance(end_date, str) else end_date,
+        total_income=total_income,
+        total_expense=total_expense,
+        net_profit=net_profit,
+        profit_margin=profit_margin,
+        total_orders=total_orders,
+        completed_orders=completed_orders,
+        pending_orders=pending_orders,
+        cancelled_orders=cancelled_orders,
+        completion_rate=completion_rate,
+        income_by_category=income_by_category,
+        expense_by_category=expense_by_category,
+        top_income_sources=top_income_sources,
+        top_expense_categories=top_expense_categories,
+        income_trend=income_trend,
+        expense_trend=expense_trend
+    )
+
+
 # Include router (MUST be after all endpoint definitions)
 app.include_router(api_router)
 
