@@ -50,7 +50,137 @@
 - [ ] Server Ubuntu dengan akses root/sudo
 - [ ] Domain name sudah diarahkan ke IP server (optional)
 - [ ] SSH key atau password untuk akses server
+- [ ] GitHub account dan repository (untuk version control)
+- [ ] GitHub Personal Access Token (untuk private repository)
 - [ ] Backup data (jika ada instalasi sebelumnya)
+
+---
+
+## GitHub Repository Setup
+
+### Mengapa Perlu GitHub Repository?
+
+Menggunakan GitHub untuk deployment memiliki banyak keuntungan:
+- ✅ **Version Control**: Track semua perubahan code
+- ✅ **Collaboration**: Tim dapat bekerja sama dengan mudah
+- ✅ **Backup**: Code tersimpan aman di cloud
+- ✅ **Easy Updates**: Deploy update dengan `git pull`
+- ✅ **Rollback**: Kembali ke versi sebelumnya jika ada masalah
+
+### 1. Persiapan GitHub Repository
+
+#### Opsi A: Repository Baru
+
+1. **Login ke GitHub**: https://github.com
+2. **Buat Repository Baru**:
+   - Klik tombol **"New"** atau **"+"** → **"New repository"**
+   - Repository name: `gelis-app` (atau nama lain sesuai keinginan)
+   - Description: `GELIS - Gerbang Elektronik Layanan Informasi Sistem`
+   - Pilih **Private** (recommended untuk production app)
+   - **JANGAN** centang "Initialize with README" (karena kita akan push existing code)
+   - Klik **"Create repository"**
+
+3. **Copy URL Repository**:
+   ```
+   https://github.com/USERNAME/gelis-app.git
+   ```
+
+#### Opsi B: Fork dari Existing Repository
+
+Jika Anda menggunakan Emergent platform dan ingin push ke GitHub:
+
+1. Gunakan fitur **"Save to GitHub"** yang ada di Emergent UI
+2. Atau manual push (lihat section berikutnya)
+
+### 2. Setup GitHub Personal Access Token (PAT)
+
+Untuk private repository, Anda perlu PAT:
+
+1. **Buka GitHub Settings**:
+   - Klik profile picture → **Settings**
+   - Scroll ke bawah → **Developer settings**
+   - Klik **Personal access tokens** → **Tokens (classic)**
+
+2. **Generate Token**:
+   - Klik **"Generate new token"** → **"Generate new token (classic)"**
+   - Note: `GELIS Deployment`
+   - Expiration: `No expiration` (atau sesuai kebutuhan)
+   - Select scopes:
+     - ✅ `repo` (Full control of private repositories)
+     - ✅ `workflow` (Update GitHub Action workflows)
+   - Klik **"Generate token"**
+
+3. **Simpan Token**:
+   ```
+   ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   ```
+   ⚠️ **PENTING**: Simpan token ini, tidak akan ditampilkan lagi!
+
+### 3. Push Code ke GitHub (Jika Belum Push)
+
+Jika Anda belum push code ke GitHub:
+
+```bash
+# Masuk ke directory aplikasi
+cd /path/to/gelis-app
+
+# Initialize git (jika belum)
+git init
+
+# Buat .gitignore untuk exclude sensitive files
+cat > .gitignore <<EOF
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+*.so
+
+# Node
+node_modules/
+build/
+dist/
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# System
+.emergent/
+EOF
+
+# Add semua file
+git add .
+
+# Commit pertama
+git commit -m "Initial commit: GELIS application"
+
+# Link ke GitHub repository
+git remote add origin https://github.com/USERNAME/gelis-app.git
+
+# Push ke GitHub
+git push -u origin main
+```
+
+Jika diminta username & password:
+- **Username**: GitHub username Anda
+- **Password**: Paste **Personal Access Token** (bukan password GitHub!)
+
+### 4. Verify Repository
+
+Buka browser dan check: `https://github.com/USERNAME/gelis-app`
+
+Pastikan semua file sudah ter-upload (kecuali file di `.gitignore`)
 
 ---
 
