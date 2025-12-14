@@ -196,6 +196,39 @@ export default function TeknisiDashboard() {
                   </div>
                 </div>
 
+                {/* Progress Keseluruhan */}
+                {order.technical_progress && (
+                  <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-slate-700">🎯 Progress Keseluruhan</span>
+                      </div>
+                      <span className="text-xl font-bold text-blue-600">
+                        {order.technical_progress.overall_progress?.toFixed(1) || 0}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                      <div 
+                        className="h-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all"
+                        style={{ width: `${order.technical_progress.overall_progress || 0}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-600">
+                      <span>
+                        {order.technical_progress.steps?.filter(s => s.status === 'completed').length || 0} dari {order.technical_progress.steps?.length || 0} tahapan selesai
+                      </span>
+                      <span className="font-medium">
+                        {order.technical_progress.overall_progress === 100 
+                          ? '✅ Selesai' 
+                          : order.technical_progress.overall_progress > 0
+                          ? '⏳ Sedang Proses'
+                          : '○ Belum Dimulai'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Notes */}
                 {order.notes && (
                   <div className="mb-4 p-3 bg-slate-50 rounded-lg">
