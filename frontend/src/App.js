@@ -95,67 +95,67 @@ function App() {
         } />
         
         <Route path="/businesses" element={
-          <RoleBasedRoute allowedRoles={[1, 2]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 8]}>
             <Layout><Businesses /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/orders" element={
-          <RoleBasedRoute allowedRoles={[1, 2, 5, 6]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 5, 6, 8]}>
             <Layout><Orders /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/transactions" element={
-          <RoleBasedRoute allowedRoles={[1, 2, 3]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 3, 8]}>
             <Layout><Accounting /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/accounting" element={
-          <RoleBasedRoute allowedRoles={[1, 2, 3]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 3, 8]}>
             <Layout><Accounting /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/users" element={
-          <RoleBasedRoute allowedRoles={[1, 2]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 8]}>
             <Layout><Users /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/reports" element={
-          <RoleBasedRoute allowedRoles={[1, 2, 3, 5, 6]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 3, 5, 6, 8]}>
             <Layout><Reports /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/loyalty" element={
-          <RoleBasedRoute allowedRoles={[1, 2]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 8]}>
             <Layout><Loyalty /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/csr" element={
-          <RoleBasedRoute allowedRoles={[1, 2]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 8]}>
             <Layout><CSR /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/activity-logs" element={
-          <RoleBasedRoute allowedRoles={[1, 2]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 8]}>
             <Layout><ActivityLogs /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/settings" element={
-          <RoleBasedRoute allowedRoles={[1]}>
+          <RoleBasedRoute allowedRoles={[1, 8]}>
             <Layout><Settings /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/teknisi" element={
-          <RoleBasedRoute allowedRoles={[1, 2, 5, 7]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 5, 7, 8]}>
             <Layout><TeknisiDashboard /></Layout>
           </RoleBasedRoute>
         } />
