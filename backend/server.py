@@ -597,7 +597,7 @@ async def get_financial_dashboard(
     """
     # Check permission - Only Owner, Manager, Finance
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:
+    if user['role_id'] not in [1, 2, 3, 8]:
         raise HTTPException(status_code=403, detail='Tidak memiliki akses ke Financial Dashboard')
     
     query = {}
@@ -684,7 +684,7 @@ async def get_accounting_summary(
     """Get accounting summary with debit/kredit totals"""
     # Check permission - Only Owner, Manager, Finance
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:
+    if user['role_id'] not in [1, 2, 3, 8]:
         raise HTTPException(status_code=403, detail='Tidak memiliki akses ke menu Akunting')
     
     query = {}
@@ -1244,7 +1244,7 @@ async def reconcile_kasir_report(
     """
     # Check permission - Owner, Manager, Finance
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:
+    if user['role_id'] not in [1, 2, 3, 8]:
         raise HTTPException(status_code=403, detail='Tidak memiliki akses rekonsiliasi')
     
     # Get kasir report for the date
@@ -1376,7 +1376,7 @@ async def reconcile_loket_report(
     """
     # Check permission - Owner, Manager, Finance
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:
+    if user['role_id'] not in [1, 2, 3, 8]:
         raise HTTPException(status_code=403, detail='Tidak memiliki akses rekonsiliasi')
     
     # Get loket reports for the date
@@ -1475,7 +1475,7 @@ async def get_verification_summary(
     """
     # Check permission - Owner, Manager, Finance
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:
+    if user['role_id'] not in [1, 2, 3, 8]:
         raise HTTPException(status_code=403, detail='Tidak memiliki akses verifikasi')
     
     # Default to last 7 days if not specified
@@ -1569,7 +1569,7 @@ async def get_teknisi_orders(current_user: dict = Depends(get_current_user)):
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
     
     # Check permission - Owner, Manager, Kasir, Teknisi
-    if user['role_id'] not in [1, 2, 5, 7]:  # Owner, Manager, Kasir, Teknisi
+    if user['role_id'] not in [1, 2, 5, 7, 8]:  # Owner, Manager, Kasir, Teknisi
         raise HTTPException(status_code=403, detail='Tidak memiliki akses ke menu Pekerjaan Teknisi')
     
     # Base query: only orders that require technician
@@ -1888,7 +1888,7 @@ async def get_accounts(current_user: dict = Depends(get_current_user)):
 async def create_account(account_data: AccountCreate, current_user: dict = Depends(get_current_user)):
     # Check permission - Owner or Manager or Finance
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:
+    if user['role_id'] not in [1, 2, 3, 8]:
         raise HTTPException(status_code=403, detail='Tidak memiliki izin')
     
     acc_dict = account_data.model_dump()
@@ -3275,7 +3275,7 @@ async def get_executive_summary(
 ):
     """Generate executive summary report for all businesses"""
     # Permission check: Only Owner, Manager, Finance can access
-    if current_user['role_id'] not in [1, 2, 3]:  # Owner, Manager, Finance
+    if user['role_id'] not in [1, 2, 3, 8]:  # Owner, Manager, Finance
         raise HTTPException(status_code=403, detail='Akses ditolak')
     
     # Get all businesses
@@ -3408,7 +3408,7 @@ async def export_report(
     format_type = export_request.format
     
     # Permission check
-    if current_user['role_id'] not in [1, 2, 3]:  # Owner, Manager, Finance
+    if user['role_id'] not in [1, 2, 3, 8]:  # Owner, Manager, Finance
         raise HTTPException(status_code=403, detail='Akses ditolak')
     
     # Generate report data based on type
@@ -3877,7 +3877,7 @@ async def get_business_dashboard(
     """Get dashboard statistics for a specific business"""
     # Check permission
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2, 3]:
+    if user['role_id'] not in [1, 2, 3, 8]:
         raise HTTPException(status_code=403, detail='Tidak memiliki akses')
     
     # Get business info
