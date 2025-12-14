@@ -2657,25 +2657,6 @@ async def export_report(
             filename = f"executive_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     
-    elif report_type == 'ppob_shift':
-        # Get PPOB shift report data
-        report_id = export_request.filters.get('report_id')
-        if not report_id:
-            raise HTTPException(status_code=400, detail='report_id required for PPOB shift export')
-        
-        report_data = await db.ppob_shift_reports.find_one({'id': report_id}, {'_id': 0})
-        if not report_data:
-            raise HTTPException(status_code=404, detail='Report not found')
-        
-        if format_type == ExportFormat.PDF:
-            buffer = report_generator.generate_ppob_shift_pdf(report_data)
-            filename = f"ppob_shift_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            media_type = "application/pdf"
-        else:  # Excel
-            buffer = report_generator.generate_ppob_shift_excel(report_data)
-            filename = f"ppob_shift_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    
     else:
         raise HTTPException(status_code=400, detail=f'Report type {report_type} not supported')
     
