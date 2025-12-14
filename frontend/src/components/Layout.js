@@ -48,7 +48,6 @@ export default function Layout({ children }) {
     { path: '/users', icon: Users, label: 'Pengguna', role: [1, 2] },
     { path: '/reports', icon: FileText, label: 'Laporan Harian', role: [1, 2, 3, 5, 6] },
     { path: '/reports/executive', icon: FileText, label: 'Ringkasan Eksekutif', role: [1, 2, 3] },
-    { path: '/alerts', icon: Bell, label: 'Smart Alerts', role: [1, 2] },
     { path: '/loyalty', icon: Gift, label: 'Program Loyalitas', role: [1, 2] },
     { path: '/csr', icon: Heart, label: 'Program CSR', role: [1, 2] },
     { path: '/activity-logs', icon: Activity, label: 'Log Aktivitas', role: [1, 2] },
