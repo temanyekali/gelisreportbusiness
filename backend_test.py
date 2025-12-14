@@ -849,6 +849,476 @@ class GelisAPITester:
                 self.log_result("Verification Summary - Invalid Range", False, f"Unexpected response: {response.status_code}")
         except Exception as e:
             self.log_result("Verification Summary - Invalid Range", False, f"Error: {str(e)}")
+
+    # ============= FASE 1 NEW ENDPOINTS TESTING =============
+    
+    def test_technical_progress_endpoints(self):
+        """Test Technical Progress endpoints (3 endpoints)"""
+        print("\n=== TESTING TECHNICAL PROGRESS ENDPOINTS ===")
+        
+        # Get an order ID for testing
+        headers = self.get_headers('owner')
+        try:
+            response = requests.get(f"{self.base_url}/orders", headers=headers, timeout=30)
+            if response.status_code == 200:
+                orders = response.json()
+                if not orders:
+                    self.log_result("Technical Progress Setup", False, "No orders available for testing")
+                    return
+                order_id = orders[0]['id']
+            else:
+                self.log_result("Technical Progress Setup", False, "Could not retrieve orders")
+                return
+        except Exception as e:
+            self.log_result("Technical Progress Setup", False, f"Error getting orders: {str(e)}")
+            return
+        
+        # Test 1: POST /api/technical-progress - Create technical progress
+        try:
+            response = requests.post(
+                f"{self.base_url}/technical-progress",
+                json={"order_id": order_id},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if 'steps' in data and len(data['steps']) == 5:
+                    self.log_result("POST Technical Progress", True, f"Created progress with 5 steps for order {order_id}")
+                    self.test_data['technical_progress_order'] = order_id
+                else:
+                    self.log_result("POST Technical Progress", False, "Missing steps or incorrect step count")
+            else:
+                self.log_result("POST Technical Progress", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("POST Technical Progress", False, f"Error: {str(e)}")
+        
+        # Test 2: GET /api/technical-progress/{order_id} - Get progress
+        try:
+            response = requests.get(
+                f"{self.base_url}/technical-progress/{order_id}",
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['order_id', 'steps', 'overall_progress']
+                missing_fields = [f for f in required_fields if f not in data]
+                if not missing_fields:
+                    self.log_result("GET Technical Progress", True, f"Retrieved progress: {data['overall_progress']}% complete")
+                else:
+                    self.log_result("GET Technical Progress", False, f"Missing fields: {missing_fields}")
+            else:
+                self.log_result("GET Technical Progress", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GET Technical Progress", False, f"Error: {str(e)}")
+        
+        # Test 3: PUT /api/technical-progress/{order_id}/step - Update step status
+        try:
+            response = requests.put(
+                f"{self.base_url}/technical-progress/{order_id}/step",
+                json={
+                    "step_name": "Survey Lokasi",
+                    "status": "completed",
+                    "notes": "Survey completed successfully"
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if 'overall_progress' in data and data['overall_progress'] > 0:
+                    self.log_result("PUT Technical Progress Step", True, f"Updated step, progress now: {data['overall_progress']}%")
+                else:
+                    self.log_result("PUT Technical Progress Step", False, "Progress not updated correctly")
+            else:
+                self.log_result("PUT Technical Progress Step", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("PUT Technical Progress Step", False, f"Error: {str(e)}")
+
+    def test_ppob_shift_report_endpoints(self):
+        """Test PPOB Shift Report endpoints (3 endpoints)"""
+        print("\n=== TESTING PPOB SHIFT REPORT ENDPOINTS ===")
+        
+        # Get business ID for testing
+        headers = self.get_headers('owner')
+        try:
+            response = requests.get(f"{self.base_url}/businesses", headers=headers, timeout=30)
+            if response.status_code == 200:
+                businesses = response.json()
+                if not businesses:
+                    self.log_result("PPOB Shift Setup", False, "No businesses available for testing")
+                    return
+                business_id = businesses[0]['id']
+            else:
+                self.log_result("PPOB Shift Setup", False, "Could not retrieve businesses")
+                return
+        except Exception as e:
+            self.log_result("PPOB Shift Setup", False, f"Error getting businesses: {str(e)}")
+            return
+        
+        # Test 1: POST /api/reports/ppob-shift - Create shift report
+        shift_data = {
+            "business_id": business_id,
+            "report_date": "2024-12-15",
+            "shift": "pagi",
+            "petugas_name": "Ahmad Kasir",
+            "products": [
+                {
+                    "product_name": "Token PLN",
+                    "quantity": 25,
+                    "total_amount": 2500000,
+                    "fee_amount": 25000,
+                    "commission_amount": 12500
+                },
+                {
+                    "product_name": "Pulsa Telkomsel",
+                    "quantity": 15,
+                    "total_amount": 750000,
+                    "fee_amount": 15000,
+                    "commission_amount": 7500
+                }
+            ]
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.base_url}/reports/ppob-shift",
+                json=shift_data,
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['id', 'business_id', 'shift', 'total_amount', 'total_fee', 'total_commission']
+                missing_fields = [f for f in required_fields if f not in data]
+                if not missing_fields:
+                    self.log_result("POST PPOB Shift Report", True, f"Created shift report: {data['total_amount']} total, {data['total_fee']} fee")
+                    self.test_data['ppob_shift_report_id'] = data['id']
+                else:
+                    self.log_result("POST PPOB Shift Report", False, f"Missing fields: {missing_fields}")
+            else:
+                self.log_result("POST PPOB Shift Report", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("POST PPOB Shift Report", False, f"Error: {str(e)}")
+        
+        # Test 2: GET /api/reports/ppob-shift - Get shift reports
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/ppob-shift",
+                params={"business_id": business_id, "limit": 10},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if 'reports' in data and isinstance(data['reports'], list):
+                    self.log_result("GET PPOB Shift Reports", True, f"Retrieved {len(data['reports'])} shift reports")
+                else:
+                    self.log_result("GET PPOB Shift Reports", False, "Invalid response format")
+            else:
+                self.log_result("GET PPOB Shift Reports", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GET PPOB Shift Reports", False, f"Error: {str(e)}")
+        
+        # Test 3: POST /api/reports/ppob-shift/auto-generate - Auto-generate from transactions
+        try:
+            response = requests.post(
+                f"{self.base_url}/reports/ppob-shift/auto-generate",
+                json={
+                    "business_id": business_id,
+                    "report_date": "2024-12-15",
+                    "shift": "siang"
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if 'products' in data and 'total_amount' in data:
+                    self.log_result("POST PPOB Auto-Generate", True, f"Auto-generated report: {len(data['products'])} products, {data['total_amount']} total")
+                else:
+                    self.log_result("POST PPOB Auto-Generate", False, "Missing required fields in response")
+            else:
+                self.log_result("POST PPOB Auto-Generate", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("POST PPOB Auto-Generate", False, f"Error: {str(e)}")
+
+    def test_executive_summary_endpoint(self):
+        """Test Executive Summary endpoint (1 endpoint)"""
+        print("\n=== TESTING EXECUTIVE SUMMARY ENDPOINT ===")
+        
+        # Test with Owner (should work)
+        headers = self.get_headers('owner')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/executive-summary",
+                params={
+                    "start_date": "2024-12-01",
+                    "end_date": "2024-12-15"
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['period', 'overall_summary', 'business_units', 'top_performers', 'alerts', 'insights', 'recommendations']
+                missing_fields = [f for f in required_fields if f not in data]
+                if not missing_fields:
+                    business_units = data.get('business_units', [])
+                    self.log_result("GET Executive Summary - Owner", True, f"Retrieved summary: {len(business_units)} business units, {len(data.get('alerts', []))} alerts")
+                    self.test_data['executive_summary'] = data
+                else:
+                    self.log_result("GET Executive Summary - Owner", False, f"Missing fields: {missing_fields}")
+            else:
+                self.log_result("GET Executive Summary - Owner", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GET Executive Summary - Owner", False, f"Error: {str(e)}")
+        
+        # Test with Manager (should work)
+        headers = self.get_headers('manager')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/executive-summary",
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                self.log_result("GET Executive Summary - Manager", True, "Manager can access executive summary")
+            else:
+                self.log_result("GET Executive Summary - Manager", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GET Executive Summary - Manager", False, f"Error: {str(e)}")
+        
+        # Test with Finance (should work)
+        headers = self.get_headers('finance')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/executive-summary",
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                self.log_result("GET Executive Summary - Finance", True, "Finance can access executive summary")
+            else:
+                self.log_result("GET Executive Summary - Finance", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GET Executive Summary - Finance", False, f"Error: {str(e)}")
+        
+        # Test with Loket (should fail with 403)
+        headers = self.get_headers('loket1')
+        try:
+            response = requests.get(
+                f"{self.base_url}/reports/executive-summary",
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 403:
+                self.log_result("GET Executive Summary - Loket (403)", True, "Loket correctly denied access (403)")
+            else:
+                self.log_result("GET Executive Summary - Loket (403)", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("GET Executive Summary - Loket (403)", False, f"Error: {str(e)}")
+
+    def test_export_endpoint(self):
+        """Test Export endpoint (1 endpoint)"""
+        print("\n=== TESTING EXPORT ENDPOINT ===")
+        
+        headers = self.get_headers('owner')
+        
+        # Test 1: Export executive summary to PDF
+        try:
+            response = requests.post(
+                f"{self.base_url}/reports/export",
+                json={
+                    "report_type": "executive_summary",
+                    "format": "pdf",
+                    "start_date": "2024-12-01",
+                    "end_date": "2024-12-15"
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if 'download_url' in data or 'file_content' in data:
+                    self.log_result("Export Executive Summary PDF", True, "Successfully exported to PDF")
+                else:
+                    self.log_result("Export Executive Summary PDF", False, "Missing download URL or file content")
+            else:
+                self.log_result("Export Executive Summary PDF", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Export Executive Summary PDF", False, f"Error: {str(e)}")
+        
+        # Test 2: Export executive summary to Excel
+        try:
+            response = requests.post(
+                f"{self.base_url}/reports/export",
+                json={
+                    "report_type": "executive_summary",
+                    "format": "excel",
+                    "start_date": "2024-12-01",
+                    "end_date": "2024-12-15"
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if 'download_url' in data or 'file_content' in data:
+                    self.log_result("Export Executive Summary Excel", True, "Successfully exported to Excel")
+                else:
+                    self.log_result("Export Executive Summary Excel", False, "Missing download URL or file content")
+            else:
+                self.log_result("Export Executive Summary Excel", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Export Executive Summary Excel", False, f"Error: {str(e)}")
+        
+        # Test 3: Export PPOB shift report to PDF (if we have a report ID)
+        if 'ppob_shift_report_id' in self.test_data:
+            try:
+                response = requests.post(
+                    f"{self.base_url}/reports/export",
+                    json={
+                        "report_type": "ppob_shift",
+                        "format": "pdf",
+                        "report_id": self.test_data['ppob_shift_report_id']
+                    },
+                    headers=headers,
+                    timeout=30
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'download_url' in data or 'file_content' in data:
+                        self.log_result("Export PPOB Shift PDF", True, "Successfully exported PPOB shift to PDF")
+                    else:
+                        self.log_result("Export PPOB Shift PDF", False, "Missing download URL or file content")
+                else:
+                    self.log_result("Export PPOB Shift PDF", False, f"Failed: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("Export PPOB Shift PDF", False, f"Error: {str(e)}")
+        
+        # Test permission control - Kasir should fail
+        headers = self.get_headers('kasir1')
+        try:
+            response = requests.post(
+                f"{self.base_url}/reports/export",
+                json={
+                    "report_type": "executive_summary",
+                    "format": "pdf"
+                },
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 403:
+                self.log_result("Export Permission - Kasir (403)", True, "Kasir correctly denied export access (403)")
+            else:
+                self.log_result("Export Permission - Kasir (403)", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Export Permission - Kasir (403)", False, f"Error: {str(e)}")
+
+    def test_smart_alerts_endpoints(self):
+        """Test Smart Alerts endpoints (3 endpoints)"""
+        print("\n=== TESTING SMART ALERTS ENDPOINTS ===")
+        
+        # Test 1: GET /api/alerts - Get alerts with filters
+        headers = self.get_headers('owner')
+        try:
+            response = requests.get(
+                f"{self.base_url}/alerts",
+                params={"severity": "critical", "is_resolved": "false"},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ['alerts', 'count', 'unresolved_count']
+                missing_fields = [f for f in required_fields if f not in data]
+                if not missing_fields:
+                    self.log_result("GET Alerts", True, f"Retrieved {data['count']} alerts, {data['unresolved_count']} unresolved")
+                else:
+                    self.log_result("GET Alerts", False, f"Missing fields: {missing_fields}")
+            else:
+                self.log_result("GET Alerts", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GET Alerts", False, f"Error: {str(e)}")
+        
+        # Test 2: POST /api/alerts/check - Trigger alert generation
+        try:
+            response = requests.post(
+                f"{self.base_url}/alerts/check",
+                json={},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                data = response.json()
+                if 'alerts_generated' in data and 'alerts' in data:
+                    self.log_result("POST Alerts Check", True, f"Generated {data['alerts_generated']} new alerts")
+                    # Store alert ID for resolve test
+                    if data['alerts']:
+                        self.test_data['alert_id'] = data['alerts'][0]['id']
+                else:
+                    self.log_result("POST Alerts Check", False, "Missing required fields in response")
+            else:
+                self.log_result("POST Alerts Check", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("POST Alerts Check", False, f"Error: {str(e)}")
+        
+        # Test permission for alerts check - Only Owner/Manager should work
+        headers = self.get_headers('manager')
+        try:
+            response = requests.post(
+                f"{self.base_url}/alerts/check",
+                json={},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 200:
+                self.log_result("POST Alerts Check - Manager", True, "Manager can trigger alert checks")
+            else:
+                self.log_result("POST Alerts Check - Manager", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("POST Alerts Check - Manager", False, f"Error: {str(e)}")
+        
+        # Test permission denial for non-authorized users
+        headers = self.get_headers('kasir1')
+        try:
+            response = requests.post(
+                f"{self.base_url}/alerts/check",
+                json={},
+                headers=headers,
+                timeout=30
+            )
+            if response.status_code == 403:
+                self.log_result("POST Alerts Check - Kasir (403)", True, "Kasir correctly denied alert check access (403)")
+            else:
+                self.log_result("POST Alerts Check - Kasir (403)", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("POST Alerts Check - Kasir (403)", False, f"Error: {str(e)}")
+        
+        # Test 3: PUT /api/alerts/{alert_id}/resolve - Resolve alert
+        if 'alert_id' in self.test_data:
+            headers = self.get_headers('owner')
+            try:
+                response = requests.put(
+                    f"{self.base_url}/alerts/{self.test_data['alert_id']}/resolve",
+                    json={"notes": "Issue resolved by testing"},
+                    headers=headers,
+                    timeout=30
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    if 'message' in data:
+                        self.log_result("PUT Resolve Alert", True, "Successfully resolved alert with notes")
+                    else:
+                        self.log_result("PUT Resolve Alert", False, "Missing success message")
+                else:
+                    self.log_result("PUT Resolve Alert", False, f"Failed: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result("PUT Resolve Alert", False, f"Error: {str(e)}")
+        else:
+            self.log_result("PUT Resolve Alert", False, "No alert ID available for testing")
     
     def run_all_tests(self):
         """Run all tests in sequence"""
