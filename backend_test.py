@@ -971,18 +971,18 @@ class GelisAPITester:
             "petugas_name": "Ahmad Kasir",
             "product_breakdown": [
                 {
-                    "product_name": "Token PLN",
-                    "quantity": 25,
+                    "product_type": "Token PLN",
+                    "transaction_count": 25,
                     "total_amount": 2500000,
-                    "fee_amount": 25000,
-                    "commission_amount": 12500
+                    "total_fee": 25000,
+                    "total_commission": 12500
                 },
                 {
-                    "product_name": "Pulsa Telkomsel",
-                    "quantity": 15,
+                    "product_type": "Pulsa Telkomsel",
+                    "transaction_count": 15,
                     "total_amount": 750000,
-                    "fee_amount": 15000,
-                    "commission_amount": 7500
+                    "total_fee": 15000,
+                    "total_commission": 7500
                 }
             ]
         }
