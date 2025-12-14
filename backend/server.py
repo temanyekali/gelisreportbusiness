@@ -3024,11 +3024,6 @@ async def get_ppob_profit_loss(
     }
 
 
-    except Exception as e:
-        print(f"Error auto-syncing to accounting: {str(e)}")
-        return None
-
-
 # 3. EXECUTIVE SUMMARY REPORT ENDPOINT
 
 @api_router.get('/reports/executive-summary', response_model=dict)
