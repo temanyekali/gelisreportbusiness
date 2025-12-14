@@ -1031,10 +1031,10 @@ class GelisAPITester:
         try:
             response = requests.post(
                 f"{self.base_url}/reports/ppob-shift/auto-generate",
-                json={
+                params={
                     "business_id": business_id,
                     "report_date": "2024-12-15",
-                    "shift": "siang"
+                    "shift": 2
                 },
                 headers=headers,
                 timeout=30
