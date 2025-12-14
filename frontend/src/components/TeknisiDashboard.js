@@ -274,9 +274,20 @@ export default function TeknisiDashboard() {
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button 
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setShowProgressModal(true);
+                    }}
+                    className="min-h-[44px] w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                  >
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Progress Detail
+                  </Button>
+                  <Button 
                     onClick={() => handleUpdateStatus(order)}
                     disabled={order.status === 'completed' || order.status === 'cancelled'}
                     className="min-h-[44px] w-full sm:w-auto"
+                    variant="outline"
                   >
                     <Clock className="w-4 h-4 mr-2" />
                     Update Status
