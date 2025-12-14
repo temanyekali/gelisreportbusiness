@@ -542,7 +542,7 @@ class TransferTopupEntry(BaseModel):
     amount: float = 0.0
     keterangan: Optional[str] = None
 
-class KasirDailyReport(BaseModel):
+class KasirHarianReport(BaseModel):
     business_id: str
     tanggal: datetime
     
@@ -579,7 +579,7 @@ class KasirDailyReport(BaseModel):
     
     catatan: Optional[str] = None
 
-class KasirDailyReportCreate(BaseModel):
+class KasirHarianReportCreate(BaseModel):
     business_id: str
     tanggal: datetime
     setoran_pagi: List[SetoranEntry] = []
@@ -597,7 +597,7 @@ class KasirDailyReportCreate(BaseModel):
     saldo_brngkas: float = 0.0
     catatan: Optional[str] = None
 
-class KasirDailyReportResponse(KasirDailyReport):
+class KasirHarianReportResponse(KasirHarianReport):
     model_config = ConfigDict(extra='ignore')
     id: str
     created_by: str
