@@ -224,6 +224,9 @@ export default function Reports() {
     if (selectedBusiness === 'all') return kasirReports;
     return kasirReports.filter(r => r.business_id === selectedBusiness);
   };
+  
+  const filteredLoketReports = getFilteredLoketReports();
+  const filteredKasirReports = getFilteredKasirReports();
 
   if (loading) {
     return <div className="flex items-center justify-center h-96">Memuat data...</div>;
@@ -231,22 +234,81 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Laporan</h1>
-          <p className="text-slate-600">Laporan harian operasional dan keuangan</p>
+      {/* Header & Date Filter */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-2">Laporan</h1>
+            <p className="text-slate-600">Laporan harian operasional dan keuangan</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowLoketForm(true)} data-testid="add-loket-report">
+              <Plus className="w-4 h-4 mr-2" />
+              Laporan Loket
+            </Button>
+            <Button onClick={() => setShowKasirForm(true)} data-testid="add-kasir-report">
+              <Plus className="w-4 h-4 mr-2" />
+              Laporan Kasir
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowLoketForm(true)} data-testid="add-loket-report">
-            <Plus className="w-4 h-4 mr-2" />
-            Laporan Loket
-          </Button>
-          <Button onClick={() => setShowKasirForm(true)} data-testid="add-kasir-report">
-            <Plus className="w-4 h-4 mr-2" />
-            Laporan Kasir
-          </Button>
-        </div>
+        
+        {/* Date Range Filter */}
+        <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                📅 Tanggal Mulai
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                📅 Tanggal Akhir
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const date = new Date();
+                  date.setDate(date.getDate() - 7);
+                  setStartDate(date.toISOString().split('T')[0]);
+                  setEndDate(new Date().toISOString().split('T')[0]);
+                }}
+              >
+                7 Hari
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const date = new Date();
+                  date.setDate(date.getDate() - 30);
+                  setStartDate(date.toISOString().split('T')[0]);
+                  setEndDate(new Date().toISOString().split('T')[0]);
+                }}
+              >
+                30 Hari
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 text-sm font-medium text-slate-700">
+            📊 Menampilkan <span className="text-blue-600">{filteredLoketReports.length}</span> laporan loket dan <span className="text-blue-600">{filteredKasirReports.length}</span> laporan kasir
+          </div>
+        </Card>
       </div>
 
       {/* Filter */}
