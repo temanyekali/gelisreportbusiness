@@ -1580,10 +1580,31 @@ async def get_teknisi_orders(current_user: dict = Depends(get_current_user)):
         query['assigned_to'] = current_user['sub']
     
     orders = await db.orders.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    
+    # Attach technical progress data to each order
     for order in orders:
         for field in ['created_at', 'updated_at', 'completion_date']:
             if order.get(field) and isinstance(order[field], str):
                 order[field] = datetime.fromisoformat(order[field])
+        
+        # Get technical progress
+        progress = await db.technical_progress.find_one({'order_id': order['id']}, {'_id': 0})
+        if progress:
+            # Calculate overall progress
+            if progress.get('steps'):
+                total_weight = sum(step.get('step_weight', 0) for step in progress['steps'])
+                overall_progress = 0.0
+                for step in progress['steps']:
+                    weight = step.get('step_weight', 0)
+                    if step.get('status') == 'completed':
+                        overall_progress += weight
+                    elif step.get('status') == 'in_progress':
+                        overall_progress += weight * 0.5
+                progress['overall_progress'] = overall_progress
+            else:
+                progress['overall_progress'] = 0.0
+            
+            order['technical_progress'] = progress
     
     return orders
 
