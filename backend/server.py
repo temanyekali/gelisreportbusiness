@@ -2999,6 +2999,9 @@ async def resolve_alert(
     return {'message': 'Alert resolved successfully'}
 
 
+# Include router (MUST be after all endpoint definitions)
+app.include_router(api_router)
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
