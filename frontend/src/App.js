@@ -147,12 +147,6 @@ function App() {
           </PrivateRoute>
         } />
         
-        <Route path="/reports/ppob-shift" element={
-          <PrivateRoute>
-            <Layout><PPOBShiftReport /></Layout>
-          </PrivateRoute>
-        } />
-        
         <Route path="/alerts" element={
           <PrivateRoute>
             <Layout><SmartAlerts /></Layout>
