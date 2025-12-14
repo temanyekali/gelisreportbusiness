@@ -129,16 +129,17 @@ class OrderCreate(OrderBase):
     pass
 
 class Order(OrderBase):
-    model_config = ConfigDict(extra='ignore')
+    model_config = ConfigDict(extra='allow')  # Allow extra fields like technical_progress
     id: str
     order_number: str
     status: OrderStatus = OrderStatus.PENDING
-    payment_status: PaymentStatus = PaymentStatus.UNPAID
+    payment_status: PaymentStatus = OrderStatus.UNPAID
     assigned_to: Optional[str] = None
     completion_date: Optional[datetime] = None
     created_by: str
     created_at: datetime
     updated_at: datetime
+    technical_progress: Optional[Dict[str, Any]] = None  # Technical progress data
 
 # Transaction Models
 class TransactionBase(BaseModel):
