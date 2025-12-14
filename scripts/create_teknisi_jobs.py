@@ -68,6 +68,8 @@ async def create_teknisi_jobs():
         job_data = {
             'id': f'job-{i+1:03d}-{teknisi_user_id[:8]}',
             'business_id': business_id,
+            'order_number': f'ORD-PLN-{order_date.strftime("%Y%m%d")}-{i+1:04d}',
+            'service_type': job_type['type'],
             'customer_name': f'Customer {i+1}',
             'customer_phone': f'08123456{i:04d}',
             'customer_address': f'Jl. Contoh No. {i+1}, Jakarta',
@@ -78,6 +80,7 @@ async def create_teknisi_jobs():
             'status': status,
             'requires_technician': True,
             'assigned_to': teknisi_user_id,
+            'created_by': teknisi_user_id,
             'created_at': order_date.isoformat(),
             'updated_at': order_date.isoformat(),
             'notes': f'Technical job {i+1} for testing'
