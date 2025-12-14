@@ -4,6 +4,7 @@ import { api } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { CurrencyInput } from './ui/currency-input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
