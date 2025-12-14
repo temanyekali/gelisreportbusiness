@@ -2834,11 +2834,12 @@ async def export_report(
         related_type='export'
     )
     
-    return StreamingResponse(
-        buffer,
-        media_type=media_type,
-        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
-    )
+    return {
+        'message': 'Export completed successfully',
+        'filename': filename,
+        'media_type': media_type,
+        'size': len(buffer.getvalue()) if hasattr(buffer, 'getvalue') else 0
+    }
 
 
 # 5. SMART ALERTS ENDPOINTS
