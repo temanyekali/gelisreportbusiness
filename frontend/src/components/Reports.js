@@ -117,10 +117,10 @@ export default function Reports() {
       
       if (editingReport) {
         await api.put(`/reports/kasir-daily/${editingReport.id}`, submitData);
-        toast.success('Laporan berhasil diupdate!');
+        toast.success('✅ Laporan berhasil diupdate!');
       } else {
         await api.post('/reports/kasir-daily', submitData);
-        toast.success('Laporan berhasil disimpan!');
+        toast.success('✅ Laporan berhasil disimpan & otomatis di-sync ke Accounting!');
       }
       
       setShowKasirForm(false);
