@@ -2746,7 +2746,7 @@ async def get_executive_summary(
     if low_performers:
         recommendations.append(f"💡 Fokus perbaikan: {', '.join([bu['business_name'] for bu in low_performers])}")
     
-    if total_expenses / total_revenue > 0.7:
+    if total_revenue > 0 and total_expenses / total_revenue > 0.7:
         recommendations.append("💡 Rasio pengeluaran tinggi (>70%), review efisiensi operasional")
     
     summary = {
