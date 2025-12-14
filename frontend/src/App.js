@@ -100,7 +100,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         <Route path="/dashboard" element={
-          <RoleBasedRoute allowedRoles={[1, 2, 3, 4, 5, 6, 7]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 3, 4, 5, 6, 7, 8]}>
             <Layout><Dashboard /></Layout>
           </RoleBasedRoute>
         } />
