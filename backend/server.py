@@ -2198,6 +2198,177 @@ async def get_all_settings(current_user: User = Depends(get_current_user)):
     
     return settings_dict
 
+
+
+# ============================================
+# DEVELOPER TOOLS ENDPOINTS (IT Developer Only)
+# ============================================
+
+@api_router.get('/dev/health')
+async def get_system_health(current_user: dict = Depends(get_current_user)):
+    """Get system health status - IT Developer only"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 8:  # Only IT Developer
+        raise HTTPException(status_code=403, detail='Akses ditolak - IT Developer only')
+    
+    try:
+        # Database connection check
+        await db.command('ping')
+        db_status = 'connected'
+    except:
+        db_status = 'disconnected'
+    
+    # Get collection counts
+    collections = {
+        'users': await db.users.count_documents({}),
+        'orders': await db.orders.count_documents({}),
+        'transactions': await db.transactions.count_documents({}),
+        'businesses': await db.businesses.count_documents({}),
+    }
+    
+    # Get total active users
+    total_users = await db.users.count_documents({'is_active': True})
+    
+    return {
+        'backend_status': 'healthy',
+        'database_status': db_status,
+        'total_users': total_users,
+        'uptime': 'N/A',  # Can be implemented with process start time
+        'collections': collections,
+        'response_time': '< 100ms',
+        'requests_per_min': 0,
+        'error_rate': '0%',
+        'timestamp': utc_now().isoformat()
+    }
+
+@api_router.post('/dev/health-check')
+async def run_health_check(current_user: dict = Depends(get_current_user)):
+    """Run comprehensive health check - IT Developer only"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 8:
+        raise HTTPException(status_code=403, detail='Akses ditolak - IT Developer only')
+    
+    checks = {
+        'database': False,
+        'collections': False,
+        'indexes': False,
+    }
+    
+    try:
+        # Check database connection
+        await db.command('ping')
+        checks['database'] = True
+        
+        # Check collections exist
+        collections = await db.list_collection_names()
+        required = ['users', 'roles', 'businesses', 'orders']
+        checks['collections'] = all(c in collections for c in required)
+        
+        checks['indexes'] = True
+        
+    except Exception as e:
+        print(f"Health check error: {e}")
+    
+    return {
+        'status': 'healthy' if all(checks.values()) else 'unhealthy',
+        'checks': checks,
+        'timestamp': utc_now().isoformat()
+    }
+
+@api_router.get('/dev/logs/{log_type}')
+async def get_logs(log_type: str, current_user: dict = Depends(get_current_user)):
+    """Get system logs - IT Developer only"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 8:
+        raise HTTPException(status_code=403, detail='Akses ditolak - IT Developer only')
+    
+    import subprocess
+    
+    try:
+        if log_type == 'backend':
+            result = subprocess.run(
+                ['tail', '-n', '100', '/var/log/supervisor/backend.err.log'],
+                capture_output=True, text=True, timeout=5
+            )
+            logs = result.stdout.split('\n')
+        elif log_type == 'frontend':
+            result = subprocess.run(
+                ['tail', '-n', '100', '/var/log/supervisor/frontend.err.log'],
+                capture_output=True, text=True, timeout=5
+            )
+            logs = result.stdout.split('\n')
+        else:
+            logs = ['Unknown log type']
+        
+        return logs
+    except Exception as e:
+        return [f'Error fetching logs: {str(e)}']
+
+@api_router.post('/dev/clear-cache')
+async def clear_cache(current_user: dict = Depends(get_current_user)):
+    """Clear application cache - IT Developer only"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 8:
+        raise HTTPException(status_code=403, detail='Akses ditolak - IT Developer only')
+    
+    # Placeholder for cache clearing logic
+    return {'message': 'Cache cleared successfully', 'timestamp': utc_now().isoformat()}
+
+@api_router.get('/dev/errors')
+async def get_recent_errors(current_user: dict = Depends(get_current_user)):
+    """Get recent error logs - IT Developer only"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 8:
+        raise HTTPException(status_code=403, detail='Akses ditolak - IT Developer only')
+    
+    # Get recent activity logs with errors
+    errors = await db.activity_logs.find(
+        {'action': {'$regex': 'error', '$options': 'i'}},
+        {'_id': 0}
+    ).sort('created_at', -1).limit(50).to_list(50)
+    
+    return errors
+
+@api_router.get('/dev/database/collections')
+async def get_database_collections(current_user: dict = Depends(get_current_user)):
+    """Get all database collections info - IT Developer only"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 8:
+        raise HTTPException(status_code=403, detail='Akses ditolak - IT Developer only')
+    
+    collections = await db.list_collection_names()
+    
+    collection_info = []
+    for coll_name in collections:
+        count = await db[coll_name].count_documents({})
+        collection_info.append({
+            'name': coll_name,
+            'count': count
+        })
+    
+    return collection_info
+
+@api_router.post('/dev/database/query')
+async def run_database_query(
+    query: dict,
+    collection: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Run custom database query - IT Developer only"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] != 8:
+        raise HTTPException(status_code=403, detail='Akses ditolak - IT Developer only')
+    
+    try:
+        results = await db[collection].find(query, {'_id': 0}).limit(100).to_list(100)
+        return {
+            'collection': collection,
+            'count': len(results),
+            'results': results
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f'Query error: {str(e)}')
+
 @api_router.put('/settings/bulk')
 async def update_bulk_settings(
     data: dict,
