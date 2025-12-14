@@ -169,15 +169,6 @@ export default function Layout({ children }) {
             </div>
 
             <div className="flex items-center space-x-2 md:space-x-4">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                data-testid="notifications-button"
-                className="min-h-[44px] min-w-[44px]"
-              >
-                <Bell className="w-5 h-5" />
-              </Button>
-
               <div className="hidden sm:flex items-center space-x-3 pl-4 border-l border-slate-200">
                 <div className="text-right">
                   <p className="text-sm font-medium text-slate-900 truncate max-w-[150px]">{user?.full_name}</p>
