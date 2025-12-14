@@ -1460,12 +1460,28 @@ Add:
 
 ## 📞 Support & Resources
 
-- **Documentation**: `/app/CREDENTIALS.md`, `/app/ROLE_PERMISSION_REFERENCE.md`
-- **Issue Tracking**: Check application logs
+### Documentation
+- **Credentials**: `/app/CREDENTIALS.md`
+- **Deployment Guide**: `/app/DEPLOYMENT_GUIDE.md`
+- **Installation Script**: `/app/install.sh`
+
+### GitHub Repository
+- **Repository**: `https://github.com/USERNAME/gelis-app`
+- **Issues**: `https://github.com/USERNAME/gelis-app/issues`
+- **Releases**: `https://github.com/USERNAME/gelis-app/releases`
+
+### Official Documentation
 - **MongoDB Docs**: https://docs.mongodb.com/
 - **FastAPI Docs**: https://fastapi.tiangolo.com/
 - **React Docs**: https://react.dev/
 - **Nginx Docs**: https://nginx.org/en/docs/
+- **GitHub Docs**: https://docs.github.com/
+
+### Quick Links
+- **GitHub Personal Access Tokens**: https://github.com/settings/tokens
+- **GitHub SSH Keys**: https://github.com/settings/keys
+- **Let's Encrypt**: https://letsencrypt.org/
+- **Ubuntu Server Guide**: https://ubuntu.com/server/docs
 
 ---
 
