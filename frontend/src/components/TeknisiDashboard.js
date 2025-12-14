@@ -28,14 +28,22 @@ export default function TeknisiDashboard() {
 
   const fetchData = async () => {
     try {
-      const [ordersRes, businessesRes] = await Promise.all([
-        api.get('/teknisi/orders'),
-        api.get('/businesses')
-      ]);
+      const ordersRes = await api.get('/teknisi/orders');
       setOrders(ordersRes.data);
-      setBusinesses(businessesRes.data);
+      // Extract unique businesses from orders
+      const uniqueBusinesses = {};
+      ordersRes.data.forEach(order => {
+        if (order.business_id && !uniqueBusinesses[order.business_id]) {
+          uniqueBusinesses[order.business_id] = {
+            id: order.business_id,
+            name: 'Business' // Placeholder, will be fetched if needed
+          };
+        }
+      });
+      setBusinesses(Object.values(uniqueBusinesses));
     } catch (error) {
-      toast.error('Gagal memuat data');
+      console.error('Error fetching data:', error);
+      toast.error('Gagal memuat data pekerjaan');
     } finally {
       setLoading(false);
     }
