@@ -1068,7 +1068,7 @@ class GelisAPITester:
             )
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ['period', 'overall_summary', 'business_units', 'top_performers', 'alerts', 'insights', 'recommendations']
+                required_fields = ['period_start', 'period_end', 'business_units', 'alerts', 'insights', 'recommendations']
                 missing_fields = [f for f in required_fields if f not in data]
                 if not missing_fields:
                     business_units = data.get('business_units', [])
