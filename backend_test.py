@@ -967,9 +967,9 @@ class GelisAPITester:
         shift_data = {
             "business_id": business_id,
             "report_date": "2024-12-15",
-            "shift": "pagi",
+            "shift": 1,
             "petugas_name": "Ahmad Kasir",
-            "products": [
+            "product_breakdown": [
                 {
                     "product_name": "Token PLN",
                     "quantity": 25,
