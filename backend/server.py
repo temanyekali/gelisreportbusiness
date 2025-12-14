@@ -2525,6 +2525,9 @@ async def auto_sync_to_accounting(
         )
         
         return transaction_dict['id']
+    except Exception as e:
+        print(f"Error auto-syncing to accounting: {str(e)}")
+        return None
 
 
 # ============= SISTEM PPOB ENDPOINTS =============
