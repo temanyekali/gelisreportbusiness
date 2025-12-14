@@ -2989,7 +2989,7 @@ async def resolve_alert(
         raise HTTPException(status_code=404, detail='Alert not found')
     
     await log_activity(
-        current_user['id'],
+        current_user['sub'],
         'RESOLVE_ALERT',
         f"Resolved alert {alert_id}",
         related_type='alert',
