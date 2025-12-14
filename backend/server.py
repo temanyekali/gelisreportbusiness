@@ -2504,7 +2504,7 @@ async def create_ppob_shift_report(
     report_dict['total_amount'] = total_amount
     report_dict['total_fee'] = total_fee
     report_dict['total_commission'] = total_commission
-    report_dict['created_by'] = current_user['id']
+    report_dict['created_by'] = current_user['sub']
     report_dict['created_at'] = utc_now()
     
     # Serialize datetime
