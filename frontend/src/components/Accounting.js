@@ -222,9 +222,8 @@ export default function Accounting() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="income">Debit (Masuk)</SelectItem>
-                <SelectItem value="expense">Kredit (Keluar)</SelectItem>
-                <SelectItem value="transfer">Transfer</SelectItem>
+                <SelectItem value="income">Pemasukan</SelectItem>
+                <SelectItem value="expense">Pengeluaran</SelectItem>
               </SelectContent>
             </Select>
           </div>
