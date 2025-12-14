@@ -155,9 +155,8 @@ export default function Accounting() {
 
   const getTransactionBadge = (type) => {
     const config = {
-      income: { label: 'Debit', color: 'bg-green-100 text-green-800', icon: ArrowUpCircle },
-      expense: { label: 'Kredit', color: 'bg-red-100 text-red-800', icon: ArrowDownCircle },
-      transfer: { label: 'Transfer', color: 'bg-blue-100 text-blue-800', icon: DollarSign }
+      income: { label: 'Pemasukan', color: 'bg-green-100 text-green-800', icon: ArrowUpCircle },
+      expense: { label: 'Pengeluaran', color: 'bg-red-100 text-red-800', icon: ArrowDownCircle }
     };
     const cfg = config[type] || config.income;
     const Icon = cfg.icon;
