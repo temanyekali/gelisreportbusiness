@@ -111,6 +111,138 @@ user_problem_statement: |
   4. Mock data realistic untuk testing operasional
 
 backend:
+  - task: "Technical Progress - POST Create"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: POST /api/technical-progress creates progress with 5 default steps (Survey 50%, Instalasi 20%, NIDI/SLO 20%, Pemberkasan 8%, KWH 2%). Auto-generates UUID, handles existing progress validation."
+
+  - task: "Technical Progress - GET Retrieve"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /api/technical-progress/{order_id} retrieves progress with overall_progress calculation. Returns complete step details with status and weights."
+
+  - task: "Technical Progress - PUT Update Step"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: PUT /api/technical-progress/{order_id}/step updates step status (not_started → in_progress → completed), auto-calculates overall progress, updates order status at 100% completion."
+
+  - task: "PPOB Shift Report - POST Create"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: POST /api/reports/ppob-shift creates shift report with product breakdown. Calculates totals (transactions, amount, fee, commission) automatically from product_breakdown array."
+
+  - task: "PPOB Shift Report - GET Retrieve"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /api/reports/ppob-shift retrieves reports with filters (business_id, date range, shift). Returns paginated results with count."
+
+  - task: "PPOB Shift Report - POST Auto-Generate"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: POST /api/reports/ppob-shift/auto-generate creates report from transactions. Categorizes products (Token PLN, Pulsa, PDAM, Paket Data) with fee/commission calculation (1% fee, 0.5% commission)."
+
+  - task: "Executive Summary Report"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /api/reports/executive-summary generates comprehensive business intelligence. Calculates KPIs (revenue, expenses, profit margins, completion rates), identifies top performers, generates alerts & recommendations. Permission: Owner/Manager/Finance ✅."
+
+  - task: "Export Report to PDF/Excel"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: POST /api/reports/export successfully exports executive_summary to PDF. Professional format with reportlab, datetime serialization fixed. Permission control working (Owner/Manager/Finance ✅, Others 403 ✅)."
+
+  - task: "Smart Alerts - GET Retrieve"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: GET /api/alerts retrieves alerts with filters (severity, is_resolved, business_id). Returns alerts array, count, and unresolved_count. Working correctly."
+
+  - task: "Smart Alerts - POST Check/Generate"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: POST /api/alerts/check triggers alert generation. Checks low_cash (<1M), pending_orders (>3 days), high_expenses (>70% revenue). Permission: Owner/Manager ✅, Others 403 ✅. Generates 5 alerts successfully."
+
+  - task: "Smart Alerts - PUT Resolve"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: PUT /api/alerts/{alert_id}/resolve marks alerts as resolved with notes. Updates resolved_at timestamp and resolved_by user tracking. Endpoint accessible and functional."
+
   - task: "Edit Loket Daily Report Endpoint"
     implemented: true
     working: true
