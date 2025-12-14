@@ -2361,7 +2361,7 @@ async def create_technical_progress(
     # Create progress
     progress_dict = progress_data.model_dump()
     progress_dict['id'] = generate_id()
-    progress_dict['created_by'] = current_user['id']
+    progress_dict['created_by'] = current_user['sub']
     progress_dict['created_at'] = utc_now()
     progress_dict['updated_at'] = utc_now()
     
