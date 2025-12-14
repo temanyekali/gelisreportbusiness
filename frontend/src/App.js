@@ -36,10 +36,15 @@ const RoleBasedRoute = ({ children, allowedRoles }) => {
   
   const user = getUser();
   
-  // Check if user role is allowed
-  if (allowedRoles && !allowedRoles.includes(user?.role_id)) {
+  // Check if user data is loaded and role is allowed
+  if (user && user.role_id && allowedRoles && !allowedRoles.includes(user.role_id)) {
     toast.error('Anda tidak memiliki akses ke halaman ini');
     return <Navigate to="/dashboard" />;
+  }
+  
+  // If user data not yet loaded, show loading or wait
+  if (!user || !user.role_id) {
+    return null; // or return a loading spinner
   }
   
   return children;
