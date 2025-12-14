@@ -11,8 +11,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import TechnicalProgressTracker from './TechnicalProgressTracker';
 
 export default function TeknisiDashboard() {
