@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from './components/ui/sonner';
-import { isAuthenticated } from './utils/auth';
+import { isAuthenticated, getUser } from './utils/auth';
 import { api } from './utils/api';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import './App.css';
+import { toast } from 'sonner';
 
 // Import actual components
 import Businesses from './components/Businesses';
@@ -24,6 +25,23 @@ import BusinessModule from './components/BusinessModule';
 
 const PrivateRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
+};
+
+// Role-based route protection
+const RoleBasedRoute = ({ children, allowedRoles }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" />;
+  }
+  
+  const user = getUser();
+  
+  // Check if user role is allowed
+  if (allowedRoles && !allowedRoles.includes(user?.role_id)) {
+    toast.error('Anda tidak memiliki akses ke halaman ini');
+    return <Navigate to="/dashboard" />;
+  }
+  
+  return children;
 };
 
 const InitData = () => {
