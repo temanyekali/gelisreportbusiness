@@ -17,7 +17,7 @@ import sys
 import os
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://finance-modules-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://unified-erp-12.preview.emergentagent.com/api"
 
 class GelisAPITester:
     def __init__(self):
