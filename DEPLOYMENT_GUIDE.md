@@ -367,47 +367,168 @@ sudo systemctl restart mongod
 
 ---
 
-## Step 4: Upload Application Code
+## Step 4: Clone dari GitHub
 
-### 4.1. Option A: Clone from Git (Recommended)
+### 4.1. Clone Repository (Public Repository)
+
+Jika repository Anda **public**:
 
 ```bash
-# Navigate to application directory
-cd /home/gelis
+# Switch ke user aplikasi
+sudo su - gelis
 
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/gelis-app.git app
-
-# Or if using private repository
-git clone https://<token>@github.com/YOUR_USERNAME/gelis-app.git app
-
-cd app
-```
-
-### 4.2. Option B: Upload via SCP
-
-```bash
-# From local machine, compress code
-tar -czf gelis-app.tar.gz /path/to/app
-
-# Upload to server
-scp gelis-app.tar.gz username@your-server-ip:/home/gelis/
-
-# On server, extract
 cd /home/gelis
-tar -xzf gelis-app.tar.gz
-mv app-folder app
+git clone https://github.com/USERNAME/gelis-app.git app
+
+# Masuk ke directory
+cd app
+
+# Verify
+ls -la
+```
+
+### 4.2. Clone Repository (Private Repository)
+
+Jika repository Anda **private**, gunakan Personal Access Token:
+
+#### Method 1: Clone dengan Token di URL
+
+```bash
+# Switch ke user aplikasi
+sudo su - gelis
+
+# Clone dengan token
+cd /home/gelis
+git clone https://YOUR_GITHUB_TOKEN@github.com/USERNAME/gelis-app.git app
+
+# Contoh:
+# git clone https://ghp_xxxxxxxxxxxxxxxxxxxx@github.com/johndoe/gelis-app.git app
+
 cd app
 ```
 
-### 4.3. Set Proper Permissions
+#### Method 2: Setup Git Credentials
 
 ```bash
+# Switch ke user aplikasi
+sudo su - gelis
+
+# Configure git credentials
+git config --global credential.helper store
+
+# Clone repository (akan diminta username & password)
+cd /home/gelis
+git clone https://github.com/USERNAME/gelis-app.git app
+
+# Saat diminta:
+# Username: your-github-username
+# Password: your-personal-access-token (bukan password GitHub!)
+
+cd app
+
+# Verify git remote
+git remote -v
+```
+
+Credentials akan tersimpan di `~/.git-credentials` untuk penggunaan selanjutnya.
+
+### 4.3. Clone Branch Tertentu
+
+Jika Anda ingin clone branch tertentu (misalnya `production`):
+
+```bash
+# Clone branch production
+git clone -b production https://github.com/USERNAME/gelis-app.git app
+
+# Atau clone main lalu switch
+git clone https://github.com/USERNAME/gelis-app.git app
+cd app
+git checkout production
+```
+
+### 4.4. Verify Clone
+
+```bash
+cd /home/gelis/app
+
+# Check struktur folder
+ls -la
+
+# Output seharusnya menampilkan:
+# drwxr-xr-x  backend/
+# drwxr-xr-x  frontend/
+# drwxr-xr-x  scripts/
+# -rw-r--r--  README.md
+# -rw-r--r--  CREDENTIALS.md
+# dll.
+
+# Check git status
+git status
+
+# Check current branch
+git branch
+```
+
+### 4.5. Set Proper Permissions
+
+```bash
+# Keluar dari user gelis (kembali ke root)
+exit
+
 # Set ownership
 sudo chown -R gelis:gelis /home/gelis/app
 
 # Set directory permissions
 sudo chmod -R 755 /home/gelis/app
+
+# Verify
+ls -la /home/gelis/app
+```
+
+### 4.6. Setup GitHub SSH Key (Optional - Recommended untuk Production)
+
+Untuk keamanan lebih baik, gunakan SSH key daripada token:
+
+```bash
+# Login sebagai user gelis
+sudo su - gelis
+
+# Generate SSH key
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# Press Enter untuk default location
+# Set passphrase (optional tapi recommended)
+
+# Copy public key
+cat ~/.ssh/id_ed25519.pub
+
+# Output akan seperti:
+# ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx your_email@example.com
+```
+
+**Tambahkan SSH Key ke GitHub**:
+
+1. Buka GitHub: https://github.com/settings/keys
+2. Klik **"New SSH key"**
+3. Title: `GELIS Production Server`
+4. Key type: `Authentication Key`
+5. Paste public key dari output di atas
+6. Klik **"Add SSH key"**
+
+**Clone menggunakan SSH**:
+
+```bash
+# Clone repository dengan SSH
+cd /home/gelis
+git clone git@github.com:USERNAME/gelis-app.git app
+
+# Atau update existing remote ke SSH
+cd /home/gelis/app
+git remote set-url origin git@github.com:USERNAME/gelis-app.git
+
+# Verify
+git remote -v
 ```
 
 ---
