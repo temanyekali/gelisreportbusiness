@@ -492,6 +492,119 @@ class KasirDailyReport(KasirDailyReportBase):
     created_at: datetime
 
 
+# ============= LAPORAN HARIAN LOKET & KASIR MODELS =============
+
+# Bank Account Entry for Loket Report
+class BankAccountEntry(BaseModel):
+    bank_name: str  # BRIS, MANDIRI, BCA, BNI, dll
+    saldo_awal: float = 0.0
+    saldo_inject: float = 0.0
+    data_lunas: float = 0.0
+    setor_kasir: float = 0.0
+    transfer: float = 0.0
+    sisa_setoran: float = 0.0  # Auto-calculated
+    saldo_akhir: float = 0.0  # Auto-calculated
+    uang_lebih: float = 0.0
+
+# Laporan Harian Loket (Pelunasan)
+class LoketDailyReportPelunasan(BaseModel):
+    business_id: str
+    nama_petugas: str
+    hari: str  # Senin, Selasa, dst
+    tanggal: datetime
+    shift: int  # 1, 2, 3
+    bank_accounts: List[BankAccountEntry] = []
+    total_setoran: float = 0.0  # Auto-calculated
+    catatan: Optional[str] = None
+
+class LoketDailyReportPelunasanCreate(BaseModel):
+    business_id: str
+    nama_petugas: str
+    hari: str
+    tanggal: datetime
+    shift: int
+    bank_accounts: List[BankAccountEntry] = []
+    catatan: Optional[str] = None
+
+class LoketDailyReportPelunasanResponse(LoketDailyReportPelunasan):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
+
+# Laporan Harian Kasir Models
+class SetoranEntry(BaseModel):
+    amount: float = 0.0
+    keterangan: Optional[str] = None
+
+class TransferTopupEntry(BaseModel):
+    nomor: int  # 1-13
+    amount: float = 0.0
+    keterangan: Optional[str] = None
+
+class KasirDailyReport(BaseModel):
+    business_id: str
+    tanggal: datetime
+    
+    # Setoran Pagi (multiple entries)
+    setoran_pagi: List[SetoranEntry] = []
+    total_setoran_pagi: float = 0.0
+    
+    # Setoran Siang (multiple entries)
+    setoran_siang: List[SetoranEntry] = []
+    total_setoran_siang: float = 0.0
+    
+    # Setoran Loket Luar
+    setoran_deposit_loket_luar: float = 0.0
+    setoran_pelunasan_loket_luar_pagi: float = 0.0
+    setoran_pelunasan_loket_luar_siang: float = 0.0
+    
+    # Transfer Topup Loket Mandiri (1-13)
+    transfer_topup: List[TransferTopupEntry] = []
+    total_topup: float = 0.0
+    
+    # Kas Kecil
+    penerimaan_kas_kecil: float = 0.0
+    pengurangan_kas_kecil: float = 0.0
+    belanja_loket: float = 0.0
+    total_kas_kecil: float = 0.0
+    
+    # Admin
+    penerimaan_admin: float = 0.0
+    total_admin: float = 0.0
+    
+    # Saldo
+    saldo_bang: float = 0.0
+    saldo_brngkas: float = 0.0
+    
+    catatan: Optional[str] = None
+
+class KasirDailyReportCreate(BaseModel):
+    business_id: str
+    tanggal: datetime
+    setoran_pagi: List[SetoranEntry] = []
+    setoran_siang: List[SetoranEntry] = []
+    setoran_deposit_loket_luar: float = 0.0
+    setoran_pelunasan_loket_luar_pagi: float = 0.0
+    setoran_pelunasan_loket_luar_siang: float = 0.0
+    transfer_topup: List[TransferTopupEntry] = []
+    penerimaan_kas_kecil: float = 0.0
+    pengurangan_kas_kecil: float = 0.0
+    belanja_loket: float = 0.0
+    penerimaan_admin: float = 0.0
+    total_admin: float = 0.0
+    saldo_bang: float = 0.0
+    saldo_brngkas: float = 0.0
+    catatan: Optional[str] = None
+
+class KasirDailyReportResponse(KasirDailyReport):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
+
+
+
 # ============= FASE 1: CRITICAL ENHANCEMENTS MODELS =============
 
 # PLN Technical Work Step Models
