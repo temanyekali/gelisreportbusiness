@@ -21,6 +21,7 @@ import ActivityLogs from './components/ActivityLogs';
 import Settings from './components/Settings';
 import ExecutiveReport from './components/ExecutiveReport';
 import PPOBShiftReport from './components/PPOBShiftReport';
+import SmartAlerts from './components/SmartAlerts';
 
 const PrivateRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
