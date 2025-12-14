@@ -1029,26 +1029,281 @@ ps aux | grep python
 ps aux | grep node
 ```
 
-### Update Application
+---
+
+## Update dari GitHub
+
+### 1. Update Code dari GitHub (Manual)
+
+Cara tercepat untuk deploy update:
 
 ```bash
-# Pull latest code
+# Login ke server
+ssh username@your-server-ip
+
+# Switch ke user aplikasi
+sudo su - gelis
+
+# Navigate ke app directory
 cd /home/gelis/app
+
+# Stash perubahan local (jika ada)
+git stash
+
+# Pull latest changes
 git pull origin main
 
-# Update backend
-cd backend
+# Atau pull dari branch tertentu
+# git pull origin production
+
+# Check apa yang berubah
+git log -5 --oneline
+```
+
+### 2. Update Backend Dependencies (Jika Ada Perubahan)
+
+Jika ada perubahan di `requirements.txt`:
+
+```bash
+cd /home/gelis/app/backend
+
+# Activate virtual environment
 source venv/bin/activate
+
+# Update dependencies
 pip install -r requirements.txt
 
-# Update frontend
-cd ../frontend
+# Atau install package spesifik
+# pip install package-name==version
+
+# Verify
+pip list
+```
+
+### 3. Update Frontend & Rebuild (Jika Ada Perubahan Code)
+
+Jika ada perubahan di frontend:
+
+```bash
+cd /home/gelis/app/frontend
+
+# Install new dependencies (jika ada)
 yarn install
+
+# Rebuild production bundle
 yarn build
 
-# Restart services
+# Verify build
+ls -lh build/
+```
+
+### 4. Restart Services
+
+```bash
+# Keluar dari user gelis
+exit
+
+# Restart backend
+sudo supervisorctl restart gelis-backend
+
+# Jika perlu restart frontend (jika menggunakan serve)
+# sudo supervisorctl restart gelis-frontend
+
+# Reload Nginx (untuk frontend static files)
+sudo systemctl reload nginx
+
+# Check status
+sudo supervisorctl status
+```
+
+### 5. Verify Update
+
+```bash
+# Test backend API
+curl https://yourdomain.com/api/health
+
+# Check backend version/logs
+sudo tail -f /var/log/supervisor/gelis-backend.out.log
+
+# Test frontend
+# Buka browser: https://yourdomain.com
+```
+
+### 6. Rollback Jika Ada Masalah
+
+Jika update menyebabkan error:
+
+```bash
+# Switch ke user aplikasi
+sudo su - gelis
+cd /home/gelis/app
+
+# Check commit history
+git log --oneline -10
+
+# Rollback ke commit sebelumnya
+git reset --hard COMMIT_HASH
+
+# Contoh:
+# git reset --hard abc1234
+
+# Atau rollback 1 commit
+git reset --hard HEAD~1
+
+# Rebuild (jika perlu)
+cd frontend
+yarn build
+
+# Keluar dan restart
+exit
 sudo supervisorctl restart all
 ```
+
+### 7. Automated Deployment Script (Recommended)
+
+Buat script untuk automate deployment:
+
+```bash
+# Create deployment script
+sudo nano /home/gelis/deploy.sh
+```
+
+Isi script:
+
+```bash
+#!/bin/bash
+
+set -e  # Exit on error
+
+echo "🚀 Starting GELIS Deployment..."
+
+APP_DIR="/home/gelis/app"
+cd $APP_DIR
+
+# Pull latest code
+echo "📥 Pulling latest code from GitHub..."
+git stash
+git pull origin main
+
+# Backend update
+echo "🔧 Updating backend..."
+cd $APP_DIR/backend
+source venv/bin/activate
+pip install -r requirements.txt -q
+
+# Frontend update
+echo "🎨 Rebuilding frontend..."
+cd $APP_DIR/frontend
+yarn install --silent
+yarn build --silent
+
+# Restart services
+echo "♻️  Restarting services..."
+sudo supervisorctl restart gelis-backend
+sudo systemctl reload nginx
+
+# Verify
+echo "✅ Deployment complete!"
+echo ""
+echo "📊 Service status:"
+sudo supervisorctl status gelis-backend
+
+echo ""
+echo "🌐 Application URL: https://yourdomain.com"
+```
+
+Set permissions:
+
+```bash
+# Make executable
+sudo chmod +x /home/gelis/deploy.sh
+
+# Run deployment
+sudo /home/gelis/deploy.sh
+```
+
+### 8. Setup Webhook untuk Auto-Deploy (Advanced)
+
+Untuk auto-deploy saat push ke GitHub:
+
+#### 8.1. Install webhook listener
+
+```bash
+# Install webhook package
+sudo npm install -g webhook
+
+# Create webhook config
+sudo mkdir -p /etc/webhook
+sudo nano /etc/webhook/hooks.json
+```
+
+Config:
+
+```json
+[
+  {
+    "id": "gelis-deploy",
+    "execute-command": "/home/gelis/deploy.sh",
+    "command-working-directory": "/home/gelis/app",
+    "pass-arguments-to-command": [],
+    "trigger-rule": {
+      "match": {
+        "type": "payload-hash-sha256",
+        "secret": "YOUR_WEBHOOK_SECRET_HERE",
+        "parameter": {
+          "source": "header",
+          "name": "X-Hub-Signature-256"
+        }
+      }
+    }
+  }
+]
+```
+
+#### 8.2. Create systemd service
+
+```bash
+sudo nano /etc/systemd/system/webhook.service
+```
+
+```ini
+[Unit]
+Description=Webhook Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/webhook -hooks /etc/webhook/hooks.json -port 9000 -verbose
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start webhook
+sudo systemctl enable webhook
+
+# Allow webhook port
+sudo ufw allow 9000/tcp
+```
+
+#### 8.3. Setup GitHub Webhook
+
+1. Buka GitHub repository: `https://github.com/USERNAME/gelis-app`
+2. Settings → Webhooks → Add webhook
+3. Payload URL: `http://your-server-ip:9000/hooks/gelis-deploy`
+4. Content type: `application/json`
+5. Secret: `YOUR_WEBHOOK_SECRET_HERE` (sama dengan config)
+6. Events: `Just the push event`
+7. Active: ✅
+8. Add webhook
+
+Sekarang setiap kali Anda push ke GitHub, server akan auto-deploy! 🎉
 
 ### Backup Database
 
