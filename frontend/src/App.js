@@ -168,13 +168,13 @@ function App() {
 
         
         <Route path="/reports/executive" element={
-          <RoleBasedRoute allowedRoles={[1, 2, 3]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 3, 8]}>
             <Layout><ExecutiveReport /></Layout>
           </RoleBasedRoute>
         } />
         
         <Route path="/business/:businessId/*" element={
-          <RoleBasedRoute allowedRoles={[1, 2]}>
+          <RoleBasedRoute allowedRoles={[1, 2, 8]}>
             <Layout><BusinessModule /></Layout>
           </RoleBasedRoute>
         } />
