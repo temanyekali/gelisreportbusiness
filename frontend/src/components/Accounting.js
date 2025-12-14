@@ -252,7 +252,7 @@ export default function Accounting() {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-slate-500">Total Debit</div>
+                <div className="text-sm text-slate-500">Total Pemasukan</div>
                 <div className="text-2xl font-bold text-green-600 mt-1">
                   {formatCurrency(summary.total_income)}
                 </div>
@@ -263,7 +263,7 @@ export default function Accounting() {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-slate-500">Total Kredit</div>
+                <div className="text-sm text-slate-500">Total Pengeluaran</div>
                 <div className="text-2xl font-bold text-red-600 mt-1">
                   {formatCurrency(summary.total_expense)}
                 </div>
