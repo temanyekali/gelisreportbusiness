@@ -147,12 +147,6 @@ function App() {
           </PrivateRoute>
         } />
         
-        <Route path="/alerts" element={
-          <PrivateRoute>
-            <Layout><SmartAlerts /></Layout>
-          </PrivateRoute>
-        } />
-        
         <Route path="/business/:businessId/*" element={
           <PrivateRoute>
             <Layout><BusinessModule /></Layout>
