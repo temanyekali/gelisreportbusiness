@@ -30,21 +30,27 @@ const PrivateRoute = ({ children }) => {
 
 // Role-based route protection
 const RoleBasedRoute = ({ children, allowedRoles }) => {
+  const [hasShownError, setHasShownError] = useState(false);
+  
   if (!isAuthenticated()) {
     return <Navigate to="/login" />;
   }
   
   const user = getUser();
   
-  // Check if user data is loaded and role is allowed
-  if (user && user.role_id && allowedRoles && !allowedRoles.includes(user.role_id)) {
-    toast.error('Anda tidak memiliki akses ke halaman ini');
-    return <Navigate to="/dashboard" />;
+  // If user data not yet loaded, wait
+  if (!user || typeof user.role_id === 'undefined') {
+    return null;
   }
   
-  // If user data not yet loaded, show loading or wait
-  if (!user || !user.role_id) {
-    return null; // or return a loading spinner
+  // Check if user role is allowed
+  if (allowedRoles && !allowedRoles.includes(user.role_id)) {
+    // Only show error once to avoid spam
+    if (!hasShownError) {
+      toast.error('Anda tidak memiliki akses ke halaman ini');
+      setHasShownError(true);
+    }
+    return <Navigate to="/dashboard" />;
   }
   
   return children;
