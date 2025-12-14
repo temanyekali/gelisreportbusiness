@@ -7,7 +7,7 @@ import requests
 import json
 from datetime import datetime
 
-BACKEND_URL = "https://unified-erp-12.preview.emergentagent.com/api"
+BACKEND_URL = "https://techjob-portal.preview.emergentagent.com/api"
 
 def login_user(username, password):
     """Login and get token"""
