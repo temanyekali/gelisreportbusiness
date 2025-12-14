@@ -645,6 +645,129 @@ class TechnicalProgress(TechnicalProgressBase):
     created_at: datetime
     updated_at: datetime
 
+
+# ============= SISTEM PPOB MODELS =============
+
+# MENU 1: LAPORAN LOKET PPOB (PER SHIFT)
+
+class ChannelBalance(BaseModel):
+    """Balance per channel/rekening (BRIS, Mandiri, dll)"""
+    channel_name: str  # BRIS, Mandiri, BCA, dll
+    saldo_awal: float = 0.0
+    total_penjualan: float = 0.0  # Data Lunas
+    saldo_inject: float = 0.0
+    sisa_setoran: float = 0.0  # Auto-calculated: total_penjualan
+    saldo_akhir: float = 0.0  # Auto-calculated: saldo_awal + inject - penjualan
+
+class PPOBLoketShiftReport(BaseModel):
+    business_id: str
+    tanggal: datetime
+    shift: int  # 1, 2, 3
+    nama_petugas: str
+    channels: List[ChannelBalance] = []
+    total_penjualan: float = 0.0  # Sum of all channels
+    total_sisa_setoran: float = 0.0  # Sum of all channels
+    status_setoran: str = "Belum Disetor"  # "Belum Disetor", "Lunas"
+    catatan: Optional[str] = None
+
+class PPOBLoketShiftReportCreate(BaseModel):
+    business_id: str
+    tanggal: datetime
+    shift: int
+    nama_petugas: str
+    channels: List[ChannelBalance]
+    catatan: Optional[str] = None
+
+class PPOBLoketShiftReportResponse(PPOBLoketShiftReport):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
+
+# MENU 2: LAPORAN KASIR PPOB
+
+class SetoranLoketEntry(BaseModel):
+    """Entry untuk setoran dari loket"""
+    loket_report_id: str  # Link ke laporan loket
+    nama_petugas: str
+    shift: int
+    amount: float
+    waktu: str  # "Pagi", "Siang", "Sore"
+
+class TopupSaldoEntry(BaseModel):
+    """Entry untuk topup saldo loket"""
+    channel_name: str  # BRIS, Mandiri, dll
+    amount: float
+    keterangan: Optional[str] = None
+
+class PPOBKasirReport(BaseModel):
+    business_id: str
+    tanggal: datetime
+    
+    # Setoran Loket (multiple entries)
+    setoran_loket: List[SetoranLoketEntry] = []
+    total_setoran_loket: float = 0.0
+    
+    # Setoran Loket Luar
+    setoran_loket_luar: float = 0.0
+    
+    # Penerimaan Admin
+    penerimaan_admin: float = 0.0
+    
+    # Kas Kecil
+    penerimaan_kas_kecil: float = 0.0
+    pengurangan_kas_kecil: float = 0.0
+    saldo_kas_kecil: float = 0.0
+    
+    # Topup Saldo Loket
+    topup_saldo: List[TopupSaldoEntry] = []
+    total_topup: float = 0.0
+    
+    # Saldo Fisik Akhir
+    saldo_fisik_brankas: float = 0.0
+    
+    catatan: Optional[str] = None
+
+class PPOBKasirReportCreate(BaseModel):
+    business_id: str
+    tanggal: datetime
+    setoran_loket: List[SetoranLoketEntry] = []
+    setoran_loket_luar: float = 0.0
+    penerimaan_admin: float = 0.0
+    penerimaan_kas_kecil: float = 0.0
+    pengurangan_kas_kecil: float = 0.0
+    topup_saldo: List[TopupSaldoEntry] = []
+    saldo_fisik_brankas: float = 0.0
+    catatan: Optional[str] = None
+
+class PPOBKasirReportResponse(PPOBKasirReport):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
+
+# MENU 3: AKUNTING PPOB (Supporting Models)
+
+class PPOBAccountBalance(BaseModel):
+    """Saldo akun PPOB realtime"""
+    account_name: str
+    account_code: str
+    balance: float
+    last_updated: datetime
+
+class PPOBJournalEntry(BaseModel):
+    """Jurnal entry otomatis dari laporan"""
+    tanggal: datetime
+    description: str
+    debit_account: str
+    debit_amount: float
+    kredit_account: str
+    kredit_amount: float
+    reference_type: str  # "loket_shift", "kasir_report"
+    reference_id: str
+    created_at: datetime
+
+
 # Executive Summary Report Models
 class BusinessUnitKPI(BaseModel):
     business_id: str
