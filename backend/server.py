@@ -153,9 +153,9 @@ async def login(login_data: UserLogin, request: Request):
     user['role_name'] = role['name'] if role else None
     
     # Parse datetime fields
-    if isinstance(user['created_at'], str):
+    if isinstance(user.get('created_at'), str):
         user['created_at'] = datetime.fromisoformat(user['created_at'])
-    if isinstance(user['updated_at'], str):
+    if user.get('updated_at') and isinstance(user['updated_at'], str):
         user['updated_at'] = datetime.fromisoformat(user['updated_at'])
     if user.get('last_login') and isinstance(user['last_login'], str):
         user['last_login'] = datetime.fromisoformat(user['last_login'])
@@ -176,9 +176,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     user['role_name'] = role['name'] if role else None
     
     # Parse datetime fields
-    if isinstance(user['created_at'], str):
+    if isinstance(user.get('created_at'), str):
         user['created_at'] = datetime.fromisoformat(user['created_at'])
-    if isinstance(user['updated_at'], str):
+    if user.get('updated_at') and isinstance(user['updated_at'], str):
         user['updated_at'] = datetime.fromisoformat(user['updated_at'])
     if user.get('last_login') and isinstance(user['last_login'], str):
         user['last_login'] = datetime.fromisoformat(user['last_login'])
