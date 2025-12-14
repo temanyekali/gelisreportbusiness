@@ -2849,6 +2849,160 @@ async def export_report(
     }
 
 
+# ============= LAPORAN HARIAN LOKET & KASIR ENDPOINTS =============
+
+@api_router.post('/reports/loket-pelunasan', response_model=dict)
+async def create_loket_pelunasan_report(
+    report_data: LoketDailyReportPelunasanCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create Laporan Harian Loket (Pelunasan) dengan multiple bank accounts"""
+    # Auto-calculate totals for each bank
+    for bank in report_data.bank_accounts:
+        # Sisa Setoran = Data Lunas - Setor Kasir - Transfer
+        bank.sisa_setoran = bank.data_lunas - bank.setor_kasir - bank.transfer
+        # Saldo Akhir = Saldo Awal + Saldo Inject - Data Lunas
+        bank.saldo_akhir = bank.saldo_awal + bank.saldo_inject - bank.data_lunas
+    
+    # Calculate total setoran (sum of all sisa_setoran from all banks)
+    total_setoran = sum(bank.sisa_setoran for bank in report_data.bank_accounts)
+    
+    report_dict = report_data.model_dump()
+    report_dict['id'] = generate_id()
+    report_dict['total_setoran'] = total_setoran
+    report_dict['created_by'] = current_user['id']
+    report_dict['created_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = report_dict.copy()
+    doc['tanggal'] = doc['tanggal'].isoformat() if isinstance(doc['tanggal'], datetime) else doc['tanggal']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.loket_pelunasan_reports.insert_one(doc)
+    
+    await log_activity(
+        current_user['id'],
+        'CREATE_LOKET_PELUNASAN_REPORT',
+        f"Created loket pelunasan report for {report_data.tanggal.strftime('%Y-%m-%d')} shift {report_data.shift}",
+        related_type='loket_pelunasan_report',
+        related_id=report_dict['id']
+    )
+    
+    return {'message': 'Laporan loket pelunasan berhasil disimpan', 'id': report_dict['id'], 'total_setoran': total_setoran}
+
+
+@api_router.get('/reports/loket-pelunasan', response_model=dict)
+async def get_loket_pelunasan_reports(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    shift: Optional[int] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get Laporan Loket Pelunasan dengan filters"""
+    query = {}
+    
+    if business_id:
+        query['business_id'] = business_id
+    
+    if start_date and end_date:
+        query['tanggal'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    if shift:
+        query['shift'] = shift
+    
+    reports = await db.loket_pelunasan_reports.find(query, {'_id': 0}).sort('tanggal', -1).to_list(length=100)
+    
+    return {
+        'reports': reports,
+        'count': len(reports)
+    }
+
+
+@api_router.post('/reports/kasir-harian', response_model=dict)
+async def create_kasir_daily_report(
+    report_data: KasirDailyReportCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create Laporan Harian Kasir dengan auto-calculations"""
+    # Calculate totals
+    total_setoran_pagi = sum(entry.amount for entry in report_data.setoran_pagi)
+    total_setoran_siang = sum(entry.amount for entry in report_data.setoran_siang)
+    total_topup = sum(entry.amount for entry in report_data.transfer_topup)
+    
+    # Calculate total kas kecil
+    total_kas_kecil = (
+        report_data.penerimaan_kas_kecil - 
+        report_data.pengurangan_kas_kecil - 
+        report_data.belanja_loket
+    )
+    
+    report_dict = report_data.model_dump()
+    report_dict['id'] = generate_id()
+    report_dict['total_setoran_pagi'] = total_setoran_pagi
+    report_dict['total_setoran_siang'] = total_setoran_siang
+    report_dict['total_topup'] = total_topup
+    report_dict['total_kas_kecil'] = total_kas_kecil
+    report_dict['created_by'] = current_user['id']
+    report_dict['created_at'] = utc_now()
+    
+    # Serialize datetime
+    doc = report_dict.copy()
+    doc['tanggal'] = doc['tanggal'].isoformat() if isinstance(doc['tanggal'], datetime) else doc['tanggal']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.kasir_daily_reports.insert_one(doc)
+    
+    await log_activity(
+        current_user['id'],
+        'CREATE_KASIR_DAILY_REPORT',
+        f"Created kasir daily report for {report_data.tanggal.strftime('%Y-%m-%d')}",
+        related_type='kasir_daily_report',
+        related_id=report_dict['id']
+    )
+    
+    return {
+        'message': 'Laporan kasir harian berhasil disimpan',
+        'id': report_dict['id'],
+        'totals': {
+            'setoran_pagi': total_setoran_pagi,
+            'setoran_siang': total_setoran_siang,
+            'topup': total_topup,
+            'kas_kecil': total_kas_kecil
+        }
+    }
+
+
+@api_router.get('/reports/kasir-harian', response_model=dict)
+async def get_kasir_daily_reports(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get Laporan Kasir Harian dengan filters"""
+    query = {}
+    
+    if business_id:
+        query['business_id'] = business_id
+    
+    if start_date and end_date:
+        query['tanggal'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    reports = await db.kasir_daily_reports.find(query, {'_id': 0}).sort('tanggal', -1).to_list(length=100)
+    
+    return {
+        'reports': reports,
+        'count': len(reports)
+    }
+
+
 # 5. SMART ALERTS ENDPOINTS
 
 @api_router.get('/alerts', response_model=dict)
