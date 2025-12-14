@@ -22,6 +22,14 @@ export default function Reports() {
   const [showKasirForm, setShowKasirForm] = useState(false);
   const [editingReport, setEditingReport] = useState(null);
   
+  // Date range filter
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30); // Default: last 30 days
+    return date.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  
   const currentUser = getUser();
   const canEditDelete = currentUser && (currentUser.role_id === 1 || currentUser.role_id === 2);
 
