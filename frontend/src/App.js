@@ -19,6 +19,8 @@ import Loyalty from './components/Loyalty';
 import CSR from './components/CSR';
 import ActivityLogs from './components/ActivityLogs';
 import Settings from './components/Settings';
+import ExecutiveReport from './components/ExecutiveReport';
+import PPOBShiftReport from './components/PPOBShiftReport';
 
 const PrivateRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
