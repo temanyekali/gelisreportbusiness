@@ -8,7 +8,7 @@ import { Textarea } from './ui/textarea';
 import axios from 'axios';
 import { toast } from 'sonner';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const SEVERITY_CONFIG = {
   critical: {
