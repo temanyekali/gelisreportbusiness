@@ -2923,8 +2923,8 @@ async def get_loket_pelunasan_reports(
 
 
 @api_router.post('/reports/kasir-harian', response_model=dict)
-async def create_kasir_daily_report(
-    report_data: KasirDailyReportCreate,
+async def create_kasir_harian_report(
+    report_data: KasirHarianReportCreate,
     current_user: dict = Depends(get_current_user)
 ):
     """Create Laporan Harian Kasir dengan auto-calculations"""
