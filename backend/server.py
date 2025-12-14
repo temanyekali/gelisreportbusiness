@@ -2484,7 +2484,51 @@ async def update_technical_step(
     }
 
 
-# 2. AUTO-SYNC TO ACCOUNTING (Removed PPOB, added auto-sync logic)
+# 2. AUTO-SYNC TO ACCOUNTING HELPER FUNCTION
+
+async def auto_sync_to_accounting(
+    business_id: str,
+    amount: float,
+    transaction_type: str,  # 'income' or 'expense'
+    category: str,
+    description: str,
+    reference_id: str,
+    reference_type: str,
+    user_id: str
+):
+    """Helper function to automatically create accounting transaction"""
+    try:
+        transaction_code = f"TRX-{datetime.now().strftime('%Y%m%d')}-{generate_id()[:8]}"
+        
+        transaction_dict = {
+            'id': generate_id(),
+            'transaction_code': transaction_code,
+            'business_id': business_id,
+            'transaction_type': transaction_type,
+            'category': category,
+            'description': description,
+            'amount': amount,
+            'payment_method': 'cash',
+            'reference_number': f"{reference_type}-{reference_id}",
+            'created_at': utc_now().isoformat(),
+            'created_by': user_id
+        }
+        
+        await db.transactions.insert_one(transaction_dict)
+        
+        await log_activity(
+            user_id,
+            'AUTO_SYNC_ACCOUNTING',
+            f"Auto-synced {transaction_type} Rp {amount:,.0f} from {reference_type}",
+            related_type='transaction',
+            related_id=transaction_dict['id']
+        )
+        
+        return transaction_dict['id']
+    except Exception as e:
+        print(f"Error auto-syncing to accounting: {str(e)}")
+        return None
+
 
 # 3. EXECUTIVE SUMMARY REPORT ENDPOINT
 
