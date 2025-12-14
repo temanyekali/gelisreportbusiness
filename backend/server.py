@@ -3574,21 +3574,93 @@ async def get_executive_summary(
             'potential_impact': 'ROI 200-300% dalam 6-12 bulan'
         })
     
+    # Financial health score (0-100)
+    health_score = 0
+    if overall_profit_margin > 20:
+        health_score += 30
+    elif overall_profit_margin > 10:
+        health_score += 20
+    elif overall_profit_margin > 0:
+        health_score += 10
+    
+    if overall_revenue_growth > 10:
+        health_score += 25
+    elif overall_revenue_growth > 0:
+        health_score += 15
+    elif overall_revenue_growth > -10:
+        health_score += 5
+    
+    if overall_expense_ratio < 60:
+        health_score += 25
+    elif overall_expense_ratio < 70:
+        health_score += 15
+    elif overall_expense_ratio < 80:
+        health_score += 10
+    
+    if len(declining_businesses) == 0:
+        health_score += 20
+    elif len(declining_businesses) < len(business_units) / 3:
+        health_score += 10
+    
     summary = {
         'period_start': start_date,
         'period_end': end_date,
         'report_generated_at': utc_now().isoformat(),
+        
+        # Overall Financial Metrics
         'total_revenue': total_revenue,
         'total_expenses': total_expenses,
         'net_profit': net_profit,
         'overall_profit_margin': overall_profit_margin,
+        'overall_expense_ratio': overall_expense_ratio,
+        
+        # Growth Metrics
+        'overall_revenue_growth': overall_revenue_growth,
+        'overall_profit_growth': overall_profit_growth,
+        'previous_period_revenue': total_prev_revenue,
+        'previous_period_expenses': total_prev_expenses,
+        
+        # Business Health
+        'financial_health_score': health_score,
+        'health_status': 'Excellent' if health_score >= 80 else ('Good' if health_score >= 60 else ('Fair' if health_score >= 40 else 'Poor')),
+        
+        # Business Units Details
         'business_units': business_units,
-        'best_performing_business': best_performing['business_name'] if best_performing else None,
-        'highest_revenue_business': highest_revenue['business_name'] if highest_revenue else None,
-        'highest_margin_business': highest_margin['business_name'] if highest_margin else None,
+        'total_business_units': len(business_units),
+        'growing_units': len(growing_businesses),
+        'stable_units': len(stable_businesses),
+        'declining_units': len(declining_businesses),
+        
+        # Top Performers
+        'best_performing_business': {
+            'name': best_performing['business_name'],
+            'profit_margin': best_performing['profit_margin']
+        } if best_performing else None,
+        'highest_revenue_business': {
+            'name': highest_revenue['business_name'],
+            'revenue': highest_revenue['total_revenue']
+        } if highest_revenue else None,
+        'fastest_growing_business': {
+            'name': fastest_growing['business_name'],
+            'growth_rate': fastest_growing['revenue_growth']
+        } if fastest_growing else None,
+        'highest_margin_business': {
+            'name': highest_margin['business_name'],
+            'margin': highest_margin['profit_margin']
+        } if highest_margin else None,
+        
+        # Intelligent Analysis
         'alerts': alerts,
         'insights': insights,
-        'recommendations': recommendations
+        'recommendations': recommendations,
+        
+        # Summary Statistics
+        'summary_stats': {
+            'total_orders': sum(bu['total_orders'] for bu in business_units),
+            'total_completed_orders': sum(bu['completed_orders'] for bu in business_units),
+            'overall_completion_rate': (sum(bu['completed_orders'] for bu in business_units) / sum(bu['total_orders'] for bu in business_units) * 100) if sum(bu['total_orders'] for bu in business_units) > 0 else 0,
+            'average_order_value': total_revenue / sum(bu['completed_orders'] for bu in business_units) if sum(bu['completed_orders'] for bu in business_units) > 0 else 0
+        }
     }
     
     return summary
