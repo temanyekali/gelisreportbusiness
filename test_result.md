@@ -1209,3 +1209,43 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ FIXED: Added actual_total > 0 check before division in recommendations section. Verification summary now handles zero actual_total gracefully."
+
+## Testing Session - 2025-12-14 (RBAC Verification)
+
+### P0 - Role-Based Access Control (RBAC) Verification
+
+**Status**: ✅ COMPLETED
+
+**Tested By**: Main Agent (E1) + Screenshot Tool
+
+**Test Cases**:
+1. ✅ Login sebagai teknisi (username: `indra`, role_id: 7)
+2. ✅ Verify sidebar hanya menampilkan menu yang sesuai role:
+   - Dashboard (allowed)
+   - Pekerjaan Teknisi (allowed)
+   - Menu lain (hidden)
+3. ✅ Test route protection:
+   - `/users` → Redirected to `/dashboard` ✅
+   - `/accounting` → Redirected to `/dashboard` ✅
+   - `/teknisi` → Accessible ✅
+
+**Bugs Fixed**:
+1. ✅ bcrypt version conflict (5.0.0 → 4.1.3)
+2. ✅ Missing `full_name` and `updated_at` fields in user schema
+3. ✅ KeyError in login endpoint for missing datetime fields
+4. ✅ Missing role-based route protection in App.js
+
+**Implementation**:
+- Added `RoleBasedRoute` component in App.js
+- Updated all routes with proper `allowedRoles` array
+- Script `/app/scripts/verify_roles_and_test.py` updated to fix user schema
+- Fixed datetime parsing in server.py login endpoint
+
+**Test Credentials**:
+- Owner: `owner` / `owner123`
+- Manager: `manager` / `manager123`
+- Finance: `finance` / `finance123`
+- Kasir: `kasir1` / `kasir123`
+- Loket: `loket1` / `loket123`
+- Teknisi: `indra` / `teknisi123`
+
