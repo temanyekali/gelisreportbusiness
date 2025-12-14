@@ -63,14 +63,14 @@ export default function Reports() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   const fetchData = async () => {
     try {
       const [businessesRes, loketRes, kasirRes] = await Promise.all([
         api.get('/businesses'),
-        api.get('/reports/loket-daily'),
-        api.get('/reports/kasir-daily')
+        api.get('/reports/loket-daily', { params: { start_date: startDate, end_date: endDate } }),
+        api.get('/reports/kasir-daily', { params: { start_date: startDate, end_date: endDate } })
       ]);
       setBusinesses(businessesRes.data);
       setLoketReports(loketRes.data);
