@@ -40,18 +40,19 @@ export default function Layout({ children }) {
 
   // Strict permission matrix
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Dashboard', role: [1, 2, 3, 4, 5, 6, 7] },
-    { path: '/businesses', icon: Building2, label: 'Bisnis', role: [1, 2] },
-    { path: '/orders', icon: ShoppingCart, label: 'Pesanan', role: [1, 2, 5, 6] },
-    { path: '/teknisi', icon: Wrench, label: 'Pekerjaan Teknisi', role: [1, 2, 5, 7] },
-    { path: '/accounting', icon: DollarSign, label: 'Akunting', role: [1, 2, 3] },
-    { path: '/users', icon: Users, label: 'Pengguna', role: [1, 2] },
-    { path: '/reports', icon: FileText, label: 'Laporan Harian', role: [1, 2, 3, 5, 6] },
-    { path: '/reports/executive', icon: FileText, label: 'Ringkasan Eksekutif', role: [1, 2, 3] },
-    { path: '/loyalty', icon: Gift, label: 'Program Loyalitas', role: [1, 2] },
-    { path: '/csr', icon: Heart, label: 'Program CSR', role: [1, 2] },
-    { path: '/activity-logs', icon: Activity, label: 'Log Aktivitas', role: [1, 2] },
-    { path: '/settings', icon: Settings, label: 'Pengaturan', role: [1] },
+    { path: '/dashboard', icon: Home, label: 'Dashboard', role: [1, 2, 3, 4, 5, 6, 7, 8] },
+    { path: '/businesses', icon: Building2, label: 'Bisnis', role: [1, 2, 8] },
+    { path: '/orders', icon: ShoppingCart, label: 'Pesanan', role: [1, 2, 5, 6, 8] },
+    { path: '/teknisi', icon: Wrench, label: 'Pekerjaan Teknisi', role: [1, 2, 5, 7, 8] },
+    { path: '/accounting', icon: DollarSign, label: 'Akunting', role: [1, 2, 3, 8] },
+    { path: '/users', icon: Users, label: 'Pengguna', role: [1, 2, 8] },
+    { path: '/reports', icon: FileText, label: 'Laporan Harian', role: [1, 2, 3, 5, 6, 8] },
+    { path: '/reports/executive', icon: FileText, label: 'Ringkasan Eksekutif', role: [1, 2, 3, 8] },
+    { path: '/loyalty', icon: Gift, label: 'Program Loyalitas', role: [1, 2, 8] },
+    { path: '/csr', icon: Heart, label: 'Program CSR', role: [1, 2, 8] },
+    { path: '/activity-logs', icon: Activity, label: 'Log Aktivitas', role: [1, 2, 8] },
+    { path: '/dev-tools', icon: Settings, label: '🔧 Developer Tools', role: [8] },
+    { path: '/settings', icon: Settings, label: 'Pengaturan', role: [1, 8] },
   ];
 
   const filteredNavItems = navItems.filter(item => {
