@@ -2375,7 +2375,7 @@ async def update_bulk_settings(
     current_user: User = Depends(get_current_user)
 ):
     """Update multiple settings at once"""
-    if current_user.role_id' not in [1, 2, 8]  # Owner, Manager, IT Developer only
+    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer only
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Hanya Owner atau Manager yang dapat mengubah pengaturan'
@@ -2501,7 +2501,7 @@ async def clear_mock_data(current_user: User = Depends(get_current_user)):
 @api_router.post('/data/backup')
 async def backup_database(current_user: User = Depends(get_current_user)):
     """Create database backup"""
-    if current_user.role_id' not in [1, 2, 8]  # Owner, Manager, IT Developer only
+    if user['role_id'] not in [1, 2, 8]  # Owner, Manager, IT Developer only
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='Hanya Owner atau Manager yang dapat backup database'
