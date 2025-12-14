@@ -158,7 +158,6 @@ export default function TeknisiDashboard() {
         <TabsContent value="all" className="space-y-3 md:space-y-4 mt-4 md:mt-6">
           {orders.map((order) => {
             const business = businesses.find(b => b.id === order.business_id);
-            const progress = order.order_details?.progress || 0;
             
             return (
               <Card key={order.id} className="p-4 md:p-6 hover:shadow-lg transition-shadow">
