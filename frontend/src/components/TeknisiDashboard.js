@@ -240,15 +240,6 @@ export default function TeknisiDashboard() {
                     <TrendingUp className="w-4 h-4 mr-2" />
                     Progress Detail
                   </Button>
-                  <Button 
-                    onClick={() => handleUpdateStatus(order)}
-                    disabled={order.status === 'completed' || order.status === 'cancelled'}
-                    className="min-h-[44px] w-full sm:w-auto"
-                    variant="outline"
-                  >
-                    <Clock className="w-4 h-4 mr-2" />
-                    Update Status
-                  </Button>
                   {order.customer_phone && (
                     <Button variant="outline" className="min-h-[44px] w-full sm:w-auto">
                       <span>📞 {order.customer_phone}</span>
