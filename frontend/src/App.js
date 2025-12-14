@@ -22,6 +22,7 @@ import ActivityLogs from './components/ActivityLogs';
 import Settings from './components/Settings';
 import ExecutiveReport from './components/ExecutiveReport';
 import BusinessModule from './components/BusinessModule';
+import DeveloperTools from './components/DeveloperTools';
 
 const PrivateRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
