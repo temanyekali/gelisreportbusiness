@@ -200,19 +200,55 @@ log_info "Step 8: Setting up application directory..."
 
 APP_DIR="/home/$APP_USER/app"
 
-# Check if running in /app (Emergent environment)
-if [ -d "/app" ]; then
+if [ "$USE_GITHUB" = "y" ]; then
+    log_info "Cloning from GitHub repository..."
+    
+    # Switch to application user
+    if [ "$IS_PRIVATE" = "y" ]; then
+        # Clone private repository with token
+        REPO_WITH_TOKEN=$(echo "$GITHUB_REPO" | sed "s|https://|https://$GITHUB_TOKEN@|")
+        sudo -u $APP_USER git clone -b $GITHUB_BRANCH $REPO_WITH_TOKEN $APP_DIR
+    else
+        # Clone public repository
+        sudo -u $APP_USER git clone -b $GITHUB_BRANCH $GITHUB_REPO $APP_DIR
+    fi
+    
+    if [ $? -eq 0 ]; then
+        log_success "Repository cloned successfully from $GITHUB_REPO"
+    else
+        log_error "Failed to clone repository. Please check:"
+        log_error "  1. Repository URL is correct"
+        log_error "  2. Branch '$GITHUB_BRANCH' exists"
+        log_error "  3. Access token is valid (for private repos)"
+        exit 1
+    fi
+    
+elif [ -d "/app" ]; then
+    # Check if running in /app (Emergent environment)
     log_info "Detected Emergent environment, copying from /app..."
     mkdir -p $APP_DIR
     cp -r /app/* $APP_DIR/
+    log_success "Application copied from /app"
 else
-    log_warning "Application code not found. Please upload your code to $APP_DIR"
-    log_info "You can use: scp -r ./app-code/* $APP_USER@server:$APP_DIR/"
+    log_error "No application source found!"
+    log_error "Please either:"
+    log_error "  1. Re-run with GitHub repository option"
+    log_error "  2. Or manually upload code to $APP_DIR"
+    exit 1
 fi
 
 chown -R $APP_USER:$APP_USER $APP_DIR
 chmod -R 755 $APP_DIR
 log_success "Application directory ready: $APP_DIR"
+
+# Verify directory structure
+if [ ! -d "$APP_DIR/backend" ] || [ ! -d "$APP_DIR/frontend" ]; then
+    log_error "Invalid application structure!"
+    log_error "Expected directories 'backend' and 'frontend' not found in $APP_DIR"
+    exit 1
+fi
+
+log_success "Application structure verified"
 
 ################################################################################
 # Step 9: Setup Backend
