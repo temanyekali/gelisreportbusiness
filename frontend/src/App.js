@@ -88,87 +88,87 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         <Route path="/dashboard" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2, 3, 4, 5, 6, 7]}>
             <Layout><Dashboard /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/businesses" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2]}>
             <Layout><Businesses /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/orders" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2, 5, 6]}>
             <Layout><Orders /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/transactions" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2, 3]}>
             <Layout><Accounting /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/accounting" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2, 3]}>
             <Layout><Accounting /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/users" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2]}>
             <Layout><Users /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/reports" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2, 3, 5, 6]}>
             <Layout><Reports /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/loyalty" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2]}>
             <Layout><Loyalty /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/csr" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2]}>
             <Layout><CSR /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/activity-logs" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2]}>
             <Layout><ActivityLogs /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/settings" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1]}>
             <Layout><Settings /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/teknisi" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2, 5, 7]}>
             <Layout><TeknisiDashboard /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/reports/executive" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2, 3]}>
             <Layout><ExecutiveReport /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
         
         <Route path="/business/:businessId/*" element={
-          <PrivateRoute>
+          <RoleBasedRoute allowedRoles={[1, 2]}>
             <Layout><BusinessModule /></Layout>
-          </PrivateRoute>
+          </RoleBasedRoute>
         } />
       </Routes>
     </BrowserRouter>
