@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, Routes, Route, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import { api } from '../utils/api';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { ArrowLeft, BarChart3, DollarSign, TrendingDown, ShoppingCart, FileText } from 'lucide-react';
