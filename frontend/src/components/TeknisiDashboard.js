@@ -19,13 +19,7 @@ export default function TeknisiDashboard() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
-  const [updateData, setUpdateData] = useState({
-    status: '',
-    progress: 0,
-    notes: ''
-  });
   const [businesses, setBusinesses] = useState([]);
   
   const currentUser = getUser();
