@@ -140,6 +140,18 @@ function App() {
             <Layout><TeknisiDashboard /></Layout>
           </PrivateRoute>
         } />
+        
+        <Route path="/reports/executive" element={
+          <PrivateRoute>
+            <Layout><ExecutiveReport /></Layout>
+          </PrivateRoute>
+        } />
+        
+        <Route path="/reports/ppob-shift" element={
+          <PrivateRoute>
+            <Layout><PPOBShiftReport /></Layout>
+          </PrivateRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
