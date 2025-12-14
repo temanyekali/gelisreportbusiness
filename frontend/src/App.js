@@ -160,6 +160,13 @@ function App() {
           </RoleBasedRoute>
         } />
         
+        <Route path="/dev-tools" element={
+          <RoleBasedRoute allowedRoles={[8]}>
+            <Layout><DeveloperTools /></Layout>
+          </RoleBasedRoute>
+        } />
+
+        
         <Route path="/reports/executive" element={
           <RoleBasedRoute allowedRoles={[1, 2, 3]}>
             <Layout><ExecutiveReport /></Layout>
