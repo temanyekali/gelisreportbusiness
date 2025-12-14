@@ -2979,7 +2979,7 @@ async def resolve_alert(
             '$set': {
                 'is_resolved': True,
                 'resolved_at': utc_now().isoformat(),
-                'resolved_by': current_user['id'],
+                'resolved_by': current_user['sub'],
                 'notes': notes
             }
         }
