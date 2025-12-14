@@ -2828,7 +2828,7 @@ async def export_report(
     
     # Log activity
     await log_activity(
-        current_user['id'],
+        current_user['sub'],
         'EXPORT_REPORT',
         f"Exported {report_type} as {format_type}",
         related_type='export'
