@@ -1322,12 +1322,36 @@ class GelisAPITester:
     
     def run_all_tests(self):
         """Run all tests in sequence"""
-        print("🚀 Starting GELIS Backend API Testing Suite - RECONCILIATION & VERIFICATION")
+        print("🚀 Starting GELIS Backend API Testing Suite - FASE 1 NEW ENDPOINTS")
         print(f"Backend URL: {self.base_url}")
         print("=" * 60)
         
-        # Run tests in order
+        # Run authentication first
         self.test_authentication()
+        
+        # FASE 1 NEW ENDPOINTS TESTING (15 endpoints)
+        print("\n🎯 TESTING FASE 1 NEW ENDPOINTS (15 endpoints)")
+        print("=" * 60)
+        
+        # 1. Technical Progress Endpoints (3 endpoints)
+        self.test_technical_progress_endpoints()
+        
+        # 2. PPOB Shift Report Endpoints (3 endpoints)
+        self.test_ppob_shift_report_endpoints()
+        
+        # 3. Executive Summary Endpoint (1 endpoint)
+        self.test_executive_summary_endpoint()
+        
+        # 4. Export Endpoint (1 endpoint)
+        self.test_export_endpoint()
+        
+        # 5. Smart Alerts Endpoints (3 endpoints)
+        self.test_smart_alerts_endpoints()
+        
+        # PREVIOUS TESTS (for regression testing)
+        print("\n📋 REGRESSION TESTING - PREVIOUS ENDPOINTS")
+        print("=" * 60)
+        
         self.test_reports_get_endpoints()
         self.test_edit_loket_report_permissions()
         self.test_edit_kasir_report_permissions()
@@ -1337,7 +1361,7 @@ class GelisAPITester:
         self.test_teknisi_update_progress()
         self.test_auto_generate_reports()
         
-        # NEW RECONCILIATION & VERIFICATION TESTS
+        # RECONCILIATION & VERIFICATION TESTS
         self.test_verification_summary_endpoint()
         self.test_kasir_reconciliation_endpoint()
         self.test_loket_reconciliation_endpoint()
