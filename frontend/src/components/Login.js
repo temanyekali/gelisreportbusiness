@@ -80,15 +80,10 @@ export default function Login() {
         </form>
 
         <div className="mt-4 md:mt-6 p-3 md:p-4 bg-slate-50 border border-slate-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed">
             GELIS mengkonsolidasi aliran informasi dari berbagai unit usaha (PPOB, PLN, Travel, PDAM, Inventory) 
-            ke dalam dashboard terpusat dengan visualisasi real-time.
+            ke dalam dashboard terpusat dengan visualisasi real-time untuk monitoring operasional yang lebih efisien.
           </p>
-          <div className="pt-3 border-t border-slate-200">
-            <p className="text-sm text-slate-900 font-medium">Demo Credentials:</p>
-            <p className="text-xs md:text-sm text-slate-700 mt-1">Username: <code className="bg-slate-100 px-2 py-0.5 rounded text-xs">edy</code></p>
-            <p className="text-xs md:text-sm text-slate-700">Password: <code className="bg-slate-100 px-2 py-0.5 rounded text-xs">edy123</code></p>
-          </div>
         </div>
       </Card>
     </div>
