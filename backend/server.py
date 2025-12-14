@@ -2796,6 +2796,9 @@ async def export_report(
         )
         
         if format_type == ExportFormat.PDF:
+            # Convert ISO string back to datetime for report generator
+            if isinstance(summary_data.get('report_generated_at'), str):
+                summary_data['report_generated_at'] = datetime.fromisoformat(summary_data['report_generated_at'].replace('Z', '+00:00'))
             buffer = report_generator.generate_executive_summary_pdf(summary_data)
             filename = f"executive_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
             media_type = "application/pdf"
