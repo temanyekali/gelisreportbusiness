@@ -209,18 +209,37 @@ export default function TechnicalProgressTracker({ orderId, onUpdate }) {
                         {getStatusBadge(step.status)}
                       </div>
 
-                      {/* Progress Bar for this step */}
-                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            step.status === 'completed'
-                              ? 'bg-green-500'
+                      {/* Progress Bar for this step with percentage */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">Progress tahapan ini:</span>
+                          <span className="font-semibold text-gray-700">
+                            {step.status === 'completed' ? '100%' : step.status === 'in_progress' ? '50%' : '0%'}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <div
+                            className={`h-2.5 rounded-full transition-all ${
+                              step.status === 'completed'
+                                ? 'bg-green-500'
+                                : step.status === 'in_progress'
+                                ? 'bg-blue-500'
+                                : 'bg-gray-300'
+                            }`}
+                            style={{ width: step.status === 'completed' ? '100%' : step.status === 'in_progress' ? '50%' : '0%' }}
+                          ></div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Kontribusi ke total: {step.step_weight}%</span>
+                          <span>
+                            {step.status === 'completed' 
+                              ? `✓ +${step.step_weight}%` 
                               : step.status === 'in_progress'
-                              ? 'bg-blue-500'
-                              : 'bg-gray-300'
-                          }`}
-                          style={{ width: step.status === 'completed' ? '100%' : step.status === 'in_progress' ? '50%' : '0%' }}
-                        ></div>
+                              ? `⏳ +${(step.step_weight * 0.5).toFixed(1)}%`
+                              : `○ +0%`
+                            }
+                          </span>
+                        </div>
                       </div>
 
                       {/* Timestamps */}
