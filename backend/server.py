@@ -2335,10 +2335,6 @@ async def root():
         'health': '/health'
     }
 
-# Include router
-app.include_router(api_router)
-
-
 # ============= FASE 1: CRITICAL ENHANCEMENTS ENDPOINTS =============
 
 # Import report generator
