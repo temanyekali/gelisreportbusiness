@@ -2515,7 +2515,7 @@ async def create_ppob_shift_report(
     await db.ppob_shift_reports.insert_one(doc)
     
     await log_activity(
-        current_user['id'],
+        current_user['sub'],
         'CREATE_PPOB_SHIFT_REPORT',
         f"Created PPOB shift report for {report_data.report_date.strftime('%Y-%m-%d')} shift {report_data.shift}",
         related_type='ppob_shift_report',
