@@ -2470,7 +2470,7 @@ async def update_technical_step(
         )
     
     await log_activity(
-        current_user['id'],
+        current_user['sub'],
         'UPDATE_TECHNICAL_STEP',
         f"Updated step {step_name} to {new_status} for order {order_id}",
         related_type='technical_progress',
