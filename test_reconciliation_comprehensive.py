@@ -7,7 +7,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 
-BACKEND_URL = "https://multibiz-hub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://finance-modules-2.preview.emergentagent.com/api"
 
 def login_user(username, password):
     """Login and get token"""
