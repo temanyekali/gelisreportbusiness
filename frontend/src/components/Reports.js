@@ -89,7 +89,7 @@ export default function Reports() {
         toast.success('Laporan berhasil diupdate!');
       } else {
         await api.post('/reports/loket-daily', submitData);
-        toast.success('Laporan berhasil disimpan!');
+        toast.success('✅ Laporan berhasil disimpan & otomatis di-sync ke Accounting!');
       }
       
       setShowLoketForm(false);
