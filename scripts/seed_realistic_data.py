@@ -241,6 +241,11 @@ async def seed_orders(businesses, users):
         
         for _ in range(num_orders):
             business = random.choice(businesses)
+            
+            # SKIP PPOB - PPOB uses shift reports, not orders
+            if business['category'] == 'PPOB':
+                continue
+            
             service_type = random.choice(SERVICE_TYPES[business['category']])
             customer_name = random.choice(CUSTOMER_NAMES)
             
