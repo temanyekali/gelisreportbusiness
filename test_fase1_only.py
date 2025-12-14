@@ -109,7 +109,7 @@ class Fase1Tester:
         try:
             response = requests.put(
                 f"{self.base_url}/technical-progress/{order_id}/step",
-                json={"step_name": "Survey Lokasi", "status": "completed", "notes": "Test update"},
+                json={"step_name": "Survey Teknis", "status": "completed", "notes": "Test update"},
                 headers=headers,
                 timeout=30
             )
