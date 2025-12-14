@@ -1663,6 +1663,55 @@ async def update_order_status_by_teknisi(
     
     return {'message': f'Status order berhasil diupdate menjadi {status}'}
 
+
+@api_router.put('/teknisi/orders/{order_id}/assign')
+async def assign_technician_to_order(
+    order_id: str,
+    technician_id: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_user)
+):
+    """Assign a technician to an order (Only Owner/Manager can do this)"""
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    
+    # Check permission - Only Owner or Manager
+    if user['role_id'] not in [1, 2]:
+        raise HTTPException(status_code=403, detail='Hanya Owner/Manager yang dapat menugaskan teknisi')
+    
+    # Check if order exists
+    order = await db.orders.find_one({'id': order_id}, {'_id': 0})
+    if not order:
+        raise HTTPException(status_code=404, detail='Order tidak ditemukan')
+    
+    # Check if technician exists and is active
+    if technician_id:  # Allow unassigning by passing empty string
+        technician = await db.users.find_one({'id': technician_id, 'role_id': 7}, {'_id': 0})
+        if not technician:
+            raise HTTPException(status_code=404, detail='Teknisi tidak ditemukan')
+        if not technician.get('is_active', False):
+            raise HTTPException(status_code=400, detail='Teknisi tidak aktif')
+    
+    # Update assignment
+    update_data = {
+        'assigned_to': technician_id if technician_id else None,
+        'updated_at': utc_now().isoformat()
+    }
+    
+    await db.orders.update_one({'id': order_id}, {'$set': update_data})
+    
+    # Log activity
+    tech_name = technician.get('full_name', technician.get('username', 'Unknown')) if technician_id else 'None'
+    activity_log = {
+        'id': generate_id(),
+        'user_id': current_user['sub'],
+        'action': 'assign_technician',
+        'description': f"Menugaskan order {order.get('order_number', order_id)} ke teknisi {tech_name}",
+        'ip_address': '0.0.0.0',
+        'created_at': utc_now().isoformat()
+    }
+    await db.activity_logs.insert_one(activity_log)
+    
+    return {'message': 'Teknisi berhasil ditugaskan', 'assigned_to': technician_id}
+
 @api_router.put('/teknisi/orders/{order_id}/progress')
 async def update_order_progress(
     order_id: str,
