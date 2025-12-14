@@ -948,7 +948,6 @@ class ExpenseCategory(str, Enum):
 
 # Universal Income Model
 class UniversalIncomeBase(BaseModel):
-    business_id: str
     category: IncomeCategory
     description: str
     amount: float
@@ -962,7 +961,10 @@ class UniversalIncomeBase(BaseModel):
 class UniversalIncomeCreate(UniversalIncomeBase):
     pass
 
-class UniversalIncome(UniversalIncomeBase):
+class UniversalIncomeFull(UniversalIncomeBase):
+    business_id: str
+
+class UniversalIncome(UniversalIncomeFull):
     model_config = ConfigDict(extra='ignore')
     id: str
     income_code: str  # Auto-generated unique code
@@ -971,7 +973,6 @@ class UniversalIncome(UniversalIncomeBase):
 
 # Universal Expense Model
 class UniversalExpenseBase(BaseModel):
-    business_id: str
     category: ExpenseCategory
     description: str
     amount: float
@@ -985,7 +986,10 @@ class UniversalExpenseBase(BaseModel):
 class UniversalExpenseCreate(UniversalExpenseBase):
     pass
 
-class UniversalExpense(UniversalExpenseBase):
+class UniversalExpenseFull(UniversalExpenseBase):
+    business_id: str
+
+class UniversalExpense(UniversalExpenseFull):
     model_config = ConfigDict(extra='ignore')
     id: str
     expense_code: str  # Auto-generated unique code
