@@ -1041,8 +1041,8 @@ class GelisAPITester:
             )
             if response.status_code == 200:
                 data = response.json()
-                if 'products' in data and 'total_amount' in data:
-                    self.log_result("POST PPOB Auto-Generate", True, f"Auto-generated report: {len(data['products'])} products, {data['total_amount']} total")
+                if 'product_breakdown' in data and 'total_amount' in data:
+                    self.log_result("POST PPOB Auto-Generate", True, f"Auto-generated report: {len(data['product_breakdown'])} products, {data['total_amount']} total")
                 else:
                     self.log_result("POST PPOB Auto-Generate", False, "Missing required fields in response")
             else:
