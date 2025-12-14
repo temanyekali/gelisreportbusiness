@@ -60,13 +60,45 @@ while [ -z "$DB_PASSWORD" ]; do
     read -p "Enter MongoDB password for 'gelis_user': " DB_PASSWORD
 done
 
+echo ""
+log_info "GitHub Repository Setup:"
+read -p "Clone from GitHub? (y/n) [y]: " USE_GITHUB
+USE_GITHUB=${USE_GITHUB:-y}
+
+if [ "$USE_GITHUB" = "y" ]; then
+    read -p "Enter GitHub repository URL (e.g., https://github.com/user/repo.git): " GITHUB_REPO
+    while [ -z "$GITHUB_REPO" ]; do
+        log_error "Repository URL cannot be empty!"
+        read -p "Enter GitHub repository URL: " GITHUB_REPO
+    done
+    
+    read -p "Is this a private repository? (y/n) [n]: " IS_PRIVATE
+    IS_PRIVATE=${IS_PRIVATE:-n}
+    
+    if [ "$IS_PRIVATE" = "y" ]; then
+        read -p "Enter GitHub Personal Access Token: " GITHUB_TOKEN
+        while [ -z "$GITHUB_TOKEN" ]; do
+            log_error "Token cannot be empty for private repository!"
+            read -p "Enter GitHub Personal Access Token: " GITHUB_TOKEN
+        done
+    fi
+    
+    read -p "Enter branch name [main]: " GITHUB_BRANCH
+    GITHUB_BRANCH=${GITHUB_BRANCH:-main}
+fi
+
 read -p "Install SSL certificate? (y/n) [n]: " INSTALL_SSL
 INSTALL_SSL=${INSTALL_SSL:-n}
 
 echo ""
-log_info "Configuration:"
+log_info "Configuration Summary:"
 log_info "  - App User: $APP_USER"
 log_info "  - Domain: $DOMAIN_NAME"
+if [ "$USE_GITHUB" = "y" ]; then
+    log_info "  - GitHub Repo: $GITHUB_REPO"
+    log_info "  - Branch: $GITHUB_BRANCH"
+    log_info "  - Private: $IS_PRIVATE"
+fi
 log_info "  - Install SSL: $INSTALL_SSL"
 echo ""
 
