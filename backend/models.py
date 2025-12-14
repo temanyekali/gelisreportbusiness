@@ -133,7 +133,7 @@ class Order(OrderBase):
     id: str
     order_number: str
     status: OrderStatus = OrderStatus.PENDING
-    payment_status: PaymentStatus = OrderStatus.UNPAID
+    payment_status: PaymentStatus = PaymentStatus.UNPAID
     assigned_to: Optional[str] = None
     completion_date: Optional[datetime] = None
     created_by: str
