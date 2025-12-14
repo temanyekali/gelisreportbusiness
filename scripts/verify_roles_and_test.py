@@ -153,24 +153,39 @@ async def generate_test_users():
         {'username': 'indra', 'password': 'teknisi123', 'name': 'Indra (Teknisi)', 'role_id': 7, 'email': 'indra@gelis.com'},
     ]
     
+    from datetime import datetime, timezone
+    
     for test_user in test_users:
         existing = await db.users.find_one({'username': test_user['username']}, {'_id': 0})
         
         if not existing:
+            now = datetime.now(timezone.utc).isoformat()
             user_data = {
                 'id': str(uuid.uuid4()),
                 'username': test_user['username'],
-                'name': test_user['name'],
+                'full_name': test_user['name'],
                 'email': test_user['email'],
                 'password': get_password_hash(test_user['password']),
                 'role_id': test_user['role_id'],
                 'is_active': True,
-                'created_at': '2025-12-14T10:00:00'
+                'created_at': now,
+                'updated_at': now
             }
             await db.users.insert_one(user_data)
             print(f"  ✅ Created: {test_user['username']} ({ROLE_MATRIX[test_user['role_id']]})")
         else:
-            print(f"  ✓ Exists: {test_user['username']} ({ROLE_MATRIX[test_user['role_id']]})")
+            # Update existing user jika missing fields
+            updates = {}
+            if 'full_name' not in existing and 'name' in existing:
+                updates['full_name'] = existing['name']
+            if 'updated_at' not in existing:
+                updates['updated_at'] = datetime.now(timezone.utc).isoformat()
+            
+            if updates:
+                await db.users.update_one({'username': test_user['username']}, {'$set': updates})
+                print(f"  ✅ Updated: {test_user['username']} ({ROLE_MATRIX[test_user['role_id']]})")
+            else:
+                print(f"  ✓ Exists: {test_user['username']} ({ROLE_MATRIX[test_user['role_id']]})")
 
 async def main():
     print("="*70)
