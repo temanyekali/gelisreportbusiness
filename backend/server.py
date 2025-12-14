@@ -3279,17 +3279,29 @@ async def get_executive_summary(
     if user['role_id'] not in [1, 2, 3, 8]:  # Owner, Manager, Finance, IT Developer
         raise HTTPException(status_code=403, detail='Akses ditolak')
     
+    # Parse dates
+    from datetime import datetime, timedelta
+    start_dt = datetime.fromisoformat(start_date)
+    end_dt = datetime.fromisoformat(end_date)
+    
+    # Calculate previous period for comparison
+    period_length = (end_dt - start_dt).days
+    prev_start_dt = start_dt - timedelta(days=period_length)
+    prev_end_dt = start_dt
+    
     # Get all businesses
     businesses = await db.businesses.find({'is_active': True}, {'_id': 0}).to_list(length=100)
     
     business_units = []
     total_revenue = 0.0
     total_expenses = 0.0
+    total_prev_revenue = 0.0
+    total_prev_expenses = 0.0
     
     for business in businesses:
         business_id = business['id']
         
-        # Get transactions for this business in date range
+        # Get transactions for current period
         transactions = await db.transactions.find({
             'business_id': business_id,
             'created_at': {
@@ -3300,8 +3312,26 @@ async def get_executive_summary(
         
         revenue = sum(t['amount'] for t in transactions if t['transaction_type'] == 'income')
         expenses = sum(t['amount'] for t in transactions if t['transaction_type'] == 'expense')
+        
+        # Get transactions for previous period (for growth calculation)
+        prev_transactions = await db.transactions.find({
+            'business_id': business_id,
+            'created_at': {
+                '$gte': prev_start_dt.isoformat(),
+                '$lte': prev_end_dt.isoformat()
+            }
+        }, {'_id': 0}).to_list(length=10000)
+        
+        prev_revenue = sum(t['amount'] for t in prev_transactions if t['transaction_type'] == 'income')
+        prev_expenses = sum(t['amount'] for t in prev_transactions if t['transaction_type'] == 'expense')
+        
+        # Calculate metrics
         net_profit = revenue - expenses
         profit_margin = (net_profit / revenue * 100) if revenue > 0 else 0
+        
+        # Calculate growth rate
+        revenue_growth = ((revenue - prev_revenue) / prev_revenue * 100) if prev_revenue > 0 else 0
+        profit_growth = ((net_profit - (prev_revenue - prev_expenses)) / (prev_revenue - prev_expenses) * 100) if (prev_revenue - prev_expenses) > 0 else 0
         
         # Get orders for this business
         orders = await db.orders.find({
@@ -3315,8 +3345,16 @@ async def get_executive_summary(
         total_orders = len(orders)
         completed_orders = len([o for o in orders if o['status'] == 'completed'])
         pending_orders = len([o for o in orders if o['status'] == 'pending'])
+        processing_orders = len([o for o in orders if o['status'] == 'processing'])
+        cancelled_orders = len([o for o in orders if o['status'] == 'cancelled'])
+        
         completion_rate = (completed_orders / total_orders * 100) if total_orders > 0 else 0
-        average_order_value = revenue / total_orders if total_orders > 0 else 0
+        cancellation_rate = (cancelled_orders / total_orders * 100) if total_orders > 0 else 0
+        average_order_value = revenue / completed_orders if completed_orders > 0 else 0
+        
+        # Calculate financial ratios
+        operating_margin = ((revenue - expenses) / revenue * 100) if revenue > 0 else 0
+        expense_ratio = (expenses / revenue * 100) if revenue > 0 else 0
         
         business_unit = {
             'business_id': business_id,
@@ -3326,17 +3364,28 @@ async def get_executive_summary(
             'total_expenses': expenses,
             'net_profit': net_profit,
             'profit_margin': profit_margin,
+            'operating_margin': operating_margin,
+            'expense_ratio': expense_ratio,
+            'revenue_growth': revenue_growth,
+            'profit_growth': profit_growth,
             'total_orders': total_orders,
             'completed_orders': completed_orders,
             'pending_orders': pending_orders,
+            'processing_orders': processing_orders,
+            'cancelled_orders': cancelled_orders,
             'completion_rate': completion_rate,
+            'cancellation_rate': cancellation_rate,
             'average_order_value': average_order_value,
-            'growth_rate': 0  # TODO: Calculate from previous period
+            'previous_revenue': prev_revenue,
+            'previous_expenses': prev_expenses,
+            'status': 'growing' if revenue_growth > 5 else ('stable' if revenue_growth > -5 else 'declining')
         }
         
         business_units.append(business_unit)
         total_revenue += revenue
         total_expenses += expenses
+        total_prev_revenue += prev_revenue
+        total_prev_expenses += prev_expenses
     
     net_profit = total_revenue - total_expenses
     overall_profit_margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0
