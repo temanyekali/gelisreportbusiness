@@ -808,9 +808,9 @@ async def get_period_report(
 # ============= USER MANAGEMENT ROUTES =============
 @api_router.get('/users', response_model=List[UserResponse])
 async def get_users(current_user: dict = Depends(get_current_user)):
-    # Check permission - Owner (1) and IT Developer (8) can view all users
+    # Check permission - Owner, Manager, and IT Developer can view all users
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if not user or user.get('role_id') not in [1, 8]:  # Owner and IT Developer
+    if not user or user.get('role_id') not in [1, 2, 8]:  # Owner, Manager, and IT Developer
         raise HTTPException(status_code=403, detail='Tidak memiliki izin')
     
     users = await db.users.find({}, {'_id': 0, 'password': 0}).to_list(1000)
