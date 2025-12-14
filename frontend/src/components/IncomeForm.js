@@ -188,15 +188,12 @@ export default function IncomeForm() {
 
               {/* Amount */}
               <div>
-                <Label htmlFor="amount">Jumlah (Rp) *</Label>
-                <Input
+                <Label htmlFor="amount">Jumlah *</Label>
+                <CurrencyInput
                   id="amount"
-                  type="number"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, amount: value })}
                   placeholder="0"
-                  min="0"
-                  step="1"
                   required
                 />
               </div>
