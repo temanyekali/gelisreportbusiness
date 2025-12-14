@@ -271,17 +271,13 @@ export default function TeknisiDashboard() {
           ) : (
             getProcessingOrders().map((order) => {
               const business = businesses.find(b => b.id === order.business_id);
-              const progress = order.order_details?.progress || 0;
               return (
                 <Card key={order.id} className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="font-semibold text-slate-900">{order.order_number}</h3>
                       <p className="text-sm text-slate-600">{order.customer_name} - {order.service_type}</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">{progress}%</div>
-                      <div className="text-xs text-slate-500">Progress</div>
+                      <p className="text-xs text-slate-500 mt-1">Business: {business?.name || 'N/A'}</p>
                     </div>
                   </div>
                   <Button onClick={() => handleUpdateStatus(order)} className="w-full">
