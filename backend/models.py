@@ -921,3 +921,110 @@ class BusinessBenchmark(BaseModel):
     best_value: float = 0.0
     rank: int = 0
     percentile: float = 0.0
+
+
+# ============= UNIVERSAL INCOME/EXPENSE MODELS (PER-BUSINESS SYSTEM) =============
+
+class IncomeCategory(str, Enum):
+    SALES = 'sales'  # Penjualan produk/jasa
+    PAYMENT = 'payment'  # Pembayaran dari customer
+    DEPOSIT = 'deposit'  # Setoran/deposit
+    ADMIN_FEE = 'admin_fee'  # Fee admin
+    COMMISSION = 'commission'  # Komisi
+    REFUND_RECEIVED = 'refund_received'  # Refund diterima
+    OTHER_INCOME = 'other_income'  # Pemasukan lainnya
+
+class ExpenseCategory(str, Enum):
+    SALARY = 'salary'  # Gaji karyawan
+    OPERATIONAL = 'operational'  # Operasional
+    SUPPLIES = 'supplies'  # Perlengkapan
+    UTILITIES = 'utilities'  # Listrik, air, internet
+    TRANSPORTATION = 'transportation'  # Transportasi
+    MAINTENANCE = 'maintenance'  # Perawatan
+    MARKETING = 'marketing'  # Marketing/promosi
+    PURCHASE = 'purchase'  # Pembelian barang
+    REFUND_PAID = 'refund_paid'  # Refund dibayarkan
+    OTHER_EXPENSE = 'other_expense'  # Pengeluaran lainnya
+
+# Universal Income Model
+class UniversalIncomeBase(BaseModel):
+    business_id: str
+    category: IncomeCategory
+    description: str
+    amount: float
+    payment_method: Optional[str] = 'cash'  # cash, transfer, card, etc
+    reference_number: Optional[str] = None  # Nomor referensi (invoice, receipt, dll)
+    order_id: Optional[str] = None  # Link ke order jika ada
+    customer_name: Optional[str] = None
+    notes: Optional[str] = None
+    transaction_date: datetime
+
+class UniversalIncomeCreate(UniversalIncomeBase):
+    pass
+
+class UniversalIncome(UniversalIncomeBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    income_code: str  # Auto-generated unique code
+    created_by: str
+    created_at: datetime
+
+# Universal Expense Model
+class UniversalExpenseBase(BaseModel):
+    business_id: str
+    category: ExpenseCategory
+    description: str
+    amount: float
+    payment_method: Optional[str] = 'cash'  # cash, transfer, card, etc
+    reference_number: Optional[str] = None  # Nomor referensi (invoice, receipt, dll)
+    vendor_name: Optional[str] = None  # Nama vendor/supplier
+    order_id: Optional[str] = None  # Link ke order jika ada
+    notes: Optional[str] = None
+    transaction_date: datetime
+
+class UniversalExpenseCreate(UniversalExpenseBase):
+    pass
+
+class UniversalExpense(UniversalExpenseBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    expense_code: str  # Auto-generated unique code
+    created_by: str
+    created_at: datetime
+
+# Business Dashboard Stats Model
+class BusinessDashboardStats(BaseModel):
+    business_id: str
+    business_name: str
+    business_category: str
+    period_start: datetime
+    period_end: datetime
+    
+    # Financial Metrics
+    total_income: float = 0.0
+    total_expense: float = 0.0
+    net_profit: float = 0.0
+    profit_margin: float = 0.0  # Percentage
+    
+    # Order Metrics
+    total_orders: int = 0
+    completed_orders: int = 0
+    pending_orders: int = 0
+    cancelled_orders: int = 0
+    completion_rate: float = 0.0  # Percentage
+    
+    # Income Breakdown by Category
+    income_by_category: Dict[str, float] = {}
+    
+    # Expense Breakdown by Category
+    expense_by_category: Dict[str, float] = {}
+    
+    # Top Income Sources
+    top_income_sources: List[Dict[str, Any]] = []
+    
+    # Top Expense Categories
+    top_expense_categories: List[Dict[str, Any]] = []
+    
+    # Trends
+    income_trend: List[Dict[str, Any]] = []  # Daily/weekly trends
+    expense_trend: List[Dict[str, Any]] = []  # Daily/weekly trends
