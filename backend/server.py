@@ -3387,42 +3387,192 @@ async def get_executive_summary(
         total_prev_revenue += prev_revenue
         total_prev_expenses += prev_expenses
     
+    # Calculate overall metrics
     net_profit = total_revenue - total_expenses
     overall_profit_margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0
+    overall_expense_ratio = (total_expenses / total_revenue * 100) if total_revenue > 0 else 0
+    
+    # Calculate growth compared to previous period
+    prev_net_profit = total_prev_revenue - total_prev_expenses
+    overall_revenue_growth = ((total_revenue - total_prev_revenue) / total_prev_revenue * 100) if total_prev_revenue > 0 else 0
+    overall_profit_growth = ((net_profit - prev_net_profit) / prev_net_profit * 100) if prev_net_profit > 0 else 0
     
     # Find top performers
     best_performing = max(business_units, key=lambda x: x['profit_margin']) if business_units else None
     highest_revenue = max(business_units, key=lambda x: x['total_revenue']) if business_units else None
+    fastest_growing = max(business_units, key=lambda x: x['revenue_growth']) if business_units else None
     highest_margin = max(business_units, key=lambda x: x['profit_margin']) if business_units else None
     
-    # Generate alerts
+    # Categorize businesses
+    growing_businesses = [bu for bu in business_units if bu['status'] == 'growing']
+    stable_businesses = [bu for bu in business_units if bu['status'] == 'stable']
+    declining_businesses = [bu for bu in business_units if bu['status'] == 'declining']
+    
+    # Generate intelligent alerts
     alerts = []
     if net_profit < 0:
-        alerts.append("⚠️ Total laba bersih negatif - perlu review pengeluaran")
+        alerts.append({
+            'level': 'critical',
+            'message': 'Total laba bersih negatif - perlu review pengeluaran segera',
+            'value': net_profit,
+            'action': 'Review dan kurangi pengeluaran operasional'
+        })
+    
+    if overall_profit_growth < -10:
+        alerts.append({
+            'level': 'warning',
+            'message': f'Penurunan profit {abs(overall_profit_growth):.1f}% dibanding periode sebelumnya',
+            'value': overall_profit_growth,
+            'action': 'Analisa penyebab penurunan dan ambil tindakan korektif'
+        })
     
     for bu in business_units:
-        if bu['profit_margin'] < 10:
-            alerts.append(f"⚠️ {bu['business_name']}: Margin keuntungan rendah ({bu['profit_margin']:.1f}%)")
-        if bu['pending_orders'] > bu['completed_orders']:
-            alerts.append(f"⚠️ {bu['business_name']}: Pending orders ({bu['pending_orders']}) lebih banyak dari completed ({bu['completed_orders']})")
+        if bu['profit_margin'] < 5:
+            alerts.append({
+                'level': 'critical',
+                'message': f"{bu['business_name']}: Margin sangat rendah ({bu['profit_margin']:.1f}%)",
+                'value': bu['profit_margin'],
+                'action': f"Review struktur biaya dan pricing di {bu['business_name']}"
+            })
+        
+        if bu['cancellation_rate'] > 15:
+            alerts.append({
+                'level': 'warning',
+                'message': f"{bu['business_name']}: Tingkat pembatalan tinggi ({bu['cancellation_rate']:.1f}%)",
+                'value': bu['cancellation_rate'],
+                'action': 'Investigasi penyebab pembatalan dan improve service quality'
+            })
+        
+        if bu['revenue_growth'] < -20:
+            alerts.append({
+                'level': 'warning',
+                'message': f"{bu['business_name']}: Penurunan revenue signifikan ({bu['revenue_growth']:.1f}%)",
+                'value': bu['revenue_growth'],
+                'action': 'Evaluasi strategi marketing dan kompetitor analysis'
+            })
     
-    # Generate insights
+    # Generate advanced insights
     insights = []
     if business_units:
         avg_margin = sum(bu['profit_margin'] for bu in business_units) / len(business_units)
-        insights.append(f"💡 Rata-rata margin keuntungan: {avg_margin:.2f}%")
+        insights.append({
+            'type': 'margin_analysis',
+            'title': 'Analisa Margin Keuntungan',
+            'description': f"Rata-rata margin: {avg_margin:.2f}%. {'Sehat' if avg_margin > 20 else 'Perlu peningkatan' if avg_margin > 10 else 'Kritis'}",
+            'value': avg_margin
+        })
+        
+        insights.append({
+            'type': 'growth_trend',
+            'title': 'Trend Pertumbuhan',
+            'description': f"Revenue {'naik' if overall_revenue_growth > 0 else 'turun'} {abs(overall_revenue_growth):.1f}% dibanding periode sebelumnya",
+            'value': overall_revenue_growth,
+            'status': 'positive' if overall_revenue_growth > 5 else ('neutral' if overall_revenue_growth > -5 else 'negative')
+        })
+        
+        insights.append({
+            'type': 'business_health',
+            'title': 'Kesehatan Unit Bisnis',
+            'description': f"{len(growing_businesses)} unit tumbuh, {len(stable_businesses)} stabil, {len(declining_businesses)} menurun",
+            'growing': len(growing_businesses),
+            'stable': len(stable_businesses),
+            'declining': len(declining_businesses)
+        })
         
         top_3_revenue = sorted(business_units, key=lambda x: x['total_revenue'], reverse=True)[:3]
-        insights.append(f"💡 Top 3 pendapatan: {', '.join([bu['business_name'] for bu in top_3_revenue])}")
+        insights.append({
+            'type': 'top_performers',
+            'title': 'Top 3 Revenue Contributors',
+            'businesses': [{'name': bu['business_name'], 'revenue': bu['total_revenue'], 'contribution': (bu['total_revenue'] / total_revenue * 100)} for bu in top_3_revenue]
+        })
+        
+        # Expense efficiency insight
+        efficient_units = [bu for bu in business_units if bu['expense_ratio'] < 60]
+        insights.append({
+            'type': 'efficiency',
+            'title': 'Efisiensi Operasional',
+            'description': f"{len(efficient_units)} dari {len(business_units)} unit beroperasi dengan efisien (expense ratio < 60%)",
+            'value': overall_expense_ratio
+        })
     
-    # Generate recommendations
+    # Generate smart recommendations
     recommendations = []
+    
+    # Recommendation 1: Focus on low performers
     low_performers = [bu for bu in business_units if bu['profit_margin'] < 15]
     if low_performers:
-        recommendations.append(f"💡 Fokus perbaikan: {', '.join([bu['business_name'] for bu in low_performers])}")
+        recommendations.append({
+            'priority': 'high',
+            'category': 'Profitability',
+            'title': 'Perbaikan Unit Bisnis Low-Margin',
+            'description': f"Fokus improve {', '.join([bu['business_name'] for bu in low_performers[:3]])}",
+            'action_items': [
+                'Review dan optimasi struktur biaya',
+                'Evaluasi pricing strategy',
+                'Improve operational efficiency'
+            ],
+            'potential_impact': 'Potensi peningkatan profit 15-30%'
+        })
     
-    if total_revenue > 0 and total_expenses / total_revenue > 0.7:
-        recommendations.append("💡 Rasio pengeluaran tinggi (>70%), review efisiensi operasional")
+    # Recommendation 2: Replicate success
+    if fastest_growing and fastest_growing['revenue_growth'] > 20:
+        recommendations.append({
+            'priority': 'medium',
+            'category': 'Growth',
+            'title': 'Replikasi Best Practice',
+            'description': f"Terapkan strategi sukses dari {fastest_growing['business_name']} (growth {fastest_growing['revenue_growth']:.1f}%) ke unit lain",
+            'action_items': [
+                'Dokumentasi success factors',
+                'Training team dari unit lain',
+                'Implement proven strategies'
+            ],
+            'potential_impact': 'Akselerasi pertumbuhan 10-25%'
+        })
+    
+    # Recommendation 3: Cost optimization
+    if overall_expense_ratio > 70:
+        recommendations.append({
+            'priority': 'high',
+            'category': 'Cost Management',
+            'title': 'Optimasi Pengeluaran',
+            'description': f"Expense ratio tinggi ({overall_expense_ratio:.1f}%) - review semua kategori pengeluaran",
+            'action_items': [
+                'Audit pengeluaran tidak produktif',
+                'Negosiasi ulang kontrak supplier',
+                'Otomasi proses untuk reduce labor cost'
+            ],
+            'potential_impact': 'Potensi saving 10-20% dari expenses'
+        })
+    
+    # Recommendation 4: Growth opportunities
+    if declining_businesses:
+        recommendations.append({
+            'priority': 'medium',
+            'category': 'Turnaround',
+            'title': 'Strategi Turnaround',
+            'description': f"Segera tangani {len(declining_businesses)} unit bisnis yang menurun",
+            'action_items': [
+                'Root cause analysis penurunan',
+                'Customer feedback & market research',
+                'Quick wins untuk restore momentum'
+            ],
+            'potential_impact': 'Stabilisasi dan recovery dalam 2-3 bulan'
+        })
+    
+    # Recommendation 5: Investment opportunities
+    if growing_businesses and net_profit > 0:
+        recommendations.append({
+            'priority': 'low',
+            'category': 'Investment',
+            'title': 'Ekspansi Unit Berkinerja Baik',
+            'description': f"Alokasikan resources lebih ke {len(growing_businesses)} unit yang tumbuh",
+            'action_items': [
+                'Increase marketing budget untuk growing units',
+                'Expand capacity untuk meet demand',
+                'Enter new markets dengan proven model'
+            ],
+            'potential_impact': 'ROI 200-300% dalam 6-12 bulan'
+        })
     
     summary = {
         'period_start': start_date,
