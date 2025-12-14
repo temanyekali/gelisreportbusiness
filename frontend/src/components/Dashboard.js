@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Card } from './ui/card';
-import { Building2, ShoppingCart, TrendingUp, TrendingDown, Clock, CheckCircle2 } from 'lucide-react';
+import { Building2, ShoppingCart, TrendingUp, TrendingDown, Clock, CheckCircle2, ArrowRight } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Button } from './ui/button';
 
 const StatCard = ({ title, value, subtitle, icon: Icon, trend, color = 'slate' }) => {
   const colorClasses = {
@@ -36,11 +38,14 @@ const StatCard = ({ title, value, subtitle, icon: Icon, trend, color = 'slate' }
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
+  const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchBusinesses();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -51,6 +56,15 @@ export default function Dashboard() {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBusinesses = async () => {
+    try {
+      const response = await api.get('/businesses');
+      setBusinesses(response.data);
+    } catch (error) {
+      console.error('Error fetching businesses:', error);
     }
   };
 
@@ -203,6 +217,45 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </Card>
       </div>
+
+      {/* Business Modules - Quick Access */}
+      {businesses.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900">Akses Cepat Bisnis</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/businesses')}
+            >
+              Lihat Semua
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {businesses.map((business) => (
+              <Card
+                key={business.id}
+                className="p-4 md:p-6 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+                onClick={() => navigate(`/business/${business.id}`)}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-slate-900 text-lg mb-1">{business.name}</h3>
+                    <p className="text-sm text-slate-600">{business.category}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 text-slate-600" />
+                  </div>
+                </div>
+                <div className="flex items-center text-slate-600 hover:text-slate-900 text-sm font-medium">
+                  <span>Kelola Bisnis</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
