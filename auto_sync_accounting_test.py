@@ -16,7 +16,7 @@ import os
 import time
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://accounting-sync-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://multibiz-hub-1.preview.emergentagent.com/api"
 
 class AutoSyncAccountingTester:
     def __init__(self):
