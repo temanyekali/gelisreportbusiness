@@ -53,13 +53,6 @@ export default function TeknisiDashboard() {
     return <Badge className={config.color}>{config.label}</Badge>;
   };
 
-  const getProgressColor = (progress) => {
-    if (progress === 0) return 'bg-gray-200';
-    if (progress < 50) return 'bg-yellow-400';
-    if (progress < 100) return 'bg-blue-500';
-    return 'bg-green-500';
-  };
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
