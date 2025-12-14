@@ -21,6 +21,7 @@ import ActivityLogs from './components/ActivityLogs';
 import Settings from './components/Settings';
 import ExecutiveReport from './components/ExecutiveReport';
 import SmartAlerts from './components/SmartAlerts';
+import BusinessModule from './components/BusinessModule';
 
 const PrivateRoute = ({ children }) => {
   return isAuthenticated() ? children : <Navigate to="/login" />;
@@ -150,6 +151,12 @@ function App() {
         <Route path="/alerts" element={
           <PrivateRoute>
             <Layout><SmartAlerts /></Layout>
+          </PrivateRoute>
+        } />
+        
+        <Route path="/business/:businessId/*" element={
+          <PrivateRoute>
+            <Layout><BusinessModule /></Layout>
           </PrivateRoute>
         } />
       </Routes>
