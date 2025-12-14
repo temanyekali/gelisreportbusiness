@@ -249,9 +249,9 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
 # ============= BUSINESS ROUTES =============
 @api_router.get('/businesses', response_model=List[Business])
 async def get_businesses(current_user: dict = Depends(get_current_user)):
-    # Check permission - Only Owner & Manager can view businesses
+    # Check permission - Owner, Manager, Finance, Kasir, Loket can view businesses
     user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
-    if user['role_id'] not in [1, 2]:  # Owner or Manager
+    if user['role_id'] not in [1, 2, 3, 5, 6]:  # Owner, Manager, Finance, Kasir, Loket
         raise HTTPException(status_code=403, detail='Tidak memiliki akses ke menu Bisnis')
     
     businesses = await db.businesses.find({}, {'_id': 0}).to_list(1000)
