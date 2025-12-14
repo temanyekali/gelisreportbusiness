@@ -2525,6 +2525,502 @@ async def auto_sync_to_accounting(
         )
         
         return transaction_dict['id']
+
+
+# ============= SISTEM PPOB ENDPOINTS =============
+
+# Helper function untuk double-entry accounting PPOB
+async def create_ppob_journal_entry(
+    tanggal: datetime,
+    description: str,
+    debit_account: str,
+    kredit_account: str,
+    amount: float,
+    reference_type: str,
+    reference_id: str,
+    user_id: str
+):
+    """Create double-entry journal for PPOB"""
+    try:
+        journal_entry = {
+            'id': generate_id(),
+            'tanggal': tanggal.isoformat() if isinstance(tanggal, datetime) else tanggal,
+            'description': description,
+            'debit_account': debit_account,
+            'debit_amount': amount,
+            'kredit_account': kredit_account,
+            'kredit_amount': amount,
+            'reference_type': reference_type,
+            'reference_id': reference_id,
+            'created_at': utc_now().isoformat(),
+            'created_by': user_id
+        }
+        
+        await db.ppob_journal_entries.insert_one(journal_entry)
+        return journal_entry['id']
+    except Exception as e:
+        print(f"Error creating PPOB journal: {str(e)}")
+        return None
+
+
+# MENU 1: LAPORAN LOKET PPOB ENDPOINTS
+
+@api_router.post('/ppob/loket-shift', response_model=dict)
+async def create_ppob_loket_shift(
+    report_data: PPOBLoketShiftReportCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create laporan shift loket PPOB dengan auto-accounting:
+    - Debit: Piutang Setoran Loket
+    - Kredit: Pendapatan PPOB
+    """
+    # Calculate totals
+    total_penjualan = 0.0
+    total_sisa_setoran = 0.0
+    
+    for channel in report_data.channels:
+        # Auto-calculate per channel
+        channel.sisa_setoran = channel.total_penjualan
+        channel.saldo_akhir = channel.saldo_awal + channel.saldo_inject - channel.total_penjualan
+        
+        total_penjualan += channel.total_penjualan
+        total_sisa_setoran += channel.sisa_setoran
+    
+    # Create report
+    report_dict = report_data.model_dump()
+    report_dict['id'] = generate_id()
+    report_dict['total_penjualan'] = total_penjualan
+    report_dict['total_sisa_setoran'] = total_sisa_setoran
+    report_dict['status_setoran'] = 'Belum Disetor'
+    report_dict['created_by'] = current_user['id']
+    report_dict['created_at'] = utc_now()
+    
+    # Serialize
+    doc = report_dict.copy()
+    doc['tanggal'] = doc['tanggal'].isoformat() if isinstance(doc['tanggal'], datetime) else doc['tanggal']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.ppob_loket_shifts.insert_one(doc)
+    
+    # AUTO-ACCOUNTING: Double Entry
+    # Debit: Piutang Setoran Loket
+    # Kredit: Pendapatan PPOB
+    await create_ppob_journal_entry(
+        tanggal=report_data.tanggal,
+        description=f"Penjualan PPOB Shift {report_data.shift} - {report_data.nama_petugas}",
+        debit_account="Piutang Setoran Loket",
+        kredit_account="Pendapatan PPOB",
+        amount=total_penjualan,
+        reference_type="loket_shift",
+        reference_id=report_dict['id'],
+        user_id=current_user['id']
+    )
+    
+    # Create notification untuk kasir
+    kasir_users = await db.users.find({'role_id': 5}, {'_id': 0}).to_list(length=100)  # Role 5 = Kasir
+    for kasir in kasir_users:
+        notification = {
+            'id': generate_id(),
+            'user_id': kasir['id'],
+            'type': 'ppob_setoran',
+            'title': 'Setoran PPOB Baru',
+            'message': f"Setoran shift {report_data.shift} dari {report_data.nama_petugas} sebesar Rp {total_sisa_setoran:,.0f} menunggu penerimaan",
+            'is_read': False,
+            'related_type': 'ppob_loket_shift',
+            'related_id': report_dict['id'],
+            'created_at': utc_now().isoformat()
+        }
+        await db.notifications.insert_one(notification)
+    
+    await log_activity(
+        current_user['id'],
+        'CREATE_PPOB_LOKET_SHIFT',
+        f"Created PPOB loket shift report: Rp {total_penjualan:,.0f}",
+        related_type='ppob_loket_shift',
+        related_id=report_dict['id']
+    )
+    
+    return {
+        'message': 'Laporan shift berhasil disimpan & auto-sync ke accounting!',
+        'id': report_dict['id'],
+        'total_penjualan': total_penjualan,
+        'status_setoran': 'Belum Disetor'
+    }
+
+
+@api_router.get('/ppob/loket-shift', response_model=dict)
+async def get_ppob_loket_shifts(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    shift: Optional[int] = None,
+    status_setoran: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get PPOB loket shift reports with filters"""
+    query = {}
+    
+    if business_id:
+        query['business_id'] = business_id
+    
+    if start_date and end_date:
+        query['tanggal'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    if shift:
+        query['shift'] = shift
+    
+    if status_setoran:
+        query['status_setoran'] = status_setoran
+    
+    reports = await db.ppob_loket_shifts.find(query, {'_id': 0}).sort('tanggal', -1).to_list(length=100)
+    
+    # Count by status
+    belum_disetor = await db.ppob_loket_shifts.count_documents({**query, 'status_setoran': 'Belum Disetor'})
+    
+    return {
+        'reports': reports,
+        'count': len(reports),
+        'belum_disetor': belum_disetor
+    }
+
+
+# MENU 2: LAPORAN KASIR PPOB ENDPOINTS
+
+@api_router.post('/ppob/kasir-report', response_model=dict)
+async def create_ppob_kasir_report(
+    report_data: PPOBKasirReportCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Create laporan kasir PPOB dengan auto-accounting:
+    1. Setoran Loket: Debit Kas, Kredit Piutang + Update status Lunas
+    2. Topup Saldo: Debit Modal PPOB, Kredit Kas
+    3. Kas Kecil: Auto-calculate
+    4. Admin: Debit Kas, Kredit Pendapatan Admin
+    """
+    # Calculate totals
+    total_setoran_loket = sum(s.amount for s in report_data.setoran_loket)
+    total_topup = sum(t.amount for t in report_data.topup_saldo)
+    saldo_kas_kecil = report_data.penerimaan_kas_kecil - report_data.pengurangan_kas_kecil
+    
+    # Create report
+    report_dict = report_data.model_dump()
+    report_dict['id'] = generate_id()
+    report_dict['total_setoran_loket'] = total_setoran_loket
+    report_dict['total_topup'] = total_topup
+    report_dict['saldo_kas_kecil'] = saldo_kas_kecil
+    report_dict['created_by'] = current_user['id']
+    report_dict['created_at'] = utc_now()
+    
+    # Serialize
+    doc = report_dict.copy()
+    doc['tanggal'] = doc['tanggal'].isoformat() if isinstance(doc['tanggal'], datetime) else doc['tanggal']
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.ppob_kasir_reports.insert_one(doc)
+    
+    # AUTO-ACCOUNTING ENTRIES
+    
+    # 1. Setoran Loket: Close piutang
+    if total_setoran_loket > 0:
+        await create_ppob_journal_entry(
+            tanggal=report_data.tanggal,
+            description="Penerimaan Setoran Loket PPOB",
+            debit_account="Kas",
+            kredit_account="Piutang Setoran Loket",
+            amount=total_setoran_loket,
+            reference_type="kasir_report",
+            reference_id=report_dict['id'],
+            user_id=current_user['id']
+        )
+        
+        # Update status setoran loket → Lunas
+        for setoran in report_data.setoran_loket:
+            await db.ppob_loket_shifts.update_one(
+                {'id': setoran.loket_report_id},
+                {'$set': {'status_setoran': 'Lunas'}}
+            )
+    
+    # 2. Setoran Loket Luar
+    if report_data.setoran_loket_luar > 0:
+        await create_ppob_journal_entry(
+            tanggal=report_data.tanggal,
+            description="Setoran Loket Luar PPOB",
+            debit_account="Kas",
+            kredit_account="Pendapatan PPOB Loket Luar",
+            amount=report_data.setoran_loket_luar,
+            reference_type="kasir_report",
+            reference_id=report_dict['id'],
+            user_id=current_user['id']
+        )
+    
+    # 3. Penerimaan Admin
+    if report_data.penerimaan_admin > 0:
+        await create_ppob_journal_entry(
+            tanggal=report_data.tanggal,
+            description="Penerimaan Admin PPOB",
+            debit_account="Kas",
+            kredit_account="Pendapatan Admin",
+            amount=report_data.penerimaan_admin,
+            reference_type="kasir_report",
+            reference_id=report_dict['id'],
+            user_id=current_user['id']
+        )
+    
+    # 4. Topup Saldo Loket
+    if total_topup > 0:
+        await create_ppob_journal_entry(
+            tanggal=report_data.tanggal,
+            description=f"Topup Saldo PPOB - {len(report_data.topup_saldo)} channel(s)",
+            debit_account="Modal Saldo PPOB",
+            kredit_account="Kas",
+            amount=total_topup,
+            reference_type="kasir_report",
+            reference_id=report_dict['id'],
+            user_id=current_user['id']
+        )
+    
+    # 5. Kas Kecil - Pengeluaran
+    if report_data.pengurangan_kas_kecil > 0:
+        await create_ppob_journal_entry(
+            tanggal=report_data.tanggal,
+            description="Pengeluaran Kas Kecil",
+            debit_account="Biaya Operasional",
+            kredit_account="Kas Kecil",
+            amount=report_data.pengurangan_kas_kecil,
+            reference_type="kasir_report",
+            reference_id=report_dict['id'],
+            user_id=current_user['id']
+        )
+    
+    # 6. Kas Kecil - Penerimaan
+    if report_data.penerimaan_kas_kecil > 0:
+        await create_ppob_journal_entry(
+            tanggal=report_data.tanggal,
+            description="Penerimaan Kas Kecil",
+            debit_account="Kas Kecil",
+            kredit_account="Kas",
+            amount=report_data.penerimaan_kas_kecil,
+            reference_type="kasir_report",
+            reference_id=report_dict['id'],
+            user_id=current_user['id']
+        )
+    
+    await log_activity(
+        current_user['id'],
+        'CREATE_PPOB_KASIR_REPORT',
+        f"Created PPOB kasir report: Setoran Rp {total_setoran_loket:,.0f}",
+        related_type='ppob_kasir_report',
+        related_id=report_dict['id']
+    )
+    
+    return {
+        'message': 'Laporan kasir berhasil disimpan & auto-sync ke accounting!',
+        'id': report_dict['id'],
+        'total_setoran': total_setoran_loket,
+        'total_topup': total_topup,
+        'saldo_kas_kecil': saldo_kas_kecil
+    }
+
+
+@api_router.get('/ppob/kasir-report', response_model=dict)
+async def get_ppob_kasir_reports(
+    business_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get PPOB kasir reports with filters"""
+    query = {}
+    
+    if business_id:
+        query['business_id'] = business_id
+    
+    if start_date and end_date:
+        query['tanggal'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    reports = await db.ppob_kasir_reports.find(query, {'_id': 0}).sort('tanggal', -1).to_list(length=100)
+    
+    return {
+        'reports': reports,
+        'count': len(reports)
+    }
+
+
+# MENU 3: AKUNTING PPOB ENDPOINTS
+
+@api_router.get('/ppob/accounting/journal', response_model=dict)
+async def get_ppob_journal_entries(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get PPOB journal entries (buku jurnal)"""
+    query = {}
+    
+    if start_date and end_date:
+        query['tanggal'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    entries = await db.ppob_journal_entries.find(query, {'_id': 0}).sort('tanggal', -1).to_list(length=1000)
+    
+    return {
+        'entries': entries,
+        'count': len(entries)
+    }
+
+
+@api_router.get('/ppob/accounting/ledger', response_model=dict)
+async def get_ppob_ledger(
+    account_name: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get PPOB ledger per account"""
+    query = {}
+    
+    if start_date and end_date:
+        query['tanggal'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    all_entries = await db.ppob_journal_entries.find(query, {'_id': 0}).sort('tanggal', 1).to_list(length=10000)
+    
+    # Group by account
+    ledger = {}
+    
+    for entry in all_entries:
+        # Debit side
+        debit_acc = entry['debit_account']
+        if debit_acc not in ledger:
+            ledger[debit_acc] = {'account_name': debit_acc, 'transactions': [], 'balance': 0.0}
+        ledger[debit_acc]['transactions'].append({
+            'tanggal': entry['tanggal'],
+            'description': entry['description'],
+            'debit': entry['debit_amount'],
+            'kredit': 0,
+            'reference': f"{entry['reference_type']}-{entry['reference_id']}"
+        })
+        ledger[debit_acc]['balance'] += entry['debit_amount']
+        
+        # Kredit side
+        kredit_acc = entry['kredit_account']
+        if kredit_acc not in ledger:
+            ledger[kredit_acc] = {'account_name': kredit_acc, 'transactions': [], 'balance': 0.0}
+        ledger[kredit_acc]['transactions'].append({
+            'tanggal': entry['tanggal'],
+            'description': entry['description'],
+            'debit': 0,
+            'kredit': entry['kredit_amount'],
+            'reference': f"{entry['reference_type']}-{entry['reference_id']}"
+        })
+        ledger[kredit_acc]['balance'] -= entry['kredit_amount']
+    
+    # Filter by account if specified
+    if account_name:
+        ledger = {k: v for k, v in ledger.items() if k == account_name}
+    
+    return {
+        'ledger': list(ledger.values()),
+        'accounts': list(ledger.keys())
+    }
+
+
+@api_router.get('/ppob/accounting/balances', response_model=dict)
+async def get_ppob_account_balances(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all PPOB account balances (saldo realtime)"""
+    # Get all journal entries
+    all_entries = await db.ppob_journal_entries.find({}, {'_id': 0}).to_list(length=10000)
+    
+    balances = {}
+    
+    for entry in all_entries:
+        # Debit increases balance
+        debit_acc = entry['debit_account']
+        if debit_acc not in balances:
+            balances[debit_acc] = 0.0
+        balances[debit_acc] += entry['debit_amount']
+        
+        # Kredit decreases balance
+        kredit_acc = entry['kredit_account']
+        if kredit_acc not in balances:
+            balances[kredit_acc] = 0.0
+        balances[kredit_acc] -= entry['kredit_amount']
+    
+    # Format output
+    account_balances = [
+        {
+            'account_name': acc,
+            'balance': bal,
+            'last_updated': utc_now().isoformat()
+        }
+        for acc, bal in balances.items()
+    ]
+    
+    return {
+        'balances': account_balances,
+        'total_accounts': len(account_balances)
+    }
+
+
+@api_router.get('/ppob/accounting/profit-loss', response_model=dict)
+async def get_ppob_profit_loss(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get PPOB profit & loss statement"""
+    query = {}
+    
+    if start_date and end_date:
+        query['tanggal'] = {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    
+    entries = await db.ppob_journal_entries.find(query, {'_id': 0}).to_list(length=10000)
+    
+    # Calculate revenue and expenses
+    revenue = 0.0
+    expenses = 0.0
+    
+    for entry in entries:
+        # Revenue accounts (Kredit)
+        if 'Pendapatan' in entry['kredit_account']:
+            revenue += entry['kredit_amount']
+        
+        # Expense accounts (Debit)
+        if 'Biaya' in entry['debit_account']:
+            expenses += entry['debit_amount']
+    
+    net_profit = revenue - expenses
+    profit_margin = (net_profit / revenue * 100) if revenue > 0 else 0
+    
+    return {
+        'period': {
+            'start': start_date,
+            'end': end_date
+        },
+        'revenue': revenue,
+        'expenses': expenses,
+        'net_profit': net_profit,
+        'profit_margin': profit_margin
+    }
+
+
     except Exception as e:
         print(f"Error auto-syncing to accounting: {str(e)}")
         return None
