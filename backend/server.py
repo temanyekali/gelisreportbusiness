@@ -3274,8 +3274,9 @@ async def get_executive_summary(
     current_user: dict = Depends(get_current_user)
 ):
     """Generate executive summary report for all businesses"""
-    # Permission check: Only Owner, Manager, Finance can access
-    if user['role_id'] not in [1, 2, 3, 8]:  # Owner, Manager, Finance
+    # Permission check: Only Owner, Manager, Finance, IT Developer can access
+    user = await db.users.find_one({'id': current_user['sub']}, {'_id': 0})
+    if user['role_id'] not in [1, 2, 3, 8]:  # Owner, Manager, Finance, IT Developer
         raise HTTPException(status_code=403, detail='Akses ditolak')
     
     # Get all businesses
