@@ -490,3 +490,233 @@ class KasirDailyReport(KasirDailyReportBase):
     id: str
     created_by: str
     created_at: datetime
+
+
+# ============= FASE 1: CRITICAL ENHANCEMENTS MODELS =============
+
+# PLN Technical Work Step Models
+class TechnicalStepStatus(str, Enum):
+    NOT_STARTED = 'not_started'
+    IN_PROGRESS = 'in_progress'
+    COMPLETED = 'completed'
+
+class TechnicalWorkStep(BaseModel):
+    step_name: str
+    step_weight: float  # Bobot dalam persen (0-100)
+    status: TechnicalStepStatus = TechnicalStepStatus.NOT_STARTED
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    notes: Optional[str] = None
+    photos: List[str] = []  # URLs/paths to uploaded photos
+    assigned_to: Optional[str] = None
+
+class TechnicalProgressBase(BaseModel):
+    order_id: str
+    steps: List[TechnicalWorkStep] = [
+        TechnicalWorkStep(step_name="Survey Teknis", step_weight=50.0),
+        TechnicalWorkStep(step_name="Pemasangan/Instalasi", step_weight=20.0),
+        TechnicalWorkStep(step_name="Pemeriksaan NIDI/SLO", step_weight=20.0),
+        TechnicalWorkStep(step_name="Pemberkasan Teknis", step_weight=8.0),
+        TechnicalWorkStep(step_name="Pemasangan KWH Meter", step_weight=2.0),
+    ]
+    overall_progress: float = 0.0  # Auto-calculated from completed steps
+    notes: Optional[str] = None
+
+class TechnicalProgressCreate(TechnicalProgressBase):
+    pass
+
+class TechnicalProgress(TechnicalProgressBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
+
+# PPOB Product Breakdown Models
+class PPOBProductBreakdown(BaseModel):
+    product_type: str  # Token PLN, Pulsa, PDAM, Paket Data, TV Kabel, dll
+    transaction_count: int = 0
+    total_amount: float = 0.0
+    total_fee: float = 0.0
+    total_commission: float = 0.0
+
+class PPOBShiftReport(BaseModel):
+    business_id: str
+    report_date: datetime
+    shift: int  # 1, 2, atau 3
+    petugas_name: str
+    product_breakdown: List[PPOBProductBreakdown] = []
+    total_transactions: int = 0
+    total_amount: float = 0.0
+    total_fee: float = 0.0
+    total_commission: float = 0.0
+    bank_deposit: float = 0.0
+    notes: Optional[str] = None
+
+class PPOBShiftReportCreate(BaseModel):
+    business_id: str
+    report_date: datetime
+    shift: int
+    petugas_name: str
+    product_breakdown: List[PPOBProductBreakdown] = []
+    notes: Optional[str] = None
+
+class PPOBShiftReportResponse(PPOBShiftReport):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    created_by: str
+    created_at: datetime
+
+# Executive Summary Report Models
+class BusinessUnitKPI(BaseModel):
+    business_id: str
+    business_name: str
+    business_category: str
+    total_revenue: float = 0.0
+    total_expenses: float = 0.0
+    net_profit: float = 0.0
+    profit_margin: float = 0.0  # Percentage
+    total_orders: int = 0
+    completed_orders: int = 0
+    pending_orders: int = 0
+    completion_rate: float = 0.0  # Percentage
+    average_order_value: float = 0.0
+    growth_rate: float = 0.0  # Compared to previous period
+
+class ExecutiveSummary(BaseModel):
+    period_start: datetime
+    period_end: datetime
+    report_generated_at: datetime
+    
+    # Overall Summary
+    total_revenue: float = 0.0
+    total_expenses: float = 0.0
+    net_profit: float = 0.0
+    overall_profit_margin: float = 0.0
+    
+    # Business Units Performance
+    business_units: List[BusinessUnitKPI] = []
+    
+    # Top Performers
+    best_performing_business: Optional[str] = None
+    highest_revenue_business: Optional[str] = None
+    highest_margin_business: Optional[str] = None
+    
+    # Alerts & Insights
+    alerts: List[str] = []
+    insights: List[str] = []
+    recommendations: List[str] = []
+
+# Smart Alerts Models
+class AlertSeverity(str, Enum):
+    INFO = 'info'
+    WARNING = 'warning'
+    CRITICAL = 'critical'
+
+class AlertType(str, Enum):
+    LOW_CASH = 'low_cash'
+    PENDING_ORDERS = 'pending_orders'
+    AGING_RECEIVABLES = 'aging_receivables'
+    HIGH_EXPENSES = 'high_expenses'
+    MISSING_REPORTS = 'missing_reports'
+    SYSTEM = 'system'
+
+class AlertBase(BaseModel):
+    alert_type: AlertType
+    severity: AlertSeverity
+    title: str
+    message: str
+    business_id: Optional[str] = None
+    related_id: Optional[str] = None
+    related_type: Optional[str] = None
+    threshold_value: Optional[float] = None
+    current_value: Optional[float] = None
+    action_url: Optional[str] = None
+    is_resolved: bool = False
+
+class AlertCreate(AlertBase):
+    pass
+
+class Alert(AlertBase):
+    model_config = ConfigDict(extra='ignore')
+    id: str
+    triggered_at: datetime
+    resolved_at: Optional[datetime] = None
+    resolved_by: Optional[str] = None
+    notes: Optional[str] = None
+
+# Export Models
+class ExportFormat(str, Enum):
+    PDF = 'pdf'
+    EXCEL = 'excel'
+    CSV = 'csv'
+
+class ExportRequest(BaseModel):
+    report_type: str  # executive_summary, loket_daily, kasir_daily, etc
+    format: ExportFormat
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    business_id: Optional[str] = None
+    filters: Dict[str, Any] = {}
+
+# Financial Intelligence Models
+class AgingBucket(BaseModel):
+    bucket_name: str  # Current, 1-30 days, 31-60 days, 61-90 days, >90 days
+    amount: float = 0.0
+    count: int = 0
+    percentage: float = 0.0
+
+class AgingAnalysis(BaseModel):
+    report_date: datetime
+    receivables_aging: List[AgingBucket] = []
+    payables_aging: List[AgingBucket] = []
+    total_receivables: float = 0.0
+    total_payables: float = 0.0
+    overdue_receivables: float = 0.0
+    overdue_payables: float = 0.0
+
+class CashFlowProjection(BaseModel):
+    projection_date: datetime
+    projected_inflow: float = 0.0
+    projected_outflow: float = 0.0
+    projected_balance: float = 0.0
+    confidence_level: str = 'medium'  # low, medium, high
+    assumptions: List[str] = []
+
+class BudgetVsActual(BaseModel):
+    category: str
+    budgeted_amount: float = 0.0
+    actual_amount: float = 0.0
+    variance: float = 0.0
+    variance_percentage: float = 0.0
+    status: str = 'on_track'  # on_track, over_budget, under_budget
+
+class CostCenterAnalysis(BaseModel):
+    business_id: str
+    business_name: str
+    period_start: datetime
+    period_end: datetime
+    direct_costs: float = 0.0
+    indirect_costs: float = 0.0
+    total_costs: float = 0.0
+    cost_per_order: float = 0.0
+    efficiency_score: float = 0.0  # 0-100
+
+# Comparative Analysis Models
+class PeriodComparison(BaseModel):
+    metric_name: str
+    current_period: float = 0.0
+    previous_period: float = 0.0
+    change_amount: float = 0.0
+    change_percentage: float = 0.0
+    trend: str = 'neutral'  # up, down, neutral
+
+class BusinessBenchmark(BaseModel):
+    business_id: str
+    business_name: str
+    metric_name: str
+    current_value: float = 0.0
+    average_value: float = 0.0
+    best_value: float = 0.0
+    rank: int = 0
+    percentile: float = 0.0
