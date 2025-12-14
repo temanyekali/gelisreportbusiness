@@ -469,6 +469,32 @@ export default function TeknisiDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Technical Progress Modal */}
+      <Dialog open={showProgressModal} onOpenChange={setShowProgressModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              📋 Progress Detail Pekerjaan Teknis
+              {selectedOrder && (
+                <div className="text-sm font-normal text-gray-500 mt-1">
+                  {selectedOrder.order_number} - {selectedOrder.customer_name}
+                </div>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <TechnicalProgressTracker 
+              orderId={selectedOrder.id}
+              onUpdate={() => {
+                fetchData();
+                setShowProgressModal(false);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
