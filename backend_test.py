@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
-GELIS Backend API Testing Suite - Phase 1-2
-Tests authentication, reports module, teknisi module, and permissions
+GELIS Backend API Testing Suite - FASE 1 NEW ENDPOINTS
+Tests all 15 new API endpoints for GELIS Enhancement Fase 1:
+- Technical Progress Endpoints (3)
+- PPOB Shift Report Endpoints (3) 
+- Executive Summary Endpoint (1)
+- Export Endpoint (1)
+- Smart Alerts Endpoints (3)
+Plus regression testing for existing endpoints
 """
 
 import requests
