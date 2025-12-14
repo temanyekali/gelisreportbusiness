@@ -19,8 +19,11 @@ export default function TeknisiDashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [businesses, setBusinesses] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
+  const [assigningOrder, setAssigningOrder] = useState(null);
   
   const currentUser = getUser();
+  const isManagerOrOwner = currentUser?.role_id === 1 || currentUser?.role_id === 2;
 
   useEffect(() => {
     fetchData();
