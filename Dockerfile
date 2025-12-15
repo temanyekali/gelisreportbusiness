@@ -1,36 +1,18 @@
-# Simple Dockerfile untuk GELIS
-  FROM node:20-alpine AS frontend-build
+FROM python:3.11-slim
 
-  # Build Frontend
-  WORKDIR /app/frontend
-  COPY frontend/package*.json ./
-  RUN npm install
-  COPY frontend/ ./
-  RUN npm run build
-
-  # Backend
-  FROM python:3.11-slim
   WORKDIR /app
 
-  # Install system deps
-  RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
-
-  # Install Python deps
+  # Copy requirements
   COPY backend/requirements.txt ./
+
+  # Install dependencies
   RUN pip install --no-cache-dir -r requirements.txt
 
-  # Copy backend code
+  # Copy application
   COPY backend/ ./
-
-  # Copy frontend build
-  COPY --from=frontend-build /app/frontend/build /app/static
-
-  # Install simple HTTP server
-  RUN pip install fastapi uvicorn
 
   # Expose port
   EXPOSE 8000
 
-  # Run both frontend and backend
-  CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port 8000 & python -m http.server 3000 --directory 
-  /app/static"]
+  # Run server
+  CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
