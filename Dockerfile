@@ -17,4 +17,4 @@ FROM python:3.11-slim
     CMD curl -f http://localhost:8000/api/health || exit 1
 
   # Run application
-  CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+  CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
