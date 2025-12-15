@@ -1,5 +1,5 @@
-[phases.setup]
-  nixPkgs = ["nodejs_20", "yarn"]
+  [phases.setup]
+  nixPkgs = ["nodejs_20", "yarn", "nginx"]
 
   [phases.build]
   cmds = [
@@ -8,7 +8,7 @@
   ]
 
   [start]
-  cmd = "nginx -g 'daemon off;'"
+  cmd = "nginx -g daemon off;"
 
   [build.env]
   NODE_ENV = "production"
