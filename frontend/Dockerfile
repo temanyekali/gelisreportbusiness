@@ -8,13 +8,16 @@
   COPY frontend/package*.json ./
   COPY frontend/yarn.lock ./
 
-  # Install dependencies
+  # Set NODE_ENV untuk build
+  ENV NODE_ENV=development
+
+  # Install dependencies (termasuk devDependencies)
   RUN yarn install --frozen-lockfile --network-timeout 1000000
 
   # Copy frontend source code
   COPY frontend/ ./
 
-  # Create .env file for production
+  # Runtime environment variables
   ARG REACT_APP_API_URL
   ARG REACT_APP_APP_NAME
   ARG REACT_APP_VERSION
@@ -34,6 +37,9 @@
 
   # Production stage
   FROM nginx:alpine AS production
+
+  # Install curl for healthcheck
+  RUN apk add --no-cache curl
 
   # Remove default nginx config
   RUN rm /etc/nginx/conf.d/default.conf
