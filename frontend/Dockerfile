@@ -1,48 +1,40 @@
-# Multi-stage build
-  FROM node:20-alpine as builder
+# Stage 1: Build
+  FROM node:20-alpine AS builder
 
   WORKDIR /app
 
   # Copy package files
   COPY package*.json ./
-
-  # Install dependencies
-  RUN npm ci
+  RUN npm ci --only=production
 
   # Copy source code
   COPY . .
 
-  # Build aplikasi
+  # Build the application
   RUN npm run build
 
-  # Production stage
-  FROM nginx:alpine
+  # Stage 2: Production
+  FROM nginx:alpine AS production
 
-  # Copy build results
+  # Copy build results from builder stage
   COPY --from=builder /app/build /usr/share/nginx/html
 
-  # Copy nginx config
-  COPY nginx.conf /etc/nginx/conf.d/default.conf
+  # Add nginx configuration
+  RUN echo 'server { \
+      listen 80; \
+      root /usr/share/nginx/html; \
+      index index.html index.htm; \
+      location / { \
+          try_files $uri $uri/ /index.html; \
+      } \
+      location /api { \
+          proxy_pass http://gelis-backend:8000; \
+          proxy_set_header Host $host; \
+          proxy_set_header X-Real-IP $remote_addr; \
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+      } \
+  }' > /etc/nginx/conf.d/default.conf
 
   EXPOSE 80
 
   CMD ["nginx", "-g", "daemon off;"]
-
-  frontend/nginx.conf:
-  server {
-      listen 80;
-      root /usr/share/nginx/html;
-      index index.html;
-
-      location / {
-          try_files $uri $uri/ /index.html;
-      }
-
-      # Proxy API ke backend
-      location /api {
-          proxy_pass http://gelis-backend:8000;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      }
-  }
