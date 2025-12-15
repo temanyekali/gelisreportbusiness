@@ -1,26 +1,25 @@
-FROM node:20-alpine as frontend-build
+FROM python:3.11-slim
 
-  WORKDIR /app/frontend
-  COPY frontend/package*.json ./
-  RUN npm install
-  COPY frontend/ ./
-  RUN npm run build
-
-  FROM python:3.11-slim
   WORKDIR /app
 
-  RUN apt-get update && apt-get install -y gcc curl netcat-openbsd && rm -rf /var/lib/apt/lists/*
+  # Install system dependencies including basic tools
+  RUN apt-get update && apt-get install -y \
+      gcc \
+      curl \
+      netcat \
+      net-tools \
+      procps \
+      && rm -rf /var/lib/apt/lists/*
+
+  # Install Python dependencies
   COPY backend/requirements.txt ./
-  RUN pip install -r requirements.txt
+  RUN pip install --no-cache-dir -r requirements.txt
+
+  # Copy application
   COPY backend/ ./
 
-  # Copy frontend build
-  COPY --from=frontend-build /app/frontend/build /app/static
-
-  # Install simple HTTP server for static files
-  RUN pip install fastapi uvicorn python-multipart
-
+  # Expose port
   EXPOSE 8000
 
-  # Start backend
+  # Run application
   CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
