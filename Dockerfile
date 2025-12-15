@@ -1,58 +1,34 @@
-# Build stage
+ # Build stage
   FROM node:20-alpine AS builder
 
-  # Set working directory
   WORKDIR /app
 
   # Copy package files
   COPY frontend/package*.json ./
   COPY frontend/yarn.lock ./
 
-  # Set NODE_ENV untuk build
-  ENV NODE_ENV=development
-
-  # Install dependencies (termasuk devDependencies)
+  # Install dependencies
   RUN yarn install --frozen-lockfile --network-timeout 1000000
 
-  # Copy frontend source code
+  # Copy source code
   COPY frontend/ ./
 
-  # Runtime environment variables
-  ARG REACT_APP_API_URL
-  ARG REACT_APP_APP_NAME
-  ARG REACT_APP_VERSION
-
-  ENV REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000/api}
-  ENV REACT_APP_APP_NAME=${REACT_APP_APP_NAME:-GELIS}
-  ENV REACT_APP_VERSION=${REACT_APP_VERSION:-1.0.0}
+  # Environment variables for build
+  ENV NODE_ENV=production
   ENV GENERATE_SOURCEMAP=false
-  ENV DISABLE_ESLINT_PLUGIN=true
   ENV INLINE_RUNTIME_CHUNK=false
-  ENV DISABLE_HOT_RELOAD=true
-  ENV REACT_APP_ENABLE_VISUAL_EDITS=false
-  ENV ENABLE_HEALTH_CHECK=true
 
-  # Build the application
+  ARG REACT_APP_API_URL
+  ENV REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000/api}
+
+  # Build application
   RUN yarn build
 
-  # Production stage
+  # Production stage with nginx
   FROM nginx:alpine AS production
 
-  # Install curl for healthcheck
-  RUN apk add --no-cache curl
-
-  # Remove default nginx config
-  RUN rm /etc/nginx/conf.d/default.conf
-
-  # Copy custom nginx config
-  COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-  # Copy built application
+  # Copy build result
   COPY --from=builder /app/build /usr/share/nginx/html
-
-  # Add healthcheck
-  HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/ || exit 1
 
   # Expose port
   EXPOSE 80
