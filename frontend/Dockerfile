@@ -1,24 +1,30 @@
-FROM node:20-alpine
+# Dockerfile.frontend (untuk documentation)
+  FROM node:20-alpine
 
   WORKDIR /app
 
   # Copy package files
-  COPY package*.json ./
+  COPY frontend/package*.json ./
 
   # Install dependencies
-  RUN npm install
+  RUN npm ci --only=production
 
   # Copy source code
-  COPY . .
+  COPY frontend/ ./
 
-  # Build the application
+  # Build application
   RUN npm run build
 
-  # Install serve to run the built app
-  RUN npm install -g serve
+  # Use nginx for serving static files
+  FROM nginx:alpine
 
-  # Expose port
-  EXPOSE 3000
+  # Copy built files
+  COPY --from=0 /app/build /usr/share/nginx/html
 
-  # Serve the built application
-  CMD ["serve", "-s", "build", "-l", "3000"]
+  # Add nginx configuration
+  RUN echo 'server { listen 80; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } }' >
+  /etc/nginx/conf.d/default.conf
+
+  EXPOSE 80
+
+  CMD ["nginx", "-g", "daemon off;"]
