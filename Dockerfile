@@ -1,5 +1,5 @@
 # Simple Dockerfile untuk GELIS
-  FROM node:20-alpine as frontend-build
+  FROM node:20-alpine AS frontend-build
 
   # Build Frontend
   WORKDIR /app/frontend
