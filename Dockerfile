@@ -1,25 +1,8 @@
 FROM python:3.11-slim
-
   WORKDIR /app
-
-  # Install system dependencies including basic tools
-  RUN apt-get update && apt-get install -y \
-      gcc \
-      curl \
-      netcat-openbsd \
-      net-tools \
-      procps \
-      && rm -rf /var/lib/apt/lists/*
-
-  # Install Python dependencies
+  RUN apt-get update && apt-get install -y gcc curl && rm -rf /var/lib/apt/lists/*
   COPY backend/requirements.txt ./
-  RUN pip install --no-cache-dir -r requirements.txt
-
-  # Copy application
+  RUN pip install -r requirements.txt
   COPY backend/ ./
-
-  # Expose port
   EXPOSE 8000
-
-  # Run application
   CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
