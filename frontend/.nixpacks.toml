@@ -1,0 +1,8 @@
+ [phases.setup]
+  nixPkgs = ["nodejs_20", "yarn"]
+
+  [phases.build]
+  cmds = ["yarn install --frozen-lockfile", "yarn build"]
+
+  [start]
+  cmd = "npx serve -s build -l 3000"
