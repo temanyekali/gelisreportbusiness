@@ -1,0 +1,17 @@
+ [phases.setup]
+  nixPkgs = ["nodejs_20", "nodePackages.yarn", "nginx"]
+
+  [phases.build]
+  cmds = [
+      "cd frontend && yarn install --frozen-lockfile",
+      "cd frontend && yarn build"
+  ]
+
+  [start]
+  cmd = "service nginx start && tail -f /dev/null"
+
+  [build.env]
+  NODE_ENV = "production"
+  GENERATE_SOURCEMAP = "false"
+  INLINE_RUNTIME_CHUNK = "false"
+  REACT_APP_API_URL = "https://backend-domain-anda.com/api"
