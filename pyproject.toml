@@ -1,0 +1,9 @@
+[project]
+  name = "gelis-backend"
+  version = "1.0.0"
+  description = "GELIS Backend API"
+  requires-python = ">=3.11"
+
+  [build-system]
+  requires = ["hatchling"]
+  build-backend = "hatchling.build"
