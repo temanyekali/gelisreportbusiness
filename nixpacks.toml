@@ -1,4 +1,4 @@
-  [phases.setup]
+[phases.setup]
   nixPkgs = ["python311"]
 
   [phases.build]
@@ -6,3 +6,6 @@
 
   [start]
   cmd = "cd backend && uvicorn main:app --host 0.0.0.0 --port 8000"
+
+  [build.env]
+  PYTHONPATH = "/app/backend"
