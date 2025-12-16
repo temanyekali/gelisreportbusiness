@@ -1,17 +1,17 @@
-  echo 'from fastapi import FastAPI
+ cat > backend/main.py << 'EOF'
+  from fastapi import FastAPI
 
-  app = FastAPI()
+  app = FastAPI(title="GELIS Backend API")
 
   @app.get("/")
   def root():
       return {"message": "Backend is running"}
 
-  if name == "main":
-      import uvicorn
-      uvicorn.run(app, host="0.0.0.0", port=8001)' > backend/main.py
+  @app.get("/health")
+  def health():
+      return {"status": "healthy"}
 
-  3. **Commit dan push:**
-  ```bash
-  git add backend/main.py
-  git commit -m "Fix main.py indentation"
-  git push
+  if __name__ == "__main__":
+      import uvicorn
+      uvicorn.run(app, host="0.0.0.0", port=8001)
+  EOF
