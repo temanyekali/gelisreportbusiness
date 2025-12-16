@@ -1,37 +1,45 @@
-# Build stage (untuk frontend)
-  FROM node:20-alpine AS builder
-
-  WORKDIR /app
-
-  # Copy package files hanya jika ada
-  COPY frontend/package*.json ./
-  COPY frontend/yarn.lock ./
-
-  # Install dependencies & build frontend
-  RUN yarn install --frozen-lockfile && yarn build
-
-  # Production stage untuk backend
-  FROM python:3.11-slim AS production
+# Build stage untuk dependencies
+  FROM python:3.11-slim as builder
 
   WORKDIR /app
 
   # Install system dependencies
   RUN apt-get update && apt-get install -y \
       gcc \
+      curl \
       && rm -rf /var/lib/apt/lists/*
 
-  # Copy Python dependencies
-  COPY requirements.txt .
+  # Copy requirements
+  COPY backend/requirements.txt .
+
+  # Install Python dependencies
   RUN pip install --no-cache-dir -r requirements.txt
 
-  # Copy backend code
-  COPY backend/ ./
+  # Production stage
+  FROM python:3.11-slim
 
-  # Copy frontend build result
-  COPY --from=builder /app/frontend/build ./static
+  WORKDIR /app
+
+  # Install runtime system dependencies
+  RUN apt-get update && apt-get install -y \
+      curl \
+      && rm -rf /var/lib/apt/lists/*
+
+  # Copy installed packages from builder
+  COPY --from=builder /opt/venv /opt/venv
+
+  # Copy backend application
+  COPY backend/ ./backend/
+
+  # Make venv active
+  ENV PATH="/opt/venv/bin:$PATH"
 
   # Expose port
-  EXPOSE 8000
+  EXPOSE 8001
 
-  # Start command
-  CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+  # Health check
+  HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+      CMD curl -f http://localhost:8001/health || exit 1
+
+  # Start application
+  CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
