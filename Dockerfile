@@ -1,37 +1,37 @@
- # Build stage
+# Build stage (untuk frontend)
   FROM node:20-alpine AS builder
 
   WORKDIR /app
 
-  # Copy package files
+  # Copy package files hanya jika ada
   COPY frontend/package*.json ./
   COPY frontend/yarn.lock ./
 
-  # Install dependencies
-  RUN yarn install --frozen-lockfile --network-timeout 1000000
+  # Install dependencies & build frontend
+  RUN yarn install --frozen-lockfile && yarn build
 
-  # Copy source code
-  COPY frontend/ ./
+  # Production stage untuk backend
+  FROM python:3.11-slim AS production
 
-  # Environment variables for build
-  ENV NODE_ENV=production
-  ENV GENERATE_SOURCEMAP=false
-  ENV INLINE_RUNTIME_CHUNK=false
+  WORKDIR /app
 
-  ARG REACT_APP_API_URL
-  ENV REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000/api}
+  # Install system dependencies
+  RUN apt-get update && apt-get install -y \
+      gcc \
+      && rm -rf /var/lib/apt/lists/*
 
-  # Build application
-  RUN yarn build
+  # Copy Python dependencies
+  COPY requirements.txt .
+  RUN pip install --no-cache-dir -r requirements.txt
 
-  # Production stage with nginx
-  FROM nginx:alpine AS production
+  # Copy backend code
+  COPY backend/ ./
 
-  # Copy build result
-  COPY --from=builder /app/build /usr/share/nginx/html
+  # Copy frontend build result
+  COPY --from=builder /app/frontend/build ./static
 
   # Expose port
-  EXPOSE 80
+  EXPOSE 8000
 
-  # Start nginx
-  CMD ["nginx", "-g", "daemon off;"]
+  # Start command
+  CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
